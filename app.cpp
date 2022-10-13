@@ -19,6 +19,12 @@
 #include <SDL.h>
 #endif
 
+#include <opentimelineio/clip.h>
+#include <opentimelineio/externalReference.h>
+#include <opentimelineio/timeline.h>
+namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
+#include <iostream>
+
 void DrawAudioPanel();
 void DrawButtons(ImVec2 button_size);
 
@@ -229,11 +235,33 @@ void LoadAudio(const char* path)
   }
 }
 
+void print_error(otio::ErrorStatus const& error_status)
+{
+    std::cout << "ERROR: " <<
+        otio::ErrorStatus::outcome_to_string(error_status.outcome) << ": " <<
+        error_status.details << std::endl;
+}
+
+void InitOTIO()
+{
+  std::string input = "example.otio";
+  otio::ErrorStatus error_status;
+  otio::SerializableObject::Retainer<otio::Timeline> timeline(
+        dynamic_cast<otio::Timeline*>(otio::Timeline::from_json_file(input, &error_status)));
+  if (!timeline || otio::is_error(error_status)) {
+    print_error(error_status);
+    exit(1);
+  }
+  Log(timeline->name().c_str());
+}
+
 void MainInit()
 {
   Style_Mono();
 
   LoadFonts();
+  
+  InitOTIO();
 
   SoLoud::result err = appState.audio.init();
   if (err) {

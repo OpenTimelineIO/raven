@@ -27,6 +27,15 @@ CXXFLAGS = -I. -I./imgui
 CXXFLAGS += -g -Wall -Wformat
 LIBS =
 
+CXXFLAGS += -I./libs/opentimelineio/src/deps
+CXXFLAGS += -I./libs/opentimelineio/src/deps/optional-lite/include
+CXXFLAGS += -I./libs/opentimelineio/src/deps/Imath/src/Imath
+CXXFLAGS += -I./libs/opentimelineio/build/temp.macosx-10.9-x86_64-3.9/src/deps/Imath/config
+CXXFLAGS += -I./libs/opentimelineio/src
+LIBS += ./libs/opentimelineio/build/temp.macosx-10.9-x86_64-3.9/src/opentime/libopentime.a
+LIBS += ./libs/opentimelineio/build/temp.macosx-10.9-x86_64-3.9/src/deps/Imath/src/Imath/libImath-3_2.a
+LIBS += ./libs/opentimelineio/build/temp.macosx-10.9-x86_64-3.9/src/opentimelineio/libopentimelineio.a
+
 ##---------------------------------------------------------------------
 ## OPENGL LOADER
 ##---------------------------------------------------------------------
