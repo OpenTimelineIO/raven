@@ -1,0 +1,3 @@
+[submodule "libs/opentimelineio"]
+	path = libs/opentimelineio
+	url = https://github.com/AcademySoftwareFoundation/OpenTimelineIO.git
