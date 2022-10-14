@@ -16,7 +16,7 @@
 
 APP = raven
 EXE = $(APP)
-SOURCES = main_glfw.cpp app.cpp audio.cpp widgets.cpp
+SOURCES = main_glfw.cpp app.cpp widgets.cpp
 SOURCES += imgui/imgui_impl_glfw.cpp imgui/imgui_impl_opengl3.cpp
 SOURCES += imgui/imgui.cpp imgui/imgui_demo.cpp imgui/imgui_draw.cpp imgui/imgui_widgets.cpp imgui/imgui_tables.cpp
 SOURCES += imgui/imguihelper.cpp imgui/imgui_plot.cpp imgui/imguifilesystem.cpp
@@ -65,7 +65,7 @@ CXXFLAGS += -Ilibs/gl3w -DIMGUI_IMPL_OPENGL_LOADER_GL3W
 
 ifeq ($(UNAME_S), Linux) #LINUX
 	ECHO_MESSAGE = "Linux"
-	LIBS += -lGL `pkg-config --static --libs glfw3` -lasound
+	LIBS += -lGL `pkg-config --static --libs glfw3`
 
 	CXXFLAGS += `pkg-config --cflags glfw3` -pthread -DHAVE_STDINT_H
 	CFLAGS = $(CXXFLAGS)
@@ -73,7 +73,7 @@ endif
 
 ifeq ($(UNAME_S), Darwin) #APPLE
 	ECHO_MESSAGE = "Mac OS X"
-	LIBS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo -framework CoreAudio -framework AudioToolbox
+	LIBS += -framework OpenGL -framework Cocoa
 	LIBS += -L/opt/local/lib -L/opt/homebrew/lib -L/usr/local/lib
 	#LIBS += -lglfw3
 	LIBS += -lglfw
