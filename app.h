@@ -21,9 +21,11 @@ struct AppState
   float scale = 100.0f;
   float track_height = 30.0f;
   otio::RationalTime playhead;
+  bool scroll_to_playhead = false;
   uint32_t selection_start = 0;
   uint32_t selection_length = 1;
 
+  std::string selected_text;
   char message[1024];
 
   bool show_main_window = true;
@@ -36,3 +38,4 @@ extern ImFont *gTechFont;
 extern ImFont *gIconFont;
 
 const char* TimecodeString(float t);
+std::string otio_error_string(otio::ErrorStatus const& error_status);

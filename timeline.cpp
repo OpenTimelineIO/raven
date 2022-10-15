@@ -44,6 +44,13 @@ void DrawComposable(otio::Composable* composable, float scale, float height)
     if (ImGui::IsItemHovered()) {
         frame_color = IM_COL32(200,0,0, 255);
     }
+    if (ImGui::IsItemClicked()) {
+        otio::ErrorStatus error_status;
+        appState.selected_text = composable->to_json_string(&error_status);
+        if (otio::is_error(error_status)) {
+            appState.selected_text = otio_error_string(error_status);
+        }
+    }
     
     ImGui::PushClipRect(p0, p1, true);
     
@@ -88,10 +95,9 @@ void DrawTrack(otio::Track* track, int index, float scale, float full_width, flo
     ImGui::EndGroup();
 }
 
-void DrawPlayheadTrack(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height)
+bool DrawPlayheadTrack(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height)
 {
-    float playhead_width = scale / playhead.rate();
-    float playhead_x = (playhead - start).to_seconds() * scale;
+    bool moved_playhead = false;
     
     ImVec2 size(full_width, track_height);
     ImVec2 text_offset(7.0f, 5.0f);
@@ -107,32 +113,14 @@ void DrawPlayheadTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     {
         float mouse_x_widget = ImGui::GetIO().MousePos.x - p0.x;
         playhead = otio::RationalTime::from_seconds(mouse_x_widget / scale, playhead.rate());
+        moved_playhead = true;
     }
     
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ImDrawList* fg_draw_list = ImGui::GetForegroundDrawList();
     
     auto fill_color = IM_COL32(20, 20, 20, 255);
     auto tick_color = IM_COL32(100, 100, 100, 255);
     auto frame_color = IM_COL32(0, 0, 0, 255);
-    
-    // const ImVec2 playhead_pos = ImVec2(p0.x + playhead_x, p0.y);
-    // const ImVec2 playhead_size = ImVec2(playhead_width, full_height);
-    // const ImVec2 playhead_max = ImVec2(playhead_pos.x + playhead_size.x, playhead_pos.y + playhead_size.y);
-    // const ImVec2 playhead_line_start = playhead_pos;
-    // const ImVec2 playhead_line_end = ImVec2(playhead_pos.x, playhead_pos.y + full_height);
-    // auto playhead_fill_color = IM_COL32(0, 200, 0, 255);
-    // auto playhead_line_color = IM_COL32(200, 255, 200, 255);
-
-    // std::string label_str = playhead.to_timecode();
-    // auto label_color = IM_COL32_WHITE;
-    // const ImVec2 label_pos = ImVec2(playhead_max.x + text_offset.x, p0.y + text_offset.y);
-    
-    // if (ImGui::IsItemHovered()) {
-    //     playhead_fill_color = IM_COL32(100, 200, 100, 255);
-    // }
-    
-    // ImGui::PushClipRect(p0, p1, true);
     
     // background
     draw_list->AddRectFilled(p0, p1, fill_color);
@@ -152,13 +140,14 @@ void DrawPlayheadTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     // outer frame
     draw_list->AddRect(p0, p1, frame_color);
     
-    // ImGui::PopClipRect();
     ImGui::EndGroup();
     ImGui::PopID();
+    
+    return moved_playhead;
 }
 
 
-void DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height, ImVec2 top)
+float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height, ImVec2 top)
 {
     float playhead_width = scale / playhead.rate();
     float playhead_x = (playhead - start).to_seconds() * scale;
@@ -194,9 +183,61 @@ void DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::Ration
     draw_list->AddRectFilled(playhead_pos, playhead_max, playhead_fill_color);
     draw_list->AddLine(playhead_line_start, playhead_line_end, playhead_line_color);
     draw_list->AddText(label_pos, label_color, label_str.c_str());
-
+    
     ImGui::EndGroup();
     ImGui::PopID();
+    
+    return playhead_pos.x - ImGui::GetWindowPos().x;
+}
+
+bool DrawTransportControls(otio::Timeline* timeline)
+{
+    bool moved_playhead = false;
+
+    otio::RationalTime start = timeline->global_start_time().value_or(otio::RationalTime());
+    auto duration = timeline->duration();
+    auto end = start + duration;
+    auto rate = duration.rate();
+    if (appState.playhead.rate() != rate) {
+        appState.playhead = appState.playhead.rescaled_to(rate);
+    }
+
+    auto start_string = start.to_timecode();
+    auto playhead_string = appState.playhead.to_timecode();
+    auto end_string = end.to_timecode();
+    
+    ImGui::PushID("##Transport");
+    ImGui::BeginGroup();
+    
+    ImGui::Text("%s", start_string.c_str());
+    ImGui::SameLine();
+
+    ImGui::SetNextItemWidth(-320);
+    float playhead_seconds = appState.playhead.to_seconds();
+    if (ImGui::SliderFloat("##Playhead", &playhead_seconds, 0.0f, duration.to_seconds(), playhead_string.c_str())) {
+        appState.playhead = otio::RationalTime::from_seconds(playhead_seconds, appState.playhead.rate());
+        moved_playhead = true;
+    }
+    
+    ImGui::SameLine();
+    ImGui::Text("%s", end_string.c_str());
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(100);
+    if (ImGui::SliderFloat("##Zoom", &appState.scale, 10.0f, 500.0f, "Zoom")) {
+        // scale
+    }
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(100);
+    if (ImGui::SliderFloat("##Height", &appState.track_height, 25.0f, 100.0f, "Height")) {
+        // scale
+    }
+    
+    ImGui::EndGroup();
+    ImGui::PopID();
+    
+    return moved_playhead;
 }
 
 void DrawTimeline(otio::Timeline* timeline)
@@ -215,52 +256,21 @@ void DrawTimeline(otio::Timeline* timeline)
     auto duration = timeline->duration();
     auto end = start + duration;
     auto rate = duration.rate();
-    if (appState.playhead.rate() != rate) {
-        appState.playhead = appState.playhead.rescaled_to(rate);
-    }
 
-    auto start_string = start.to_timecode();
+    // auto start_string = start.to_timecode();
     auto playhead_string = appState.playhead.to_timecode();
-    auto end_string = end.to_timecode();
+    // auto end_string = end.to_timecode();
   
     auto video_tracks = timeline->video_tracks();
     auto audio_tracks = timeline->audio_tracks();
     
     // ImGui::BeginChild("##Timeline", ImVec2(0,0), true, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-    // Transport controls
-  
-    ImGui::BeginGroup();
-    {
-        ImGui::Text("%s", start_string.c_str());
-        ImGui::SameLine();
-
-        ImGui::SetNextItemWidth(-400);
-        float playhead_seconds = appState.playhead.to_seconds();
-        if (ImGui::SliderFloat("##Playhead", &playhead_seconds, 0.0f, duration.to_seconds(), playhead_string.c_str())) {
-            appState.playhead = otio::RationalTime::from_seconds(playhead_seconds, appState.playhead.rate());
-        }
-        
-        ImGui::SameLine();
-        ImGui::Text("%s", end_string.c_str());
-
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(100);
-        if (ImGui::SliderFloat("Zoom", &appState.scale, 10.0f, 500.0f)) {
-            // scale
-        }
-
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(100);
-        if (ImGui::SliderFloat("Height", &appState.track_height, 25.0f, 100.0f)) {
-            // scale
-        }
-    }
-    ImGui::EndGroup();
-  
     // Tracks
+    // ImGui::BeginGroup();
+
     float full_width = duration.to_seconds() * appState.scale;
-    float full_height = ImGui::GetContentRegionAvail().y;
+    float full_height = ImGui::GetContentRegionAvail().y - ImGui::GetFrameHeightWithSpacing();
 
     int flags =
         ImGuiTableFlags_SizingFixedFit |
@@ -278,7 +288,9 @@ void DrawTimeline(otio::Timeline* timeline)
         ImGui::TableNextColumn();
         ImGui::Text("%s", playhead_string.c_str());
         ImGui::TableNextColumn();
-        DrawPlayheadTrack(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height);
+        if (DrawPlayheadTrack(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height)) {
+            // scroll_to_playhead = true;
+        }
         auto top = ImGui::GetItemRectMin();
 
         int index = video_tracks.size();
@@ -313,12 +325,18 @@ void DrawTimeline(otio::Timeline* timeline)
         ImGui::TableNextColumn();
         // ImGui::Text("%s", playhead_string.c_str());
         ImGui::TableNextColumn();
-        DrawPlayhead(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height, top);
+        float playhead_x = DrawPlayhead(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height, top);
 
+        if (appState.scroll_to_playhead) {
+            ImGui::SetScrollFromPosX(playhead_x);
+            appState.scroll_to_playhead = false;
+        }
+        
         ImGui::EndTable();
     }
 
-    // float width = ImGui::CalcItemWidth();    
+    // ImGui::EndGroup();
+        // float width = ImGui::CalcItemWidth();    
     // ImVec2 group_size = ImGui::GetItemRectSize();
 
     // ImGui::EndChild();

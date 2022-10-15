@@ -290,13 +290,21 @@ void MainGui()
   // ImGui::SameLine();
   // ImGui::BeginChild("2", ImVec2(sz2, h), true);
 
-  ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+  ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()*2)); // Leave room for 1 line below us
   
   if (ImGui::BeginTabBar("MyTabBar", ImGuiTabBarFlags_None))
   {
     if (ImGui::BeginTabItem("Timeline"))
     {
       DrawTimeline(appState.timeline);
+
+      ImGui::EndTabItem();
+    }
+    if (ImGui::BeginTabItem("Selection"))
+    {
+      char buf[10000];
+      snprintf(buf, sizeof(buf), "%s", appState.selected_text.c_str());
+      ImGui::InputTextMultiline("Selection", buf, sizeof(buf), ImVec2(-FLT_MIN, -FLT_MIN), 0);
 
       ImGui::EndTabItem();
     }
@@ -308,11 +316,16 @@ void MainGui()
     }
     ImGui::EndTabBar();
   }
-
+  
   ImGui::EndChild();
 
-  // Status message at the very bottom
   ImGui::Separator();
+
+  if (DrawTransportControls(appState.timeline)) {
+      appState.scroll_to_playhead = true;
+  }
+
+  // Status message at the very bottom
   ImGui::Text("%s", appState.message);
 
   ImGui::End();
