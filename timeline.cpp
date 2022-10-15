@@ -1,6 +1,7 @@
 // Timeline widget
 
 #include "app.h"
+#include "widgets.h"
 
 #include <opentimelineio/clip.h>
 #include <opentimelineio/gap.h>
@@ -272,7 +273,7 @@ bool DrawTransportControls(otio::Timeline* timeline)
     ImGui::Text("%s", start_string.c_str());
     ImGui::SameLine();
 
-    ImGui::SetNextItemWidth(-320);
+    ImGui::SetNextItemWidth(-220);
     float playhead_seconds = appState.playhead.to_seconds();
     if (ImGui::SliderFloat("##Playhead", &playhead_seconds, 0.0f, duration.to_seconds(), playhead_string.c_str())) {
         appState.playhead = otio::RationalTime::from_seconds(playhead_seconds, appState.playhead.rate());
@@ -289,12 +290,6 @@ bool DrawTransportControls(otio::Timeline* timeline)
     ImGui::SetNextItemWidth(100);
     if (ImGui::SliderFloat("##Zoom", &appState.scale, 10.0f, 5000.0f, "Zoom")) {
         moved_playhead = true;
-    }
-
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(100);
-    if (ImGui::SliderFloat("##Height", &appState.track_height, 25.0f, 100.0f, "Height")) {
-        // scale
     }
     
     ImGui::EndGroup();
@@ -326,10 +321,7 @@ void DrawTimeline(otio::Timeline* timeline)
     auto video_tracks = timeline->video_tracks();
     auto audio_tracks = timeline->audio_tracks();
     
-    // ImGui::BeginChild("##Timeline", ImVec2(0,0), true, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar);
-
     // Tracks
-    // ImGui::BeginGroup();
 
     float full_width = duration.to_seconds() * appState.scale;
     float full_height = ImGui::GetContentRegionAvail().y - ImGui::GetFrameHeightWithSpacing();
@@ -369,8 +361,22 @@ void DrawTimeline(otio::Timeline* timeline)
             index--;
         }
 
-        ImGui::Separator();
+        // Make a splitter between the Video and Audio tracks
+        // You can drag up/down to adjust the track height
+        float splitter_size = 5.0f;
+        
+        ImGui::TableNextRow(ImGuiTableRowFlags_None, splitter_size);
+        ImGui::TableNextColumn();
 
+        int num_tracks_above = video_tracks.size() + 1;
+        float sz1 = 0;
+        float sz2 = 0;
+        float sz1_min = -(appState.track_height - 25.0f) * num_tracks_above;
+        if (Splitter(false, splitter_size, &sz1, &sz2, sz1_min, -100, full_width, 0)) {
+            appState.track_height = fminf(100.0f, fmaxf(25.0f, appState.track_height + (sz1 / num_tracks_above)));
+        }
+        ImGui::Dummy(ImVec2(splitter_size,splitter_size));
+        
         index = 1;
         for (const auto& audio_track : audio_tracks)
         {
@@ -396,10 +402,4 @@ void DrawTimeline(otio::Timeline* timeline)
         
         ImGui::EndTable();
     }
-
-    // ImGui::EndGroup();
-        // float width = ImGui::CalcItemWidth();    
-    // ImVec2 group_size = ImGui::GetItemRectSize();
-
-    // ImGui::EndChild();
 }
