@@ -73,7 +73,7 @@ void LoadFonts()
 
 void ApplyAppStyle()
 {
-  ImGuiStyle& style = ImGui::GetStyle();
+  // ImGuiStyle& style = ImGui::GetStyle();
 
   ImGui::StyleColorsDark();
     
@@ -338,7 +338,7 @@ void MainGui()
 
 void DrawButtons(ImVec2 button_size)
 {
-  ImGuiStyle& style = ImGui::GetStyle();
+  // ImGuiStyle& style = ImGui::GetStyle();
 
   const bool browseButtonPressed = IconButton("\uF07C##Load", button_size);                          // we need a trigger boolean variable
   static ImGuiFs::Dialog dlg;
