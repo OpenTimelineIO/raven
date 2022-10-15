@@ -9,8 +9,6 @@
 #include "imguifilesystem.h"
 #include "imgui_internal.h"
 
-#include <opentimelineio/clip.h>
-#include <opentimelineio/externalReference.h>
 #include <opentimelineio/timeline.h>
 namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
 
@@ -34,3 +32,5 @@ struct AppState
 extern AppState appState;
 extern ImFont *gTechFont;
 extern ImFont *gIconFont;
+
+const char* TimecodeString(float t);

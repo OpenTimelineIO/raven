@@ -20,10 +20,12 @@
 
 #include <iostream>
 
-void DrawTimeline();
 void DrawButtons(ImVec2 buttonSize);
 
 #include "app.h"
+#include "timeline.h"
+
+const char *app_name = "Raven";
 
 AppState appState;
 
@@ -69,10 +71,12 @@ void LoadFonts()
 #endif
 }
 
-void Style_Mono()
+void ApplyAppStyle()
 {
   ImGuiStyle& style = ImGui::GetStyle();
 
+  ImGui::StyleColorsDark();
+    
 /*
   style.Alpha = 1.0;
   style.WindowRounding = 3;
@@ -160,11 +164,14 @@ void LoadFile(const char* path)
   Message("Loaded %s", timeline->name().c_str());
 }
 
-void MainInit()
+void MainInit(int argc, char** argv)
 {
-  Style_Mono();
-
+  ApplyAppStyle();
   LoadFonts();
+  
+  if (argc > 1) {
+    LoadFile(argv[1]);
+  }
 }
 
 void MainCleanup()
@@ -193,24 +200,24 @@ void AppUpdate()
 {
 }
 
-float LengthInSeconds() {
-  return 10.0;
-}
-
 static char buffer[256];
-const char* timecode_from(float t) {
+const char* TimecodeString(float t) {
 
-  // float fraction = t - floor(t);
-  t = floor(t);
-  int seconds = fmodf(t, 60.0);
-  int minutes = fmodf(t/60.0, 60.0);
-  int hours = floor(t/3600.0);
+  auto str = otio::RationalTime::from_seconds(t).to_timecode();
+  
+  // // float fraction = t - floor(t);
+  // t = floor(t);
+  // int seconds = fmodf(t, 60.0);
+  // int minutes = fmodf(t/60.0, 60.0);
+  // int hours = floor(t/3600.0);
 
-  snprintf(
-    buffer, sizeof(buffer),
-    "%d:%02d:%02d",
-    hours, minutes, seconds); //, (int)(fraction*100.0));
+  // snprintf(
+  //   buffer, sizeof(buffer),
+  //   "%d:%02d:%02d",
+  //   hours, minutes, seconds); //, (int)(fraction*100.0));
 
+  snprintf(buffer, sizeof(buffer), "%s", str.c_str());
+  
   return buffer;
 }
 
@@ -227,7 +234,6 @@ void MainGui()
     ImGui::SetNextWindowSize(displaySize);
   }
 
-  const char *app_name = "Raven";
   const char *window_id = "###MainWindow";
   char window_title[1024];
   char filename[ImGuiFs::MAX_FILENAME_BYTES] = {""};
@@ -241,10 +247,7 @@ void MainGui()
   ImGui::Begin(
       window_title,
       &appState.show_main_window,
-      // ImGuiWindowFlags_NoResize |
-      // ImGuiWindowFlags_NoMove |
-      // ImGuiWindowFlags_NoTitleBar | 
-      // ImGuiWindowFlags_NoBringToFrontOnFocus | 
+      ImGuiWindowFlags_NoCollapse |
       // ImGuiWindowFlags_NoDocking |
       // ImGuiWindowFlags_AlwaysAutoResize |
       0
@@ -259,21 +262,6 @@ void MainGui()
     ImGui::GetTextLineHeightWithSpacing(),
     ImGui::GetTextLineHeightWithSpacing()
     );
-
-  ImGui::Text("%s", strlen(filename) ? filename : app_name);
-
-  if (strlen(filename)) {
-
-    ImGui::SameLine();
-    ImGui::Text("/");
-
-    ImGui::SameLine();
-    ImGui::Text("%s", timecode_from(appState.playhead));
-    ImGui::SameLine();
-    ImGui::Text("/");
-    ImGui::SameLine();
-    ImGui::Text("%s", timecode_from(LengthInSeconds()));
-  }
 
   ImGui::SameLine();
   DrawButtons(button_size);
@@ -302,11 +290,13 @@ void MainGui()
   // ImGui::SameLine();
   // ImGui::BeginChild("2", ImVec2(sz2, h), true);
 
+  ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+  
   if (ImGui::BeginTabBar("MyTabBar", ImGuiTabBarFlags_None))
   {
     if (ImGui::BeginTabItem("Timeline"))
     {
-      DrawTimeline();
+      DrawTimeline(appState.timeline);
 
       ImGui::EndTabItem();
     }
@@ -318,6 +308,12 @@ void MainGui()
     }
     ImGui::EndTabBar();
   }
+
+  ImGui::EndChild();
+
+  // Status message at the very bottom
+  ImGui::Separator();
+  ImGui::Text("%s", appState.message);
 
   ImGui::End();
   
@@ -358,120 +354,4 @@ void DrawButtons(ImVec2 button_size)
   if (IconButton("\uF013#Demo", button_size)) {
     appState.show_demo_window = !appState.show_demo_window;
   }
-}
-
-void DrawTimeline()
-{
-  ImGuiStyle& style = ImGui::GetStyle();
-  ImGuiIO& io = ImGui::GetIO();
-
-  ImGui::BeginGroup();
-
-  float duration = LengthInSeconds();
-  if (ImGui::SliderFloat("POS", &appState.playhead, 0.0f, duration, timecode_from(appState.playhead))) {
-    // Seek(appState.playhead);
-  }
-
-  float width = ImGui::CalcItemWidth();
-
-  /*
-  {
-    ImGui::PlotConfig plot_config;
-    plot_config.frame_size = ImVec2(width, 100);
-    plot_config.values.ys = GetData();
-    plot_config.values.count = DataLen();
-    plot_config.scale.min = -1.0f;
-    plot_config.scale.max = 1.0f;
-    plot_config.selection.show = true;
-    plot_config.selection.start = &appState.selection_start;
-    plot_config.selection.length = &appState.selection_length;
-    // plot_config.overlay_text = "Hello";
-    if (ImGui::Plot("DAT", plot_config) == ImGui::PlotStatus::selection_updated) {
-      // Seek(appState.selection_start * LengthInSeconds() / DataLen());
-      appState.selection_length = fmax(appState.selection_length, 256);
-    }
-
-    // ImVec2 size = ImGui::GetItemRectSize();
-    ImVec2 corner = ImGui::GetItemRectMax();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-      corner -= ImGui::GetWindowPos();
-    }
-
-    ImGui::SameLine(0,style.ItemInnerSpacing.x);
-    ImGui::Text("DAT");
-  }
-  */
-
-  ImGui::SameLine();
-
-  // if (KnobFloat("VOL", &appState.volume, 0.01f, 0.0f, 1.0f, "%.2f")) {
-  //   // appState.audio.setVolume(appState.audio_handle, appState.volume);
-  // }
-
-  /*
-  if (appState.source == &appState.wav || appState.source == &appState.mp3) {
-    ImGui::PlotLines(
-      "WAV",
-      GetData() + appState.selection_start,
-      appState.selection_length / GetChannels(),  // values_count
-      0,    // values_offset
-      nullptr, // overlay_text
-      -1.0f, // scale_min
-      1.0f, // scale_max
-      ImVec2(width,100), // graph_size
-      sizeof(float)*GetChannels() // stride
-      );
-    uint32_t low = 256;
-    uint32_t high = appState.source->mBaseSamplerate;
-    ImGui::SameLine();
-    KnobScalar("##WAV", ImGuiDataType_U32, &appState.selection_length, 100.0f, &low, &high, "%d", 0);
-  }else{
-    // this shows the mixed output waveform
-    ImGui::PlotLines(
-      "WAV",
-      appState.audio.getWave(),
-      256,  // values_count
-      0,    // values_offset
-      nullptr, // overlay_text
-      -1.0f, // scale_min
-      1.0f, // scale_max
-      ImVec2(width,100) // graph_size
-      );
-  }
-  static int fft_zoom = 256;
-  ImGui::PlotHistogram(
-    "FFT",
-    appState.audio.calcFFT(),
-    fft_zoom,  // values_count
-    0,    // values_offset
-    nullptr, // overlay_text
-    FLT_MAX, // scale_min
-    FLT_MAX, // scale_max
-    ImVec2(width,100) // graph_size
-    );
-  ImGui::SameLine();
-  KnobInt("##FFT", &fft_zoom, 1.0f, 16, 256);
-  // ImGui::SliderInt("Z##FFT", &fft_zoom, 16, 256);
-*/
-  
-  ImGui::EndGroup();
-
-  ImVec2 group_size = ImGui::GetItemRectSize();
-
-  ImGui::SameLine();
-  // ComputeAndDrawVolumeMeter(ImVec2(50, group_size.y));
-
-  // ImGui::SameLine();
-  // if (ImGui::VSliderFloat("##VOL", ImVec2(25, group_size.y), &appState.volume, 0.0f, 1.0f, "")) {
-  //   appState.audio.setVolume(appState.audio_handle, appState.volume);
-  // }
-
-  ImGui::Spacing();
-
-  // if (strlen(appState.file_path)>0) {
-  //   ImGui::Text("%s", appState.file_path);
-  // }else{
-  //   ImGui::Text("No file loaded.");
-  // }
-  ImGui::Text("%s", appState.message);
 }
