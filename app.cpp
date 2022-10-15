@@ -200,27 +200,6 @@ void AppUpdate()
 {
 }
 
-static char buffer[256];
-const char* TimecodeString(float t) {
-
-  auto str = otio::RationalTime::from_seconds(t).to_timecode();
-  
-  // // float fraction = t - floor(t);
-  // t = floor(t);
-  // int seconds = fmodf(t, 60.0);
-  // int minutes = fmodf(t/60.0, 60.0);
-  // int hours = floor(t/3600.0);
-
-  // snprintf(
-  //   buffer, sizeof(buffer),
-  //   "%d:%02d:%02d",
-  //   hours, minutes, seconds); //, (int)(fraction*100.0));
-
-  snprintf(buffer, sizeof(buffer), "%s", str.c_str());
-  
-  return buffer;
-}
-
 void MainGui()
 {
   AppUpdate();

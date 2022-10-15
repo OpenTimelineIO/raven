@@ -38,5 +38,4 @@ extern AppState appState;
 extern ImFont *gTechFont;
 extern ImFont *gIconFont;
 
-const char* TimecodeString(float t);
 std::string otio_error_string(otio::ErrorStatus const& error_status);
