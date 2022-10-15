@@ -18,7 +18,9 @@ struct AppState
   char file_path[ImGuiFs::MAX_PATH_BYTES];
   otio::SerializableObject::Retainer<otio::Timeline> timeline;
 
-  float playhead = 0.0f;
+  float scale = 100.0f;
+  float track_height = 30.0f;
+  otio::RationalTime playhead;
   uint32_t selection_start = 0;
   uint32_t selection_length = 1;
 
