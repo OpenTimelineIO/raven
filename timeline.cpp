@@ -95,14 +95,20 @@ void DrawTrack(otio::Track* track, int index, float scale, float full_width, flo
     ImGui::EndGroup();
 }
 
-bool DrawPlayheadTrack(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height)
+static bool _divisible(float t, float interval) {
+    float epsilon = interval / 1000000.0f;
+    float remainder = fmodf(t, interval);
+    return fabsf(remainder) < epsilon;
+}
+
+bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height)
 {
     bool moved_playhead = false;
     
     ImVec2 size(full_width, track_height);
     ImVec2 text_offset(7.0f, 5.0f);
     
-    ImGui::PushID("##PlayheadTrack");
+    ImGui::PushID("##DrawTimecodeTrack");
     ImGui::BeginGroup();
 
     ImGui::InvisibleButton("##empty", size);
@@ -122,22 +128,71 @@ bool DrawPlayheadTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     
     auto fill_color = IM_COL32(20, 20, 20, 255);
-    auto tick_color = IM_COL32(100, 100, 100, 255);
+    auto tick_color = IM_COL32(150, 150, 150, 255);
+    auto tick_label_color = IM_COL32(100, 100, 100, 255);
     auto frame_color = IM_COL32(0, 0, 0, 255);
     
     // background
     draw_list->AddRectFilled(p0, p1, fill_color);
     
+    // draw every frame?
+    float single_frame_width = scale / playhead.rate();
+    float tick_width = single_frame_width;
+    float min_tick_width = 30;
+    if (tick_width < min_tick_width) {
+        // every second?
+        tick_width = scale;
+        if (tick_width < min_tick_width) {
+            // every minute?
+            tick_width = scale * 60.0f;
+            if (tick_width < min_tick_width) {
+                // every hour
+                tick_width = scale * 60.0f * 60.0f;
+            }
+        }
+    }
+    // while (tick_width > min_tick_width*2 && tick_width > single_frame_width) {
+    //     tick_width /= 2;
+    // }
+    
+    // assert(_divisible(1, 1));
+    // assert(_divisible(1000, 1));
+    // assert(_divisible(1000, 10));
+    // assert(_divisible(1000, 100));
+    // assert(!_divisible(1001, 10));
+    // assert(!_divisible(999, 10));
+    // assert(!_divisible(1.0/24.0, 1));
+    // assert(!_divisible(1.0/24.0, 3600));
+    
     // tick marks - roughly every N pixels
-    float tick_width = 50.0f;
     float seconds_per_tick = tick_width / scale;
-    float snapped_seconds = ceilf(seconds_per_tick);
-    auto step = otio::RationalTime::from_seconds(snapped_seconds);
-    for (auto t=start; t<end; t+=step) {
+    auto snapped_start = otio::RationalTime::from_seconds(start.to_seconds() - fmodf(start.to_seconds(), seconds_per_tick), playhead.rate());
+    auto step = otio::RationalTime::from_seconds(seconds_per_tick, playhead.rate());
+    for (auto t=snapped_start; t<end; t+=step) {
         float x = (t - start).to_seconds() * scale;
         const ImVec2 tick_start = ImVec2(p0.x + x, p0.y + track_height/2);
         const ImVec2 tick_end = ImVec2(tick_start.x, tick_start.y + track_height);
         draw_list->AddLine(tick_start, tick_end, tick_color);
+        const ImVec2 tick_label_pos = ImVec2(p0.x + x + 7.0f, p0.y + track_height/2);
+        char tick_label[100];
+        char tick_unit = 'f';
+        int tick_value = 0;
+        float seconds = t.to_seconds();
+        if (_divisible(seconds, 3600.0f)) {
+            tick_unit = 'h';
+            tick_value = rint(seconds / 3600.0f);
+        }else if (_divisible(seconds, 60.0f)) {
+            tick_unit = 'm';
+            tick_value = rint(fmodf(seconds, 3600.0f));
+        }else if (_divisible(seconds, 1.0f)) {
+            tick_unit = 's';
+            tick_value = rint(fmodf(seconds, 60.0f));
+        }else{
+            tick_unit = 'f';
+            tick_value = rint(fmodf(seconds, 1.0f) * playhead.rate());
+        }
+        snprintf(tick_label, sizeof(tick_label), "%d%c", tick_value, tick_unit);
+        draw_list->AddText(tick_label_pos, tick_label_color, tick_label);
     }
 
     // outer frame
@@ -232,8 +287,8 @@ bool DrawTransportControls(otio::Timeline* timeline)
 
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100);
-    if (ImGui::SliderFloat("##Zoom", &appState.scale, 10.0f, 500.0f, "Zoom")) {
-        // scale
+    if (ImGui::SliderFloat("##Zoom", &appState.scale, 10.0f, 5000.0f, "Zoom")) {
+        moved_playhead = true;
     }
 
     ImGui::SameLine();
@@ -263,7 +318,6 @@ void DrawTimeline(otio::Timeline* timeline)
     otio::RationalTime start = timeline->global_start_time().value_or(otio::RationalTime());
     auto duration = timeline->duration();
     auto end = start + duration;
-    auto rate = duration.rate();
 
     // auto start_string = start.to_timecode();
     auto playhead_string = appState.playhead.to_timecode();
@@ -296,7 +350,7 @@ void DrawTimeline(otio::Timeline* timeline)
         ImGui::TableNextColumn();
         ImGui::Text("%s", playhead_string.c_str());
         ImGui::TableNextColumn();
-        if (DrawPlayheadTrack(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height)) {
+        if (DrawTimecodeTrack(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height)) {
             // scroll_to_playhead = true;
         }
         auto top = ImGui::GetItemRectMin();
