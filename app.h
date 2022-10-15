@@ -22,6 +22,7 @@ struct AppState
   float track_height = 30.0f;
   otio::RationalTime playhead;
   bool scroll_to_playhead = false;
+  bool snap_to_frame = true;
   uint32_t selection_start = 0;
   uint32_t selection_length = 1;
 

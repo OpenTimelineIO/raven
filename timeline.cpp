@@ -113,6 +113,9 @@ bool DrawPlayheadTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     {
         float mouse_x_widget = ImGui::GetIO().MousePos.x - p0.x;
         playhead = otio::RationalTime::from_seconds(mouse_x_widget / scale, playhead.rate());
+        if (appState.snap_to_frame) {
+            playhead = otio::RationalTime::from_frames(playhead.to_frames(), playhead.rate());
+        }
         moved_playhead = true;
     }
     
@@ -145,7 +148,6 @@ bool DrawPlayheadTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     
     return moved_playhead;
 }
-
 
 float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height, ImVec2 top)
 {
@@ -200,6 +202,9 @@ bool DrawTransportControls(otio::Timeline* timeline)
     auto rate = duration.rate();
     if (appState.playhead.rate() != rate) {
         appState.playhead = appState.playhead.rescaled_to(rate);
+        if (appState.snap_to_frame) {
+            appState.playhead = otio::RationalTime::from_frames(appState.playhead.to_frames(), appState.playhead.rate());
+        }
     }
 
     auto start_string = start.to_timecode();
@@ -216,6 +221,9 @@ bool DrawTransportControls(otio::Timeline* timeline)
     float playhead_seconds = appState.playhead.to_seconds();
     if (ImGui::SliderFloat("##Playhead", &playhead_seconds, 0.0f, duration.to_seconds(), playhead_string.c_str())) {
         appState.playhead = otio::RationalTime::from_seconds(playhead_seconds, appState.playhead.rate());
+        if (appState.snap_to_frame) {
+            appState.playhead = otio::RationalTime::from_frames(appState.playhead.to_frames(), appState.playhead.rate());
+        }
         moved_playhead = true;
     }
     
