@@ -44,3 +44,5 @@ std::string otio_error_string(otio::ErrorStatus const& error_status);
 void SelectObject(otio::SerializableObject* object);
 void SeekPlayhead(float seconds);
 void SnapPlayhead();
+void Log(const char* format, ...);
+void Message(const char* format, ...);

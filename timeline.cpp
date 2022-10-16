@@ -8,6 +8,7 @@
 #include <opentimelineio/transition.h>
 #include <opentimelineio/effect.h>
 #include <opentimelineio/marker.h>
+#include <opentimelineio/composable.h>
 
 // typedef struct TimelineWidgetCache {
 //     float duration = -1;
@@ -83,14 +84,22 @@ void DrawItem(otio::Item* item, float scale, float height)
     ImGui::PopID();
 }
 
-void DrawTransition(otio::Transition* transition, float scale, float left_x, float height)
+void DrawTransition(otio::Transition* transition, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto duration = transition->duration();
     float width = duration.to_seconds() * scale;
 
+    auto range_it = range_map.find(transition);
+    if (range_it == range_map.end()) {
+        // fall back to transition->trimmed_range_in_parent() ?
+        Log("Couldn't find %s in range map?!", transition->name().c_str());
+        assert(false);
+    }
+    auto item_range = range_it->second;    
+    
     ImVec2 size(width, height);
     ImVec2 render_pos(
-        transition->trimmed_range_in_parent()->start_time().to_seconds() * scale + left_x,
+        item_range.start_time().to_seconds() * scale + left_x,
         ImGui::GetCursorPosY()
     );
     ImVec2 text_offset(5.0f, 5.0f);
@@ -141,7 +150,7 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
     ImGui::SetCursorPos(old_pos);
 }
 
-void DrawEffects(otio::Item* item, float scale, float left_x, float height)
+void DrawEffects(otio::Item* item, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto effects = item->effects();
     if (effects.size() == 0) return;
@@ -149,9 +158,17 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height)
     auto duration = item->duration();
     float width = duration.to_seconds() * scale;
 
+    auto range_it = range_map.find(item);
+    if (range_it == range_map.end()) {
+        // fall back to item->trimmed_range_in_parent() ?
+        Log("Couldn't find %s in range map?!", item->name().c_str());
+        assert(false);
+    }
+    auto item_range = range_it->second;    
+
     ImVec2 size(width, height/2);
     ImVec2 render_pos(
-        item->trimmed_range_in_parent()->start_time().to_seconds() * scale + left_x,
+        item_range.start_time().to_seconds() * scale + left_x,
         ImGui::GetCursorPosY() + height/4
     );
     ImVec2 text_offset(5.0f, 5.0f);
@@ -240,15 +257,22 @@ ImU32 MarkerColor(std::string color)
     return IM_COL32(0x88, 0x88, 0x88, 0xff);
 }
 
-void DrawMarkers(otio::Item* item, float scale, float left_x, float height)
+void DrawMarkers(otio::Item* item, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto markers = item->markers();
     if (markers.size() == 0) return;
-
+    
     auto item_trimmed_start = item->trimmed_range().start_time();
     auto item_start_in_parent = otio::RationalTime();
     if (item->parent() != NULL) {
-        item_start_in_parent = item->trimmed_range_in_parent()->start_time();
+        auto range_it = range_map.find(item);
+        if (range_it == range_map.end()) {
+            // fall back to item->trimmed_range_in_parent() ?
+            Log("Couldn't find %s in range map?!", item->name().c_str());
+            assert(false);
+        }
+        auto item_range = range_it->second;    
+        item_start_in_parent = item_range.start_time();
     }
     
     for (const auto& marker : markers) {
@@ -384,21 +408,28 @@ void DrawTrack(otio::Track* track, int index, float scale, float left_x, float f
         }
     }
 
+    otio::ErrorStatus error_status;
+    auto range_map = track->range_of_all_children(&error_status);
+    if (otio::is_error(error_status)) {
+        Message("Error calculating timing: %s", otio_error_string(error_status).c_str());
+        assert(false);
+    }
+    
     for (const auto& child : track->children())
     {
         if (const auto& transition = dynamic_cast<otio::Transition*>(child.value)) {
-            DrawTransition(transition, scale, left_x, height);
+            DrawTransition(transition, scale, left_x, height, range_map);
         }
     }
 
     for (const auto& child : track->children())
     {
         if (const auto& item = dynamic_cast<otio::Item*>(child.value)) {
-            DrawEffects(item, scale, left_x, height);
-            DrawMarkers(item, scale, left_x, height);
+            DrawEffects(item, scale, left_x, height, range_map);
+            DrawMarkers(item, scale, left_x, height, range_map);
         }
     }
-                
+
     ImGui::EndGroup();
 }
 
@@ -590,7 +621,7 @@ bool DrawTransportControls(otio::Timeline* timeline)
 
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100);
-    if (ImGui::SliderFloat("##Zoom", &appState.scale, 10.0f, 5000.0f, "Zoom", ImGuiSliderFlags_Logarithmic)) {
+    if (ImGui::SliderFloat("##Zoom", &appState.scale, 0.5f, 5000.0f, "Zoom", ImGuiSliderFlags_Logarithmic)) {
         moved_playhead = true;
     }
     
@@ -677,7 +708,14 @@ void DrawTimeline(otio::Timeline* timeline)
         }
         auto top = ImGui::GetItemRectMin();
         ImGui::SetCursorPos(old_pos);
-        DrawMarkers(timeline->tracks(), appState.scale, left_x, appState.track_height);
+        // otio::ErrorStatus error_status;
+        // auto range_map = track->range_of_all_children(&error_status);
+        // if (otio::is_error(error_status)) {
+        //     Message("Error calculating timing: %s", otio_error_string(error_status).c_str());
+        //     assert(false);
+        // }
+        std::map<otio::Composable*, otio::TimeRange> empty_map;
+        DrawMarkers(timeline->tracks(), appState.scale, left_x, appState.track_height, empty_map);
 
         int index = video_tracks.size();
         for (auto i = video_tracks.rbegin(); i != video_tracks.rend(); ++i)
