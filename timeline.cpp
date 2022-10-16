@@ -6,6 +6,7 @@
 #include <opentimelineio/clip.h>
 #include <opentimelineio/gap.h>
 #include <opentimelineio/transition.h>
+#include <opentimelineio/effect.h>
 
 // typedef struct TimelineWidgetCache {
 //     float duration = -1;
@@ -93,13 +94,10 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
     );
     ImVec2 text_offset(5.0f, 5.0f);
     
-    std::string label_str; // = transition->name();
-    auto label_color = IM_COL32_WHITE;
     auto fill_color = IM_COL32(230, 230, 30, 120);
     auto selected_fill_color = IM_COL32(230, 230, 230, 120);
     auto frame_color = IM_COL32(230, 230, 30, 255);
     
-    //render_pos.x -= transition->out_offset().to_seconds() * scale;
     auto old_pos = ImGui::GetCursorPos();
     ImGui::SetCursorPos(render_pos);
     
@@ -108,11 +106,7 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
 
     // ImGui::InvisibleButton("##empty", size);
     ImGui::Dummy(size);
-    // if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-    // {
-    //     offset.x += ImGui::GetIO().MouseDelta.x;
-    //     offset.y += ImGui::GetIO().MouseDelta.y;
-    // }
+    
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
     // ImGui::SetItemAllowOverlap();
@@ -139,8 +133,88 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
     
     draw_list->AddRectFilled(p0, p1, fill_color);
     draw_list->AddLine(line_start, line_end, frame_color);
+    draw_list->AddRect(p0, p1, frame_color);
+    
+    ImGui::PopClipRect();
+    ImGui::EndGroup();
+    ImGui::PopID();
+    
+    ImGui::SetCursorPos(old_pos);
+}
+
+void DrawEffects(otio::Item* item, float scale, float left_x, float height)
+{
+    auto effects = item->effects();
+    if (effects.size() == 0) return;
+
+    auto duration = item->duration();
+    float width = duration.to_seconds() * scale;
+
+    ImVec2 size(width, height/2);
+    ImVec2 render_pos(
+        item->trimmed_range_in_parent()->start_time().to_seconds() * scale + left_x,
+        ImGui::GetCursorPosY() + height/4
+    );
+    ImVec2 text_offset(5.0f, 5.0f);
+    
+    std::string label_str;
+    for (const auto& effect : effects) {
+        if (label_str != "") label_str += ", ";
+        label_str += effect->name();
+    }
+    auto label_color = IM_COL32_WHITE;
+        
+    auto fill_color = IM_COL32(230, 30, 30, 120);
+    auto selected_fill_color = IM_COL32(230, 230, 30, 120);
+    auto frame_color = IM_COL32(230, 30, 30, 255);
+    
+    auto old_pos = ImGui::GetCursorPos();
+    ImGui::SetCursorPos(render_pos);
+    
+    ImGui::PushID(item);
+    ImGui::BeginGroup();
+
+    // ImGui::InvisibleButton("##empty", size);
+    ImGui::Dummy(size);
+    
+    ImVec2 p0 = ImGui::GetItemRectMin();
+    ImVec2 p1 = ImGui::GetItemRectMax();
+    // ImGui::SetItemAllowOverlap();
+    
+    const auto text_size = ImGui::CalcTextSize(label_str.c_str());
+    const ImVec2 text_pos = ImVec2(
+        p0.x + fmaxf(text_offset.x, width/2 - text_size.x/2),
+        p0.y + fmaxf(text_offset.y, height/4 - text_size.y/2)
+    );
+
+    if (ImGui::IsItemHovered()) {
+        frame_color = IM_COL32(200,0,0, 255);
+    }
+    if (effects.size() == 1) {
+        const auto& effect = effects[0];
+        if (ImGui::IsItemClicked()) {
+            SelectObject(effect);
+        }
+        if (appState.selected_object == effect) {
+            fill_color = selected_fill_color;
+            frame_color = IM_COL32(200,200,0, 255);
+        }
+    }else{
+        if (ImGui::IsItemClicked()) {
+            SelectObject(item);
+        }
+        if (appState.selected_object == item) {
+            fill_color = selected_fill_color;
+            frame_color = IM_COL32(200,200,0, 255);
+        }
+    }
+    
+    ImGui::PushClipRect(p0, p1, true);
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    draw_list->AddRectFilled(p0, p1, fill_color);
     if (label_str != "") {
-        // draw_list->AddText(text_pos, label_color, label_str.c_str());
+        draw_list->AddText(text_pos, label_color, label_str.c_str());
     }
     draw_list->AddRect(p0, p1, frame_color);
     
@@ -148,14 +222,10 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
     ImGui::EndGroup();
     ImGui::PopID();
     
-    ImGui::SetCursorPos(old_pos);    
+    ImGui::SetCursorPos(old_pos);
 }
 
-void DrawEffects(otio::Item* item, float scale, float height)
-{
-}
-
-void DrawMarkers(otio::Item* item, float scale, float height)
+void DrawMarkers(otio::Item* item, float scale, float left_x, float height)
 {
 }
 
@@ -170,7 +240,6 @@ void DrawTrackLabel(otio::Track* track, int index, float height)
     
     char label_str[200];
     snprintf(label_str, sizeof(label_str), "%c%d: %s", track->kind().c_str()[0], index, track->name().c_str());
-    // ImGui::Text("%c%d: %s", track->kind().c_str()[0], index, track->name().c_str());
 
     auto label_color = IM_COL32_WHITE;
     auto fill_color = IM_COL32(30, 30, 30, 255);
@@ -228,8 +297,8 @@ void DrawTrack(otio::Track* track, int index, float scale, float left_x, float f
     for (const auto& child : track->children())
     {
         if (const auto& item = dynamic_cast<otio::Item*>(child.value)) {
-            DrawEffects(item, scale, height);
-            DrawMarkers(item, scale, height);
+            DrawEffects(item, scale, left_x, height);
+            DrawMarkers(item, scale, left_x, height);
         }
     }
                 
@@ -260,7 +329,7 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
         float mouse_x_widget = ImGui::GetIO().MousePos.x - p0.x;
-        SeekPlayhead(mouse_x_widget / scale);
+        SeekPlayhead(mouse_x_widget / scale + start.to_seconds());
         moved_playhead = true;
     }
     
@@ -462,9 +531,7 @@ void DrawTimeline(otio::Timeline* timeline)
     auto duration = appState.playhead_limit.duration();
     auto end = appState.playhead_limit.end_time_exclusive();
 
-    // auto start_string = start.to_timecode();
     auto playhead_string = appState.playhead.to_timecode();
-    // auto end_string = end.to_timecode();
   
     auto video_tracks = timeline->video_tracks();
     auto audio_tracks = timeline->audio_tracks();
