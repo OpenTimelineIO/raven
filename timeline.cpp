@@ -7,6 +7,7 @@
 #include <opentimelineio/gap.h>
 #include <opentimelineio/transition.h>
 #include <opentimelineio/effect.h>
+#include <opentimelineio/marker.h>
 
 // typedef struct TimelineWidgetCache {
 //     float duration = -1;
@@ -110,8 +111,6 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
     // ImGui::SetItemAllowOverlap();
-    
-    const ImVec2 text_pos = ImVec2(p0.x + text_offset.x, p0.y + text_offset.y);
         
     if (ImGui::IsItemHovered()) {
         frame_color = IM_COL32(200,0,0, 255);
@@ -225,8 +224,106 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height)
     ImGui::SetCursorPos(old_pos);
 }
 
+ImU32 MarkerColor(std::string color)
+{
+    if (color == otio::Marker::Color::pink) return IM_COL32(0xff, 0x70, 0x70, 0xff);
+    if (color == otio::Marker::Color::red) return IM_COL32(0xff, 0x00, 0x00, 0xff);
+    if (color == otio::Marker::Color::orange) return IM_COL32(0xff, 0xa0, 0x00, 0xff);
+    if (color == otio::Marker::Color::yellow) return IM_COL32(0xff, 0xff, 0x00, 0xff);
+    if (color == otio::Marker::Color::green) return IM_COL32(0x00, 0xff, 0x00, 0xff);
+    if (color == otio::Marker::Color::cyan) return IM_COL32(0x00, 0xff, 0xff, 0xff);
+    if (color == otio::Marker::Color::blue) return IM_COL32(0x00, 0x00, 0xff, 0xff);
+    if (color == otio::Marker::Color::purple) return IM_COL32(0xa0, 0x00, 0xd0, 0xff);
+    if (color == otio::Marker::Color::magenta) return IM_COL32(0xff, 0x00, 0xff, 0xff);
+    if (color == otio::Marker::Color::black) return IM_COL32(0x00, 0x00, 0x00, 0xff);
+    if (color == otio::Marker::Color::white) return IM_COL32(0xff, 0xff, 0xff, 0xff);
+    return IM_COL32(0x88, 0x88, 0x88, 0xff);
+}
+
 void DrawMarkers(otio::Item* item, float scale, float left_x, float height)
 {
+    auto markers = item->markers();
+    if (markers.size() == 0) return;
+
+    auto item_trimmed_start = item->trimmed_range().start_time();
+    auto item_start_in_parent = otio::RationalTime();
+    if (item->parent() != NULL) {
+        item_start_in_parent = item->trimmed_range_in_parent()->start_time();
+    }
+    
+    for (const auto& marker : markers) {
+        auto range = marker->marked_range();
+        auto duration = range.duration();
+        auto start = range.start_time();
+        
+        const float arrow_width = height/4;
+        float width = duration.to_seconds() * scale + arrow_width;
+
+        ImVec2 size(width, arrow_width);
+        ImVec2 render_pos(
+            (item_start_in_parent + (start - item_trimmed_start)).to_seconds() * scale + left_x - arrow_width/2,
+            ImGui::GetCursorPosY()
+        );
+        // ImVec2 text_offset(5.0f, 5.0f);
+        
+        // std::string label_str;
+        // for (const auto& effect : effects) {
+        //     if (label_str != "") label_str += ", ";
+        //     label_str += effect->name();
+        // }
+        // auto label_color = IM_COL32_WHITE;
+
+        auto fill_color = MarkerColor(marker->color());
+        auto selected_fill_color = IM_COL32(230, 230, 30, 255);
+        // auto frame_color = IM_COL32(230, 30, 30, 255);
+        
+        auto old_pos = ImGui::GetCursorPos();
+        ImGui::SetCursorPos(render_pos);
+        
+        ImGui::PushID(item);
+        ImGui::BeginGroup();
+
+        // ImGui::InvisibleButton("##empty", size);
+        ImGui::Dummy(size);
+        
+        ImVec2 p0 = ImGui::GetItemRectMin();
+        ImVec2 p1 = ImGui::GetItemRectMax();
+        // ImGui::SetItemAllowOverlap();
+        
+        // const auto text_size = ImGui::CalcTextSize(label_str.c_str());
+        // const ImVec2 text_pos = ImVec2(
+        //     p0.x + fmaxf(text_offset.x, width/2 - text_size.x/2),
+        //     p0.y + fmaxf(text_offset.y, height/4 - text_size.y/2)
+        // );
+
+        if (ImGui::IsItemHovered()) {
+            // frame_color = IM_COL32(200,0,0, 255);
+        }
+        if (ImGui::IsItemClicked()) {
+            SelectObject(marker);
+        }
+        if (appState.selected_object == marker) {
+            fill_color = selected_fill_color;
+            // frame_color = IM_COL32(200,200,0, 255);
+        }
+        
+        ImGui::PushClipRect(p0, p1, true);
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        
+        draw_list->AddTriangleFilled(ImVec2(p0.x, p0.y), ImVec2(p0.x + arrow_width/2, p1.y), ImVec2(p0.x + arrow_width/2, p0.y), fill_color);
+        draw_list->AddRectFilled(ImVec2(p0.x + arrow_width/2, p0.y), ImVec2(p1.x - arrow_width/2, p1.y), fill_color);
+        draw_list->AddTriangleFilled(ImVec2(p1.x - arrow_width/2, p0.y), ImVec2(p1.x - arrow_width/2, p1.y), ImVec2(p1.x, p0.y), fill_color);
+        // if (label_str != "") {
+        //     draw_list->AddText(text_pos, label_color, label_str.c_str());
+        // }
+        // draw_list->AddRect(p0, p1, frame_color);
+        
+        ImGui::PopClipRect();
+        ImGui::EndGroup();
+        ImGui::PopID();
+        
+        ImGui::SetCursorPos(old_pos);
+    }
 }
 
 void DrawTrackLabel(otio::Track* track, int index, float height)
@@ -325,6 +422,7 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     ImGui::InvisibleButton("##empty", size);
     const ImVec2 p0 = ImGui::GetItemRectMin();
     const ImVec2 p1 = ImGui::GetItemRectMax();
+    ImGui::SetItemAllowOverlap();
     
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
@@ -482,7 +580,7 @@ bool DrawTransportControls(otio::Timeline* timeline)
 
     ImGui::SetNextItemWidth(-220);
     float playhead_seconds = appState.playhead.to_seconds();
-    if (ImGui::SliderFloat("##Playhead", &playhead_seconds, 0.0f, duration.to_seconds(), playhead_string.c_str())) {
+    if (ImGui::SliderFloat("##Playhead", &playhead_seconds, appState.playhead_limit.start_time().to_seconds(), appState.playhead_limit.end_time_exclusive().to_seconds(), playhead_string.c_str())) {
         SeekPlayhead(playhead_seconds);
         moved_playhead = true;
     }
@@ -573,10 +671,13 @@ void DrawTimeline(otio::Timeline* timeline)
         float left_x = ImGui::GetCursorPosX();
         // auto top = ImGui::GetCursorPos();
         
+        auto old_pos = ImGui::GetCursorPos();
         if (DrawTimecodeTrack(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height)) {
             // scroll_to_playhead = true;
         }
         auto top = ImGui::GetItemRectMin();
+        ImGui::SetCursorPos(old_pos);
+        DrawMarkers(timeline->tracks(), appState.scale, left_x, appState.track_height);
 
         int index = video_tracks.size();
         for (auto i = video_tracks.rbegin(); i != video_tracks.rend(); ++i)
