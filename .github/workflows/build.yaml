@@ -1,0 +1,197 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Windows:
+  #   runs-on: windows-2019
+  #   env:
+  #     VS_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\
+  #     MSBUILD_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\
+  #     # Until gh-actions allow us to use env variables inside other env variables (because we need %GITHUB_WORKSPACE%) we have to use relative path to imgui/examples/example_name directory.
+  #     SDL2_DIR: ..\..\SDL2-devel-2.0.10-VC\SDL2-2.0.10\
+  #     VULKAN_SDK: ..\..\vulkan-sdk-1.1.121.2\
+  #   steps:
+  #     - uses: actions/checkout@v1
+  #       with:
+  #         fetch-depth: 1
+
+  #     - name: Install Dependencies
+  #       shell: powershell
+  #       run: |
+  #         Invoke-WebRequest -Uri "https://www.libsdl.org/release/SDL2-devel-2.0.10-VC.zip" -OutFile "SDL2-devel-2.0.10-VC.zip"
+  #         Expand-Archive -Path SDL2-devel-2.0.10-VC.zip
+  #         Invoke-WebRequest -Uri "https://github.com/ocornut/imgui/files/3789205/vulkan-sdk-1.1.121.2.zip" -OutFile vulkan-sdk-1.1.121.2.zip
+  #         Expand-Archive -Path vulkan-sdk-1.1.121.2.zip
+
+  #     - name: Fix Projects
+  #       shell: powershell
+  #       run: |
+  #         # WARNING: This will need updating if toolset/sdk change in project files!
+  #         gci -recurse -filter "*.vcxproj" | ForEach-Object {
+  #           # Fix SDK and toolset for most samples.
+  #           (Get-Content $_.FullName) -Replace "<PlatformToolset>v110</PlatformToolset>","<PlatformToolset>v142</PlatformToolset>" | Set-Content -Path $_.FullName
+  #           (Get-Content $_.FullName) -Replace "<WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>","<WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>" | Set-Content -Path $_.FullName
+  #           # Fix SDK and toolset for samples that require newer SDK/toolset. At the moment it is only dx12.
+  #           (Get-Content $_.FullName) -Replace "<PlatformToolset>v140</PlatformToolset>","<PlatformToolset>v142</PlatformToolset>" | Set-Content -Path $_.FullName
+  #           (Get-Content $_.FullName) -Replace "<WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>","<WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>" | Set-Content -Path $_.FullName
+  #         }
+
+  #     # Not using matrix here because it would inflate job count too much. Check out and setup is done for every job and that makes build times way too long.
+  #     - name: Build Win32 example_glfw_opengl3
+  #       shell: cmd
+  #       run: '"%MSBUILD_PATH%\MSBuild.exe" raven.vcxproj /p:Platform=Win32 /p:Configuration=Release'
+  #       if: github.event_name == 'schedule'
+
+  #     - name: Build x64 example_glfw_opengl3
+  #       shell: cmd
+  #       run: '"%MSBUILD_PATH%\MSBuild.exe" raven.vcxproj /p:Platform=x64 /p:Configuration=Release'
+
+  Linux:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libglfw3-dev gcc-multilib g++-multilib libfreetype6-dev
+
+    - name: Build
+      run: make
+
+    - name: Check Product
+      run: |
+        ls -l raven
+        file raven
+
+    - name: Package Product
+      run: |
+        chmod +x raven
+        zip -r raven-linux.zip raven fonts
+
+    - name: Archive Product
+      uses: actions/upload-artifact@v1
+      with:
+        name: raven-linux.zip
+        path: raven-linux.zip
+
+  # Windows-Cross-Compile:
+  #   runs-on: ubuntu-18.04
+  #   steps:
+  #   - uses: actions/checkout@v1
+  #     with:
+  #       fetch-depth: 1
+
+  #   - name: Install Dependencies
+  #     run: |
+  #       sudo apt-get update
+  #       sudo apt-get install -y libglfw3-dev gcc-multilib g++-multilib libfreetype6-dev libasound2-dev
+  #       sudo apt-get install gcc-mingw-w64
+  #       sudo apt-get install g++-mingw-w64-x86-64
+
+  #   - name: Build
+  #     run: make XCOMPILE=Windows
+
+  #   - name: Check Product
+  #     run: |
+  #       ls -l raven.exe
+  #       file raven.exe
+
+  #   - name: Package Product
+  #     run: |
+  #       chmod +x raven.exe
+  #       zip -r raven-win.zip raven.exe fonts
+
+  #   - name: Archive Product
+  #     uses: actions/upload-artifact@v1
+  #     with:
+  #       name: raven-win.zip
+  #       path: raven-win.zip
+
+  MacOS:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+
+    - name: Install Dependencies
+      run: |
+        brew install glfw3
+
+    - name: Build
+      run: make
+
+    - name: Check Product
+      run: |
+        ls -l raven
+        file raven
+
+    - name: Package Product
+      run: |
+        chmod +x raven
+        zip -r raven-mac.zip raven fonts
+
+    - name: Archive Product
+      uses: actions/upload-artifact@v1
+      with:
+        name: raven-mac.zip
+        path: raven-mac.zip
+
+    # - run: |
+    #     pwd
+    #     ls -la
+
+  # iOS:
+  #   runs-on: macOS-latest
+  #   steps:
+  #   - uses: actions/checkout@v1
+  #     with:
+  #       fetch-depth: 1
+
+  #   - name: Build example_apple_metal
+  #     run: |
+  #       # Code signing is required, but we disable it because it is irrelevant for CI builds.
+  #       xcodebuild -project examples/example_apple_metal/example_apple_metal.xcodeproj -target example_apple_metal_ios CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+
+  Emscripten:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+
+    - name: Install Dependencies
+      run: |
+        wget -q https://github.com/emscripten-core/emsdk/archive/master.tar.gz
+        tar -xvf master.tar.gz
+        emsdk-master/emsdk update
+        emsdk-master/emsdk install latest
+        emsdk-master/emsdk activate latest
+
+    - name: Build
+      run: |
+        source emsdk-master/emsdk_env.sh
+        make -f Makefile.emscripten
+
+    - name: Check Product
+      run: |
+        ls -l raven_emscripten.*
+        file raven_emscripten.*
+
+    - name: Package Product
+      run: |
+        zip -r raven-web.zip raven_emscripten.*
+
+    - name: Archive Product
+      uses: actions/upload-artifact@v1
+      with:
+        name: raven-web.zip
+        path: raven-web.zip
