@@ -150,6 +150,15 @@ std::string otio_error_string(otio::ErrorStatus const& error_status)
         error_status.details;
 }
 
+void LoadTimeline(otio::Timeline* timeline)
+{
+  appState.timeline = timeline;
+  appState.playhead_limit = otio::TimeRange(
+    timeline->global_start_time().value_or(otio::RationalTime()),
+    timeline->duration()
+  );
+}
+
 void LoadFile(const char* path)
 {
   std::string input(path);
@@ -159,7 +168,7 @@ void LoadFile(const char* path)
     Message("Error loading %s: %s", path, otio_error_string(error_status).c_str());
     return;
   }
-  appState.timeline = timeline;
+  LoadTimeline(timeline);
   strncpy(appState.file_path, path, sizeof(appState.file_path));
   Message("Loaded %s", timeline->name().c_str());
 }
@@ -350,7 +359,38 @@ void DrawButtons(ImVec2 button_size)
   ImGui::SameLine();
   if (ImGui::Checkbox("Snap to Frame", &appState.snap_to_frame)) {
     if (appState.snap_to_frame) {
-        appState.playhead = otio::RationalTime::from_frames(appState.playhead.to_frames(), appState.playhead.rate());
+      SnapPlayhead();
     }
   }
+}
+
+void SelectObject(otio::SerializableObject* object)
+{
+  appState.selected_object = object;
+  
+  if (object == NULL) {
+    appState.selected_text = "No selection";
+  }else{
+    otio::ErrorStatus error_status;
+    appState.selected_text = object->to_json_string(&error_status);
+    if (otio::is_error(error_status)) {
+        appState.selected_text = otio_error_string(error_status);
+    }
+  }
+}
+
+void SeekPlayhead(float seconds)
+{
+  float lower_limit = appState.playhead_limit.start_time().to_seconds();
+  float upper_limit = appState.playhead_limit.end_time_exclusive().to_seconds();
+  seconds = fmaxf(lower_limit, fminf(upper_limit, seconds));
+  appState.playhead = otio::RationalTime::from_seconds(seconds, appState.playhead.rate());
+  if (appState.snap_to_frame) {
+    SnapPlayhead();
+  }
+}
+
+void SnapPlayhead()
+{
+  appState.playhead = otio::RationalTime::from_frames(appState.playhead.to_frames(), appState.playhead.rate());
 }

@@ -5,6 +5,7 @@
 
 #include <opentimelineio/clip.h>
 #include <opentimelineio/gap.h>
+#include <opentimelineio/transition.h>
 
 // typedef struct TimelineWidgetCache {
 //     float duration = -1;
@@ -16,15 +17,30 @@
 
 // GUI
 
-void DrawComposable(otio::Composable* composable, float scale, float height)
+void DrawItem(otio::Item* item, float scale, float height)
 {
-    auto duration = composable->duration();
+    auto duration = item->duration();
     float width = duration.to_seconds() * scale;
-    
+
     ImVec2 size(width, height);
-    ImVec2 offset(5.0f, 5.0f);
+    ImVec2 text_offset(5.0f, 5.0f);
     
-    ImGui::PushID(composable);
+    std::string label_str;
+    auto label_color = IM_COL32_WHITE;
+    auto fill_color = IM_COL32(255, 0, 255, 255);
+    auto selected_fill_color = IM_COL32(255, 0, 255, 255);
+    auto frame_color = IM_COL32(0,0,0, 255);
+    
+    if (auto gap = dynamic_cast<otio::Gap*>(item)) {
+        fill_color = IM_COL32(30, 30, 30, 255); 
+        selected_fill_color = IM_COL32(30, 30, 230, 255);
+    }else{
+        fill_color = IM_COL32(90, 90, 120, 255);
+        selected_fill_color = IM_COL32(90, 90, 220, 255);
+        label_str = item->name();
+    }
+    
+    ImGui::PushID(item);
     ImGui::BeginGroup();
 
     ImGui::InvisibleButton("##empty", size);
@@ -33,34 +49,26 @@ void DrawComposable(otio::Composable* composable, float scale, float height)
     //     offset.x += ImGui::GetIO().MouseDelta.x;
     //     offset.y += ImGui::GetIO().MouseDelta.y;
     // }
-    const ImVec2 p0 = ImGui::GetItemRectMin();
-    const ImVec2 p1 = ImGui::GetItemRectMax();
-    std::string label_str;
-    auto label_color = IM_COL32_WHITE;
-    const ImVec2 text_pos = ImVec2(p0.x + offset.x, p0.y + offset.y);
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    auto fill_color = IM_COL32(255, 0, 255, 255);
-    auto frame_color = IM_COL32(0,0,0, 255);
-    
+    ImVec2 p0 = ImGui::GetItemRectMin();
+    ImVec2 p1 = ImGui::GetItemRectMax();
+    ImGui::SetItemAllowOverlap();
+
+    const ImVec2 text_pos = ImVec2(p0.x + text_offset.x, p0.y + text_offset.y);
+        
     if (ImGui::IsItemHovered()) {
         frame_color = IM_COL32(200,0,0, 255);
     }
     if (ImGui::IsItemClicked()) {
-        otio::ErrorStatus error_status;
-        appState.selected_text = composable->to_json_string(&error_status);
-        if (otio::is_error(error_status)) {
-            appState.selected_text = otio_error_string(error_status);
-        }
+        SelectObject(item);
+    }
+    
+    if (appState.selected_object == item) {
+        fill_color = selected_fill_color;
+        frame_color = IM_COL32(200,200,0, 255);
     }
     
     ImGui::PushClipRect(p0, p1, true);
-    
-    if (auto gap = dynamic_cast<otio::Gap*>(composable)) {
-        fill_color = IM_COL32(30, 30, 30, 255); 
-    }else{
-        fill_color = IM_COL32(90, 90, 120, 255);
-        label_str = composable->name();    
-    }
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
     
     draw_list->AddRectFilled(p0, p1, fill_color);
     if (label_str != "") {
@@ -73,26 +81,158 @@ void DrawComposable(otio::Composable* composable, float scale, float height)
     ImGui::PopID();
 }
 
-void DrawTrackLabel(otio::Track* track, int index)
+void DrawTransition(otio::Transition* transition, float scale, float left_x, float height)
 {
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("%c%d: %s", track->kind().c_str()[0], index, track->name().c_str());
+    auto duration = transition->duration();
+    float width = duration.to_seconds() * scale;
+
+    ImVec2 size(width, height);
+    ImVec2 render_pos(
+        transition->trimmed_range_in_parent()->start_time().to_seconds() * scale + left_x,
+        ImGui::GetCursorPosY()
+    );
+    ImVec2 text_offset(5.0f, 5.0f);
+    
+    std::string label_str; // = transition->name();
+    auto label_color = IM_COL32_WHITE;
+    auto fill_color = IM_COL32(230, 230, 30, 120);
+    auto selected_fill_color = IM_COL32(230, 230, 230, 120);
+    auto frame_color = IM_COL32(230, 230, 30, 255);
+    
+    //render_pos.x -= transition->out_offset().to_seconds() * scale;
+    auto old_pos = ImGui::GetCursorPos();
+    ImGui::SetCursorPos(render_pos);
+    
+    ImGui::PushID(transition);
+    ImGui::BeginGroup();
+
+    // ImGui::InvisibleButton("##empty", size);
+    ImGui::Dummy(size);
+    // if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    // {
+    //     offset.x += ImGui::GetIO().MouseDelta.x;
+    //     offset.y += ImGui::GetIO().MouseDelta.y;
+    // }
+    ImVec2 p0 = ImGui::GetItemRectMin();
+    ImVec2 p1 = ImGui::GetItemRectMax();
+    // ImGui::SetItemAllowOverlap();
+    
+    const ImVec2 text_pos = ImVec2(p0.x + text_offset.x, p0.y + text_offset.y);
+        
+    if (ImGui::IsItemHovered()) {
+        frame_color = IM_COL32(200,0,0, 255);
+    }
+    if (ImGui::IsItemClicked()) {
+        SelectObject(transition);
+    }
+    
+    if (appState.selected_object == transition) {
+        fill_color = selected_fill_color;
+        frame_color = IM_COL32(200,200,0, 255);
+    }
+    
+    ImGui::PushClipRect(p0, p1, true);
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    const ImVec2 line_start = ImVec2(p0.x, p1.y);
+    const ImVec2 line_end = ImVec2(p1.x, p0.y);
+    
+    draw_list->AddRectFilled(p0, p1, fill_color);
+    draw_list->AddLine(line_start, line_end, frame_color);
+    if (label_str != "") {
+        // draw_list->AddText(text_pos, label_color, label_str.c_str());
+    }
+    draw_list->AddRect(p0, p1, frame_color);
+    
+    ImGui::PopClipRect();
+    ImGui::EndGroup();
+    ImGui::PopID();
+    
+    ImGui::SetCursorPos(old_pos);    
 }
 
-void DrawTrack(otio::Track* track, int index, float scale, float full_width, float height)
+void DrawEffects(otio::Item* item, float scale, float height)
 {
-    // char id[100];
-    // snprintf(id, sizeof(id), "%p", track);
-    //ImGui::BeginChild(id, ImVec2(full_width, height), false);
+}
+
+void DrawMarkers(otio::Item* item, float scale, float height)
+{
+}
+
+void DrawTrackLabel(otio::Track* track, int index, float height)
+{
+    float width = ImGui::GetContentRegionAvailWidth();
+    
+    ImGui::BeginGroup();
+    ImGui::AlignTextToFramePadding();
+    ImVec2 size(width, height);
+    ImGui::InvisibleButton("##empty", size);
+    
+    char label_str[200];
+    snprintf(label_str, sizeof(label_str), "%c%d: %s", track->kind().c_str()[0], index, track->name().c_str());
+    // ImGui::Text("%c%d: %s", track->kind().c_str()[0], index, track->name().c_str());
+
+    auto label_color = IM_COL32_WHITE;
+    auto fill_color = IM_COL32(30, 30, 30, 255);
+    auto selected_fill_color = IM_COL32(30, 30, 230, 255);
+    auto frame_color = IM_COL32(0,0,0, 255);
+    ImVec2 text_offset(5.0f, 5.0f);
+
+    if (ImGui::IsItemHovered()) {
+        frame_color = IM_COL32(200,0,0, 255);
+    }
+    if (ImGui::IsItemClicked()) {
+        SelectObject(track);
+    }
+    
+    if (appState.selected_object == track) {
+        frame_color = IM_COL32(200,200,0, 255);
+        fill_color = selected_fill_color;
+    }
+    
+    ImVec2 p0 = ImGui::GetItemRectMin();
+    ImVec2 p1 = ImGui::GetItemRectMax();
+    const ImVec2 text_pos = ImVec2(p0.x + text_offset.x, p0.y + text_offset.y);
+
+    ImGui::PushClipRect(p0, p1, true);
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    
+    draw_list->AddRectFilled(p0, p1, fill_color);
+    draw_list->AddText(text_pos, label_color, label_str);
+    draw_list->AddRect(p0, p1, frame_color);
+    
+    ImGui::PopClipRect();
+        
+    ImGui::EndGroup();
+}
+
+void DrawTrack(otio::Track* track, int index, float scale, float left_x, float full_width, float height)
+{
     ImGui::BeginGroup();
     
     for (const auto& child : track->children())
     {
-        DrawComposable(child, scale, height);
-        ImGui::SameLine(0,0);
+        if (const auto& item = dynamic_cast<otio::Item*>(child.value)) {
+            DrawItem(item, scale, height);
+            ImGui::SameLine(0,0);
+        }
     }
-    
-    //ImGui::EndChild();
+
+    for (const auto& child : track->children())
+    {
+        if (const auto& transition = dynamic_cast<otio::Transition*>(child.value)) {
+            DrawTransition(transition, scale, left_x, height);
+        }
+    }
+
+    for (const auto& child : track->children())
+    {
+        if (const auto& item = dynamic_cast<otio::Item*>(child.value)) {
+            DrawEffects(item, scale, height);
+            DrawMarkers(item, scale, height);
+        }
+    }
+                
     ImGui::EndGroup();
 }
 
@@ -106,7 +246,8 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
 {
     bool moved_playhead = false;
     
-    ImVec2 size(full_width, track_height);
+    float width = ImGui::GetContentRegionAvailWidth();
+    ImVec2 size(fmaxf(full_width, width), track_height);
     ImVec2 text_offset(7.0f, 5.0f);
     
     ImGui::PushID("##DrawTimecodeTrack");
@@ -119,10 +260,7 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
         float mouse_x_widget = ImGui::GetIO().MousePos.x - p0.x;
-        playhead = otio::RationalTime::from_seconds(mouse_x_widget / scale, playhead.rate());
-        if (appState.snap_to_frame) {
-            playhead = otio::RationalTime::from_frames(playhead.to_frames(), playhead.rate());
-        }
+        SeekPlayhead(mouse_x_widget / scale);
         moved_playhead = true;
     }
     
@@ -172,25 +310,25 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     for (auto t=snapped_start; t<end; t+=step) {
         float x = (t - start).to_seconds() * scale;
         const ImVec2 tick_start = ImVec2(p0.x + x, p0.y + track_height/2);
-        const ImVec2 tick_end = ImVec2(tick_start.x, tick_start.y + track_height);
+        const ImVec2 tick_end = ImVec2(tick_start.x, tick_start.y + track_height/2);
         draw_list->AddLine(tick_start, tick_end, tick_color);
-        const ImVec2 tick_label_pos = ImVec2(p0.x + x + 7.0f, p0.y + track_height/2);
+        const ImVec2 tick_label_pos = ImVec2(p0.x + x + text_offset.x, p0.y + text_offset.y);
         char tick_label[100];
         char tick_unit = 'f';
         int tick_value = 0;
         float seconds = t.to_seconds();
         if (_divisible(seconds, 3600.0f)) {
             tick_unit = 'h';
-            tick_value = rint(seconds / 3600.0f);
+            tick_value = floorf(seconds / 3600.0f);
         }else if (_divisible(seconds, 60.0f)) {
             tick_unit = 'm';
-            tick_value = rint(fmodf(seconds, 3600.0f));
+            tick_value = floorf(fmodf(seconds, 3600.0f) / 60.0f);
         }else if (_divisible(seconds, 1.0f)) {
             tick_unit = 's';
-            tick_value = rint(fmodf(seconds, 60.0f));
+            tick_value = floorf(fmodf(seconds, 60.0f));
         }else{
             tick_unit = 'f';
-            tick_value = rint(fmodf(seconds, 1.0f) * playhead.rate());
+            tick_value = floorf(fmodf(seconds, 1.0f) * playhead.rate());
         }
         snprintf(tick_label, sizeof(tick_label), "%d%c", tick_value, tick_unit);
         draw_list->AddText(tick_label_pos, tick_label_color, tick_label);
@@ -229,7 +367,7 @@ float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::Ratio
     auto playhead_fill_color = IM_COL32(0, 200, 0, 120);
     auto playhead_line_color = IM_COL32(200, 255, 200, 255);
 
-    std::string label_str = playhead.to_timecode();
+    std::string label_str = playhead.to_timecode() + " / " + playhead.to_time_string();
     auto label_color = IM_COL32_WHITE;
     const ImVec2 label_pos = ImVec2(playhead_max.x + text_offset.x, p0.y + text_offset.y);
     
@@ -252,14 +390,14 @@ bool DrawTransportControls(otio::Timeline* timeline)
 {
     bool moved_playhead = false;
 
-    otio::RationalTime start = timeline->global_start_time().value_or(otio::RationalTime());
-    auto duration = timeline->duration();
-    auto end = start + duration;
+    auto start = appState.playhead_limit.start_time();
+    auto duration = appState.playhead_limit.duration();
+    auto end = appState.playhead_limit.end_time_exclusive();
     auto rate = duration.rate();
     if (appState.playhead.rate() != rate) {
         appState.playhead = appState.playhead.rescaled_to(rate);
         if (appState.snap_to_frame) {
-            appState.playhead = otio::RationalTime::from_frames(appState.playhead.to_frames(), appState.playhead.rate());
+            SnapPlayhead();
         }
     }
 
@@ -276,10 +414,7 @@ bool DrawTransportControls(otio::Timeline* timeline)
     ImGui::SetNextItemWidth(-220);
     float playhead_seconds = appState.playhead.to_seconds();
     if (ImGui::SliderFloat("##Playhead", &playhead_seconds, 0.0f, duration.to_seconds(), playhead_string.c_str())) {
-        appState.playhead = otio::RationalTime::from_seconds(playhead_seconds, appState.playhead.rate());
-        if (appState.snap_to_frame) {
-            appState.playhead = otio::RationalTime::from_frames(appState.playhead.to_frames(), appState.playhead.rate());
-        }
+        SeekPlayhead(playhead_seconds);
         moved_playhead = true;
     }
     
@@ -288,7 +423,7 @@ bool DrawTransportControls(otio::Timeline* timeline)
 
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100);
-    if (ImGui::SliderFloat("##Zoom", &appState.scale, 10.0f, 5000.0f, "Zoom")) {
+    if (ImGui::SliderFloat("##Zoom", &appState.scale, 10.0f, 5000.0f, "Zoom", ImGuiSliderFlags_Logarithmic)) {
         moved_playhead = true;
     }
     
@@ -296,6 +431,19 @@ bool DrawTransportControls(otio::Timeline* timeline)
     ImGui::PopID();
     
     return moved_playhead;
+}
+
+void DrawTrackSplitter(const char* str_id, float splitter_size)
+{
+    int num_tracks_above = ImGui::TableGetRowIndex();
+    float sz1 = 0;
+    float sz2 = 0;
+    float width = ImGui::GetContentRegionAvailWidth();
+    float sz1_min = -(appState.track_height - 25.0f) * num_tracks_above;
+    if (Splitter(str_id, false, splitter_size, &sz1, &sz2, sz1_min, -100, width, 0)) {
+        appState.track_height = fminf(100.0f, fmaxf(25.0f, appState.track_height + (sz1 / num_tracks_above)));
+    }
+    ImGui::Dummy(ImVec2(splitter_size,splitter_size));
 }
 
 void DrawTimeline(otio::Timeline* timeline)
@@ -310,9 +458,9 @@ void DrawTimeline(otio::Timeline* timeline)
         return;
     }
     
-    otio::RationalTime start = timeline->global_start_time().value_or(otio::RationalTime());
-    auto duration = timeline->duration();
-    auto end = start + duration;
+    auto start = appState.playhead_limit.start_time();
+    auto duration = appState.playhead_limit.duration();
+    auto end = appState.playhead_limit.end_time_exclusive();
 
     // auto start_string = start.to_timecode();
     auto playhead_string = appState.playhead.to_timecode();
@@ -326,8 +474,11 @@ void DrawTimeline(otio::Timeline* timeline)
     float full_width = duration.to_seconds() * appState.scale;
     float full_height = ImGui::GetContentRegionAvail().y - ImGui::GetFrameHeightWithSpacing();
 
+    static ImVec2 cell_padding(2.0f, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, cell_padding);
     int flags =
         ImGuiTableFlags_SizingFixedFit |
+        ImGuiTableFlags_Resizable |
         ImGuiTableFlags_NoSavedSettings |
         ImGuiTableFlags_BordersInnerV |
         ImGuiTableFlags_ScrollX |
@@ -335,6 +486,14 @@ void DrawTimeline(otio::Timeline* timeline)
         0;
     if (ImGui::BeginTable("Tracks", 2, flags))
     {
+        ImGui::TableSetupColumn("Track");
+        ImGui::TableSetupColumn("Composition", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize);
+        if (ImGui::GetFrameCount() > 1) {  // crash if we call this on the 1st frame?!
+            // We allow the 1st column to be user-resizable, but
+            // we want the 2nd column to always fit the timeline content.
+            // Add some padding, so you can read the playhead label when it sticks off the end.
+            ImGui::TableSetColumnWidth(1, fmaxf(0.0f, full_width) + 200.0f);
+        }
         // Always show the track labels & the playhead track
         ImGui::TableSetupScrollFreeze(1, 1);
         
@@ -342,6 +501,11 @@ void DrawTimeline(otio::Timeline* timeline)
         ImGui::TableNextColumn();
         ImGui::Text("%s", playhead_string.c_str());
         ImGui::TableNextColumn();
+
+        // Remember the left edge, so that we can pass this into DrawTrack for overlays.
+        float left_x = ImGui::GetCursorPosX();
+        // auto top = ImGui::GetCursorPos();
+        
         if (DrawTimecodeTrack(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height)) {
             // scroll_to_playhead = true;
         }
@@ -354,10 +518,10 @@ void DrawTimeline(otio::Timeline* timeline)
             const auto& video_track = *i;
             ImGui::TableNextRow(ImGuiTableRowFlags_None, appState.track_height);
             ImGui::TableNextColumn();
-            DrawTrackLabel(video_track, index);
+            DrawTrackLabel(video_track, index, appState.track_height);
                     // ImGui::Selectable(label, &selected[i]); // FIXME-TABLE: Selection overlap
             ImGui::TableNextColumn();
-            DrawTrack(video_track, index, appState.scale, full_width, appState.track_height);
+            DrawTrack(video_track, index, appState.scale, left_x, full_width, appState.track_height);
             index--;
         }
 
@@ -367,24 +531,18 @@ void DrawTimeline(otio::Timeline* timeline)
         
         ImGui::TableNextRow(ImGuiTableRowFlags_None, splitter_size);
         ImGui::TableNextColumn();
-
-        int num_tracks_above = video_tracks.size() + 1;
-        float sz1 = 0;
-        float sz2 = 0;
-        float sz1_min = -(appState.track_height - 25.0f) * num_tracks_above;
-        if (Splitter(false, splitter_size, &sz1, &sz2, sz1_min, -100, full_width, 0)) {
-            appState.track_height = fminf(100.0f, fmaxf(25.0f, appState.track_height + (sz1 / num_tracks_above)));
-        }
-        ImGui::Dummy(ImVec2(splitter_size,splitter_size));
+        DrawTrackSplitter("##SplitterCol1", splitter_size);
+        ImGui::TableNextColumn();
+        DrawTrackSplitter("##SplitterCol2", splitter_size);
         
         index = 1;
         for (const auto& audio_track : audio_tracks)
         {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, appState.track_height);
             ImGui::TableNextColumn();
-            DrawTrackLabel(audio_track, index);
+            DrawTrackLabel(audio_track, index, appState.track_height);
             ImGui::TableNextColumn();
-            DrawTrack(audio_track, index, appState.scale, full_width, appState.track_height);
+            DrawTrack(audio_track, index, appState.scale, left_x, full_width, appState.track_height);
             index++;
         }
         
@@ -402,4 +560,5 @@ void DrawTimeline(otio::Timeline* timeline)
         
         ImGui::EndTable();
     }
+    ImGui::PopStyleVar();
 }
