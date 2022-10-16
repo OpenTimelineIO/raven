@@ -685,11 +685,12 @@ void DrawTimeline(otio::Timeline* timeline)
         {
             const auto& video_track = *i;
             ImGui::TableNextRow(ImGuiTableRowFlags_None, appState.track_height);
-            ImGui::TableNextColumn();
-            DrawTrackLabel(video_track, index, appState.track_height);
-                    // ImGui::Selectable(label, &selected[i]); // FIXME-TABLE: Selection overlap
-            ImGui::TableNextColumn();
-            DrawTrack(video_track, index, appState.scale, left_x, full_width, appState.track_height);
+            if (ImGui::TableNextColumn()) {
+                DrawTrackLabel(video_track, index, appState.track_height);
+            }
+            if (ImGui::TableNextColumn()) {
+                DrawTrack(video_track, index, appState.scale, left_x, full_width, appState.track_height);
+            }
             index--;
         }
 
@@ -707,10 +708,12 @@ void DrawTimeline(otio::Timeline* timeline)
         for (const auto& audio_track : audio_tracks)
         {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, appState.track_height);
-            ImGui::TableNextColumn();
-            DrawTrackLabel(audio_track, index, appState.track_height);
-            ImGui::TableNextColumn();
-            DrawTrack(audio_track, index, appState.scale, left_x, full_width, appState.track_height);
+            if (ImGui::TableNextColumn()) {
+                DrawTrackLabel(audio_track, index, appState.track_height);
+            }
+            if (ImGui::TableNextColumn()) {
+                DrawTrack(audio_track, index, appState.scale, left_x, full_width, appState.track_height);
+            }
             index++;
         }
         
