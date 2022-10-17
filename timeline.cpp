@@ -10,15 +10,6 @@
 #include <opentimelineio/marker.h>
 #include <opentimelineio/composable.h>
 
-// typedef struct TimelineWidgetCache {
-//     float duration = -1;
-// } TimelineWidgetCache;
-// TimelineWidgetCache cache;
-
-// Accessors & helpers
-
-
-// GUI
 
 void DrawItem(otio::Item* item, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
@@ -27,7 +18,6 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
 
     auto range_it = range_map.find(item);
     if (range_it == range_map.end()) {
-        // fall back to item->trimmed_range_in_parent() ?
         Log("Couldn't find %s in range map?!", item->name().c_str());
         assert(false);
     }
@@ -40,19 +30,19 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
     );
     ImVec2 text_offset(5.0f, 5.0f);
 
-    std::string label_str;
-    auto label_color = IM_COL32_WHITE;
-    auto fill_color = IM_COL32(255, 0, 255, 255);
-    auto selected_fill_color = IM_COL32(255, 0, 255, 255);
-    auto frame_color = IM_COL32(0,0,0, 255);
-    
+    std::string label_str = item->name();
+    auto label_color = appTheme.colors[AppThemeCol_Label];
+    auto fill_color = appTheme.colors[AppThemeCol_Item];
+    auto selected_fill_color = appTheme.colors[AppThemeCol_ItemSelected];
+    auto hover_fill_color = appTheme.colors[AppThemeCol_ItemHovered];
+    bool fancy_corners = true;
+
     if (auto gap = dynamic_cast<otio::Gap*>(item)) {
-        fill_color = IM_COL32(30, 30, 30, 255); 
-        selected_fill_color = IM_COL32(30, 30, 230, 255);
-    }else{
-        fill_color = IM_COL32(90, 90, 120, 255);
-        selected_fill_color = IM_COL32(90, 90, 220, 255);
-        label_str = item->name();
+        fill_color = appTheme.colors[AppThemeCol_Background];
+        selected_fill_color = appTheme.colors[AppThemeCol_GapSelected];
+        hover_fill_color = appTheme.colors[AppThemeCol_GapHovered];
+        label_str = "";
+        fancy_corners = false;
     }
     
     auto old_pos = ImGui::GetCursorPos();
@@ -76,7 +66,7 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
     // }
 
     if (ImGui::IsItemHovered()) {
-        frame_color = IM_COL32(200,0,0, 255);
+        fill_color = hover_fill_color;
     }
     if (ImGui::IsItemClicked()) {
         SelectObject(item);
@@ -84,22 +74,24 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
     
     if (appState.selected_object == item) {
         fill_color = selected_fill_color;
-        frame_color = IM_COL32(200,200,0, 255);
     }
     
     ImGui::PushClipRect(p0, p1, true);
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     
-    const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
-    const float corner_radius = 5.0f;
-    draw_list->AddRectFilled(p0, p1, fill_color, corner_radius, corners_tl_br);
+    if (fancy_corners) {
+        const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
+        const float corner_radius = 5.0f;
+        draw_list->AddRectFilled(p0, p1, fill_color, corner_radius, corners_tl_br);
+    }else{
+        draw_list->AddRectFilled(p0, p1, fill_color);
+    }
     if (width > text_offset.x*2) {
         const ImVec2 text_pos = ImVec2(p0.x + text_offset.x, p0.y + text_offset.y);
         if (label_str != "") {
             draw_list->AddText(text_pos, label_color, label_str.c_str());
         }
     }
-    // draw_list->AddRect(p0, p1, frame_color);
     
     ImGui::PopClipRect();
     ImGui::EndGroup();
@@ -115,23 +107,23 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
 
     auto range_it = range_map.find(transition);
     if (range_it == range_map.end()) {
-        // fall back to transition->trimmed_range_in_parent() ?
         Log("Couldn't find %s in range map?!", transition->name().c_str());
         assert(false);
     }
     auto item_range = range_it->second;    
-    
+
     ImVec2 size(width, height);
     ImVec2 render_pos(
         item_range.start_time().to_seconds() * scale + left_x,
         ImGui::GetCursorPosY()
     );
     ImVec2 text_offset(5.0f, 5.0f);
-    
-    auto fill_color = IM_COL32(230, 230, 30, 120);
-    auto selected_fill_color = IM_COL32(230, 230, 230, 120);
-    auto frame_color = IM_COL32(230, 230, 30, 255);
-    
+
+    auto fill_color = appTheme.colors[AppThemeCol_Transition];
+    auto line_color = appTheme.colors[AppThemeCol_TransitionLine];
+    auto selected_fill_color = appTheme.colors[AppThemeCol_TransitionSelected];
+    auto hover_fill_color = appTheme.colors[AppThemeCol_TransitionHovered];
+
     auto old_pos = ImGui::GetCursorPos();
     ImGui::SetCursorPos(render_pos);
     
@@ -140,23 +132,22 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
 
     // ImGui::InvisibleButton("##empty", size);
     ImGui::Dummy(size);
-    
+
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
     // ImGui::SetItemAllowOverlap();
-        
+
     if (ImGui::IsItemHovered()) {
-        frame_color = IM_COL32(200,0,0, 255);
+        fill_color = hover_fill_color;
     }
     if (ImGui::IsItemClicked()) {
         SelectObject(transition);
     }
-    
+
     if (appState.selected_object == transition) {
         fill_color = selected_fill_color;
-        frame_color = IM_COL32(200,200,0, 255);
     }
-    
+
     ImGui::PushClipRect(p0, p1, true);
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
@@ -166,13 +157,12 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
     const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
     const float corner_radius = height/2;
     draw_list->AddRectFilled(p0, p1, fill_color, corner_radius, corners_tl_br);
-    draw_list->AddLine(line_start, line_end, frame_color);
-    // draw_list->AddRect(p0, p1, frame_color);
-    
+    draw_list->AddLine(line_start, line_end, line_color);
+
     ImGui::PopClipRect();
     ImGui::EndGroup();
     ImGui::PopID();
-    
+
     ImGui::SetCursorPos(old_pos);
 }
 
@@ -195,7 +185,6 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
 
     auto range_it = range_map.find(item);
     if (range_it == range_map.end()) {
-        // fall back to item->trimmed_range_in_parent() ?
         Log("Couldn't find %s in range map?!", item->name().c_str());
         assert(false);
     }
@@ -208,11 +197,10 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
         ImGui::GetCursorPosY() + height/4
     );
 
-    auto label_color = IM_COL32_WHITE;
-        
-    auto fill_color = IM_COL32(230, 30, 30, 120);
-    auto selected_fill_color = IM_COL32(230, 230, 30, 120);
-    auto frame_color = IM_COL32(230, 30, 30, 255);
+    auto label_color = appTheme.colors[AppThemeCol_Label];
+    auto fill_color = appTheme.colors[AppThemeCol_Effect];
+    auto selected_fill_color = appTheme.colors[AppThemeCol_EffectSelected];
+    auto hover_fill_color = appTheme.colors[AppThemeCol_EffectHovered];
     
     auto old_pos = ImGui::GetCursorPos();
     ImGui::SetCursorPos(render_pos);
@@ -228,7 +216,7 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
     // ImGui::SetItemAllowOverlap();
     
     if (ImGui::IsItemHovered()) {
-        frame_color = IM_COL32(200,0,0, 255);
+        fill_color = hover_fill_color;
     }
     if (effects.size() == 1) {
         const auto& effect = effects[0];
@@ -237,7 +225,6 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
         }
         if (appState.selected_object == effect) {
             fill_color = selected_fill_color;
-            frame_color = IM_COL32(200,200,0, 255);
         }
     }else{
         if (ImGui::IsItemClicked()) {
@@ -245,7 +232,6 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
         }
         if (appState.selected_object == item) {
             fill_color = selected_fill_color;
-            frame_color = IM_COL32(200,200,0, 255);
         }
     }
     
@@ -255,14 +241,11 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
     draw_list->AddRectFilled(p0, p1, fill_color);
     if (width > text_size.x*2 && label_str != "") {
         const ImVec2 text_pos = ImVec2(
-            // p0.x + fmaxf(text_offset.x, width/2 - text_size.x/2),
-            // p0.y + fmaxf(text_offset.y, height/4 - text_size.y/2)
             p0.x + width/2 - text_size.x/2,
             p0.y + height/4 - text_size.y/2
         );
         draw_list->AddText(text_pos, label_color, label_str.c_str());
     }
-    // draw_list->AddRect(p0, p1, frame_color);
     
     ImGui::PopClipRect();
     ImGui::EndGroup();
@@ -297,19 +280,18 @@ void DrawMarkers(otio::Item* item, float scale, float left_x, float height, std:
     if (item->parent() != NULL) {
         auto range_it = range_map.find(item);
         if (range_it == range_map.end()) {
-            // fall back to item->trimmed_range_in_parent() ?
             Log("Couldn't find %s in range map?!", item->name().c_str());
             assert(false);
         }
         auto item_range = range_it->second;    
         item_start_in_parent = item_range.start_time();
     }
-    
+
     for (const auto& marker : markers) {
         auto range = marker->marked_range();
         auto duration = range.duration();
         auto start = range.start_time();
-        
+
         const float arrow_width = height/4;
         float width = duration.to_seconds() * scale + arrow_width;
 
@@ -318,22 +300,14 @@ void DrawMarkers(otio::Item* item, float scale, float left_x, float height, std:
             (item_start_in_parent + (start - item_trimmed_start)).to_seconds() * scale + left_x - arrow_width/2,
             ImGui::GetCursorPosY()
         );
-        // ImVec2 text_offset(5.0f, 5.0f);
-        
-        // std::string label_str;
-        // for (const auto& effect : effects) {
-        //     if (label_str != "") label_str += ", ";
-        //     label_str += effect->name();
-        // }
-        // auto label_color = IM_COL32_WHITE;
 
         auto fill_color = MarkerColor(marker->color());
-        auto selected_fill_color = IM_COL32(230, 230, 30, 255);
-        // auto frame_color = IM_COL32(230, 30, 30, 255);
-        
+        auto selected_fill_color = appTheme.colors[AppThemeCol_MarkerSelected];
+        auto hover_fill_color = appTheme.colors[AppThemeCol_MarkerHovered];
+
         auto old_pos = ImGui::GetCursorPos();
         ImGui::SetCursorPos(render_pos);
-        
+
         ImGui::PushID(item);
         ImGui::BeginGroup();
 
@@ -343,39 +317,28 @@ void DrawMarkers(otio::Item* item, float scale, float left_x, float height, std:
         ImVec2 p0 = ImGui::GetItemRectMin();
         ImVec2 p1 = ImGui::GetItemRectMax();
         // ImGui::SetItemAllowOverlap();
-        
-        // const auto text_size = ImGui::CalcTextSize(label_str.c_str());
-        // const ImVec2 text_pos = ImVec2(
-        //     p0.x + fmaxf(text_offset.x, width/2 - text_size.x/2),
-        //     p0.y + fmaxf(text_offset.y, height/4 - text_size.y/2)
-        // );
 
         if (ImGui::IsItemHovered()) {
-            // frame_color = IM_COL32(200,0,0, 255);
+            fill_color = hover_fill_color;
         }
         if (ImGui::IsItemClicked()) {
             SelectObject(marker);
         }
         if (appState.selected_object == marker) {
             fill_color = selected_fill_color;
-            // frame_color = IM_COL32(200,200,0, 255);
         }
-        
+
         ImGui::PushClipRect(p0, p1, true);
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        
+
         draw_list->AddTriangleFilled(ImVec2(p0.x, p0.y), ImVec2(p0.x + arrow_width/2, p1.y), ImVec2(p0.x + arrow_width/2, p0.y), fill_color);
         draw_list->AddRectFilled(ImVec2(p0.x + arrow_width/2, p0.y), ImVec2(p1.x - arrow_width/2, p1.y), fill_color);
         draw_list->AddTriangleFilled(ImVec2(p1.x - arrow_width/2, p0.y), ImVec2(p1.x - arrow_width/2, p1.y), ImVec2(p1.x, p0.y), fill_color);
-        // if (label_str != "") {
-        //     draw_list->AddText(text_pos, label_color, label_str.c_str());
-        // }
-        // draw_list->AddRect(p0, p1, frame_color);
-        
+
         ImGui::PopClipRect();
         ImGui::EndGroup();
         ImGui::PopID();
-        
+
         ImGui::SetCursorPos(old_pos);
     }
 }
@@ -392,21 +355,21 @@ void DrawTrackLabel(otio::Track* track, int index, float height)
     char label_str[200];
     snprintf(label_str, sizeof(label_str), "%c%d: %s", track->kind().c_str()[0], index, track->name().c_str());
 
-    auto label_color = IM_COL32_WHITE;
-    auto fill_color = IM_COL32(30, 30, 30, 255);
-    auto selected_fill_color = IM_COL32(30, 30, 230, 255);
-    auto frame_color = IM_COL32(0,0,0, 255);
+    auto label_color = appTheme.colors[AppThemeCol_Label];
+    auto fill_color = appTheme.colors[AppThemeCol_Track];
+    auto selected_fill_color = appTheme.colors[AppThemeCol_TrackSelected];
+    auto hover_fill_color = appTheme.colors[AppThemeCol_TrackHovered];
+
     ImVec2 text_offset(5.0f, 5.0f);
 
     if (ImGui::IsItemHovered()) {
-        frame_color = IM_COL32(200,0,0, 255);
+        fill_color = hover_fill_color;
     }
     if (ImGui::IsItemClicked()) {
         SelectObject(track);
     }
     
     if (appState.selected_object == track) {
-        frame_color = IM_COL32(200,200,0, 255);
         fill_color = selected_fill_color;
     }
     
@@ -419,7 +382,6 @@ void DrawTrackLabel(otio::Track* track, int index, float height)
     
     draw_list->AddRectFilled(p0, p1, fill_color);
     draw_list->AddText(text_pos, label_color, label_str);
-    // draw_list->AddRect(p0, p1, frame_color);
     
     ImGui::PopClipRect();
         
@@ -471,11 +433,11 @@ static bool _divisible(float t, float interval) {
 bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height)
 {
     bool moved_playhead = false;
-    
+
     float width = ImGui::GetContentRegionAvailWidth();
     ImVec2 size(fmaxf(full_width, width), track_height);
     ImVec2 text_offset(7.0f, 5.0f);
-    
+
     ImGui::PushID("##DrawTimecodeTrack");
     ImGui::BeginGroup();
 
@@ -483,24 +445,24 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     const ImVec2 p0 = ImGui::GetItemRectMin();
     const ImVec2 p1 = ImGui::GetItemRectMax();
     ImGui::SetItemAllowOverlap();
-    
+
     if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
         float mouse_x_widget = ImGui::GetIO().MousePos.x - p0.x;
         SeekPlayhead(mouse_x_widget / scale + start.to_seconds());
         moved_playhead = true;
     }
-    
+
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    
-    auto fill_color = IM_COL32(20, 20, 20, 255);
-    auto tick_color = IM_COL32(150, 150, 150, 255);
-    auto tick_label_color = IM_COL32(100, 100, 100, 255);
-    auto frame_color = IM_COL32(0, 0, 0, 255);
-    
+
+    auto fill_color = appTheme.colors[AppThemeCol_Background];
+    auto tick_color = appTheme.colors[AppThemeCol_TickMajor];
+    // auto tick2_color = appTheme.colors[AppThemeCol_TickMinor];
+    auto tick_label_color = appTheme.colors[AppThemeCol_Label];
+
     // background
     draw_list->AddRectFilled(p0, p1, fill_color);
-    
+
     // draw every frame?
     float single_frame_width = scale / playhead.rate();
     float tick_width = single_frame_width;
@@ -520,7 +482,7 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     // while (tick_width > min_tick_width*2 && tick_width > single_frame_width) {
     //     tick_width /= 2;
     // }
-    
+
     // assert(_divisible(1, 1));
     // assert(_divisible(1000, 1));
     // assert(_divisible(1000, 10));
@@ -529,7 +491,7 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     // assert(!_divisible(999, 10));
     // assert(!_divisible(1.0/24.0, 1));
     // assert(!_divisible(1.0/24.0, 3600));
-    
+
     // tick marks - roughly every N pixels
     float seconds_per_tick = tick_width / scale;
     auto snapped_start = otio::RationalTime::from_seconds(start.to_seconds() - fmodf(start.to_seconds(), seconds_per_tick), playhead.rate());
@@ -561,12 +523,9 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
         draw_list->AddText(tick_label_pos, tick_label_color, tick_label);
     }
 
-    // outer frame
-    // draw_list->AddRect(p0, p1, frame_color);
-    
     ImGui::EndGroup();
     ImGui::PopID();
-    
+
     return moved_playhead;
 }
 
@@ -591,17 +550,13 @@ float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::Ratio
     const ImVec2 playhead_max = ImVec2(playhead_pos.x + playhead_size.x, playhead_pos.y + playhead_size.y);
     const ImVec2 playhead_line_start = playhead_pos;
     const ImVec2 playhead_line_end = ImVec2(playhead_pos.x, playhead_pos.y + full_height);
-    auto playhead_fill_color = IM_COL32(0, 200, 0, 120);
-    auto playhead_line_color = IM_COL32(200, 255, 200, 255);
+    auto playhead_fill_color = appTheme.colors[AppThemeCol_Playhead];
+    auto playhead_line_color = appTheme.colors[AppThemeCol_PlayheadLine];
 
     std::string label_str = playhead.to_timecode() + " / " + playhead.to_time_string();
-    auto label_color = IM_COL32_WHITE;
+    auto label_color = appTheme.colors[AppThemeCol_Label];
     const ImVec2 label_pos = ImVec2(playhead_max.x + text_offset.x, p0.y + text_offset.y);
     
-    // if (ImGui::IsItemHovered()) {
-    //     playhead_fill_color = IM_COL32(100, 200, 100, 255);
-    // }
-        
     // playhead
     draw_list->AddRectFilled(playhead_pos, playhead_max, playhead_fill_color);
     draw_list->AddLine(playhead_line_start, playhead_line_end, playhead_line_color);
@@ -684,7 +639,7 @@ void DrawTimeline(otio::Timeline* timeline)
         ImGui::EndGroup();
         return;
     }
-    
+
     auto start = appState.playhead_limit.start_time();
     auto duration = appState.playhead_limit.duration();
     auto end = appState.playhead_limit.end_time_exclusive();
@@ -701,6 +656,7 @@ void DrawTimeline(otio::Timeline* timeline)
 
     static ImVec2 cell_padding(2.0f, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, cell_padding);
+
     int flags =
         ImGuiTableFlags_SizingFixedFit |
         ImGuiTableFlags_Resizable |

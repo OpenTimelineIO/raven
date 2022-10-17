@@ -22,12 +22,14 @@
 
 void DrawButtons(ImVec2 buttonSize);
 
+#define DEFINE_APP_THEME_NAMES
 #include "app.h"
 #include "timeline.h"
 
 const char *app_name = "Raven";
 
 AppState appState;
+AppTheme appTheme;
 
 ImFont *gTechFont = nullptr;
 ImFont *gIconFont = nullptr;
@@ -142,6 +144,15 @@ void ApplyAppStyle()
   colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
   colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.04f, 0.10f, 0.09f, 0.51f);
   */
+  
+  // for (int i=0; i< AppThemeCol_COUNT; i++) {
+  //   appTheme.colors[i] = IM_COL32(rand()%0xff, rand()%0xff, rand()%0xff, 255);
+  // }
+  // appTheme.colors[AppThemeCol_Background] = IM_COL32(20, 20, 20, 255);
+  // appTheme.colors[AppThemeCol_GapHovered] = IM_COL32(50, 50, 50, 255);
+  // appTheme.colors[AppThemeCol_GapSelected] = IM_COL32(100, 100, 200, 255);
+  
+  #include "theme.inc"
 }
 
 std::string otio_error_string(otio::ErrorStatus const& error_status)
@@ -323,6 +334,23 @@ void MainGui()
   }
 }
 
+void SaveTheme()
+{
+  FILE* file = fopen("theme.inc", "w");
+  for (int i=0; i<AppThemeCol_COUNT; i++) {
+    const char *fullname = AppThemeColor_Names[i];
+    char name[100];
+    char *n;
+    const char *f;
+    for (f=fullname, n=name; *f; f++,n++) {
+      if (*f==' ') f++; // skip spaces
+      *n = *f;
+    }
+    *n=0;
+    fprintf(file, "appTheme.colors[AppThemeCol_%s] = 0x%08X;\n", name, appTheme.colors[i]);
+  }
+  fclose(file);
+}
 
 void DrawButtons(ImVec2 button_size)
 {
@@ -365,7 +393,16 @@ void DrawButtons(ImVec2 button_size)
   
   ImGui::SameLine();
   int fps = rint(1.0f / ImGui::GetIO().DeltaTime);
-  ImGui::Text("/ Frame: %d / FPS: %d", ImGui::GetFrameCount(), fps);
+  ImGui::Text("/ Frame: %d / FPS: %3d", ImGui::GetFrameCount(), fps);
+  
+  for (int i=0; i<AppThemeCol_COUNT; i++) {
+    ImGui::SameLine();
+    ImVec4 col4f = ImColor(appTheme.colors[i]);
+    if (ImGui::ColorEdit4(AppThemeColor_Names[i], &col4f.x, ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoDragDrop)) {
+      appTheme.colors[i] = ImColor(col4f);
+      SaveTheme();
+    }
+  }
 }
 
 void SelectObject(otio::SerializableObject* object)
