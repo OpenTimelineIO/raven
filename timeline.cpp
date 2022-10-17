@@ -20,14 +20,26 @@
 
 // GUI
 
-void DrawItem(otio::Item* item, float scale, float height)
+void DrawItem(otio::Item* item, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto duration = item->duration();
     float width = duration.to_seconds() * scale;
 
-    ImVec2 size(width, height);
-    ImVec2 text_offset(5.0f, 5.0f);
+    auto range_it = range_map.find(item);
+    if (range_it == range_map.end()) {
+        // fall back to item->trimmed_range_in_parent() ?
+        Log("Couldn't find %s in range map?!", item->name().c_str());
+        assert(false);
+    }
+    auto item_range = range_it->second;    
     
+    ImVec2 size(width, height);
+    ImVec2 render_pos(
+        item_range.start_time().to_seconds() * scale + left_x,
+        ImGui::GetCursorPosY()
+    );
+    ImVec2 text_offset(5.0f, 5.0f);
+
     std::string label_str;
     auto label_color = IM_COL32_WHITE;
     auto fill_color = IM_COL32(255, 0, 255, 255);
@@ -43,21 +55,26 @@ void DrawItem(otio::Item* item, float scale, float height)
         label_str = item->name();
     }
     
+    auto old_pos = ImGui::GetCursorPos();
+    ImGui::SetCursorPos(render_pos);
+    
     ImGui::PushID(item);
     ImGui::BeginGroup();
 
-    ImGui::InvisibleButton("##empty", size);
+    // ImGui::InvisibleButton("##empty", size);
+    ImGui::Dummy(size);
+    
+    ImVec2 p0 = ImGui::GetItemRectMin();
+    ImVec2 p1 = ImGui::GetItemRectMax();
+    ImGui::SetItemAllowOverlap();
+
+    // Dragging...
     // if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     // {
     //     offset.x += ImGui::GetIO().MouseDelta.x;
     //     offset.y += ImGui::GetIO().MouseDelta.y;
     // }
-    ImVec2 p0 = ImGui::GetItemRectMin();
-    ImVec2 p1 = ImGui::GetItemRectMax();
-    ImGui::SetItemAllowOverlap();
 
-    const ImVec2 text_pos = ImVec2(p0.x + text_offset.x, p0.y + text_offset.y);
-        
     if (ImGui::IsItemHovered()) {
         frame_color = IM_COL32(200,0,0, 255);
     }
@@ -73,15 +90,22 @@ void DrawItem(otio::Item* item, float scale, float height)
     ImGui::PushClipRect(p0, p1, true);
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     
-    draw_list->AddRectFilled(p0, p1, fill_color);
-    if (label_str != "") {
-        draw_list->AddText(text_pos, label_color, label_str.c_str());
+    const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
+    const float corner_radius = 5.0f;
+    draw_list->AddRectFilled(p0, p1, fill_color, corner_radius, corners_tl_br);
+    if (width > text_offset.x*2) {
+        const ImVec2 text_pos = ImVec2(p0.x + text_offset.x, p0.y + text_offset.y);
+        if (label_str != "") {
+            draw_list->AddText(text_pos, label_color, label_str.c_str());
+        }
     }
-    draw_list->AddRect(p0, p1, frame_color);
+    // draw_list->AddRect(p0, p1, frame_color);
     
     ImGui::PopClipRect();
     ImGui::EndGroup();
     ImGui::PopID();
+
+    ImGui::SetCursorPos(old_pos);    
 }
 
 void DrawTransition(otio::Transition* transition, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
@@ -139,9 +163,11 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
     const ImVec2 line_start = ImVec2(p0.x, p1.y);
     const ImVec2 line_end = ImVec2(p1.x, p0.y);
     
-    draw_list->AddRectFilled(p0, p1, fill_color);
+    const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
+    const float corner_radius = height/2;
+    draw_list->AddRectFilled(p0, p1, fill_color, corner_radius, corners_tl_br);
     draw_list->AddLine(line_start, line_end, frame_color);
-    draw_list->AddRect(p0, p1, frame_color);
+    // draw_list->AddRect(p0, p1, frame_color);
     
     ImGui::PopClipRect();
     ImGui::EndGroup();
@@ -155,8 +181,17 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
     auto effects = item->effects();
     if (effects.size() == 0) return;
 
-    auto duration = item->duration();
-    float width = duration.to_seconds() * scale;
+    std::string label_str;
+    for (const auto& effect : effects) {
+        if (label_str != "") label_str += ", ";
+        label_str += effect->name();
+    }
+    const auto text_size = ImGui::CalcTextSize(label_str.c_str());
+    ImVec2 text_offset(5.0f, 5.0f);
+    
+    auto item_duration = item->duration();
+    float item_width = item_duration.to_seconds() * scale;
+    float width = fminf(item_width, text_size.x + text_offset.x*2);
 
     auto range_it = range_map.find(item);
     if (range_it == range_map.end()) {
@@ -167,17 +202,12 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
     auto item_range = range_it->second;    
 
     ImVec2 size(width, height/2);
+    float item_x = item_range.start_time().to_seconds() * scale + left_x;
     ImVec2 render_pos(
-        item_range.start_time().to_seconds() * scale + left_x,
+        item_x + item_width/2 - width/2, // centered
         ImGui::GetCursorPosY() + height/4
     );
-    ImVec2 text_offset(5.0f, 5.0f);
-    
-    std::string label_str;
-    for (const auto& effect : effects) {
-        if (label_str != "") label_str += ", ";
-        label_str += effect->name();
-    }
+
     auto label_color = IM_COL32_WHITE;
         
     auto fill_color = IM_COL32(230, 30, 30, 120);
@@ -197,12 +227,6 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
     ImVec2 p1 = ImGui::GetItemRectMax();
     // ImGui::SetItemAllowOverlap();
     
-    const auto text_size = ImGui::CalcTextSize(label_str.c_str());
-    const ImVec2 text_pos = ImVec2(
-        p0.x + fmaxf(text_offset.x, width/2 - text_size.x/2),
-        p0.y + fmaxf(text_offset.y, height/4 - text_size.y/2)
-    );
-
     if (ImGui::IsItemHovered()) {
         frame_color = IM_COL32(200,0,0, 255);
     }
@@ -229,10 +253,16 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
     draw_list->AddRectFilled(p0, p1, fill_color);
-    if (label_str != "") {
+    if (width > text_size.x*2 && label_str != "") {
+        const ImVec2 text_pos = ImVec2(
+            // p0.x + fmaxf(text_offset.x, width/2 - text_size.x/2),
+            // p0.y + fmaxf(text_offset.y, height/4 - text_size.y/2)
+            p0.x + width/2 - text_size.x/2,
+            p0.y + height/4 - text_size.y/2
+        );
         draw_list->AddText(text_pos, label_color, label_str.c_str());
     }
-    draw_list->AddRect(p0, p1, frame_color);
+    // draw_list->AddRect(p0, p1, frame_color);
     
     ImGui::PopClipRect();
     ImGui::EndGroup();
@@ -389,7 +419,7 @@ void DrawTrackLabel(otio::Track* track, int index, float height)
     
     draw_list->AddRectFilled(p0, p1, fill_color);
     draw_list->AddText(text_pos, label_color, label_str);
-    draw_list->AddRect(p0, p1, frame_color);
+    // draw_list->AddRect(p0, p1, frame_color);
     
     ImGui::PopClipRect();
         
@@ -399,20 +429,19 @@ void DrawTrackLabel(otio::Track* track, int index, float height)
 void DrawTrack(otio::Track* track, int index, float scale, float left_x, float full_width, float height)
 {
     ImGui::BeginGroup();
-    
-    for (const auto& child : track->children())
-    {
-        if (const auto& item = dynamic_cast<otio::Item*>(child.value)) {
-            DrawItem(item, scale, height);
-            ImGui::SameLine(0,0);
-        }
-    }
 
     otio::ErrorStatus error_status;
     auto range_map = track->range_of_all_children(&error_status);
     if (otio::is_error(error_status)) {
         Message("Error calculating timing: %s", otio_error_string(error_status).c_str());
         assert(false);
+    }
+
+    for (const auto& child : track->children())
+    {
+        if (const auto& item = dynamic_cast<otio::Item*>(child.value)) {
+            DrawItem(item, scale, left_x, height, range_map);
+        }
     }
     
     for (const auto& child : track->children())
@@ -533,7 +562,7 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     }
 
     // outer frame
-    draw_list->AddRect(p0, p1, frame_color);
+    // draw_list->AddRect(p0, p1, frame_color);
     
     ImGui::EndGroup();
     ImGui::PopID();
