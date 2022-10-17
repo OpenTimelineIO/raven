@@ -357,11 +357,15 @@ void DrawButtons(ImVec2 button_size)
   }
   
   ImGui::SameLine();
-  if (ImGui::Checkbox("Snap to Frame", &appState.snap_to_frame)) {
+  if (ImGui::Checkbox("Snap", &appState.snap_to_frame)) {
     if (appState.snap_to_frame) {
       SnapPlayhead();
     }
   }
+  
+  ImGui::SameLine();
+  int fps = rint(1.0f / ImGui::GetIO().DeltaTime);
+  ImGui::Text("/ Frame: %d / FPS: %d", ImGui::GetFrameCount(), fps);
 }
 
 void SelectObject(otio::SerializableObject* object)
