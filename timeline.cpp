@@ -683,7 +683,7 @@ void DrawTimeline(otio::Timeline* timeline)
     if (ImGui::BeginTable("Tracks", 2, flags))
     {
         ImGui::TableSetupColumn("Track");
-        ImGui::TableSetupColumn("Composition", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize);
+        ImGui::TableSetupColumn("Composition", ImGuiTableColumnFlags_WidthFixed);
         if (ImGui::GetFrameCount() > 1) {  // crash if we call this on the 1st frame?!
             // We allow the 1st column to be user-resizable, but
             // we want the 2nd column to always fit the timeline content.
