@@ -24,7 +24,7 @@ OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 
 CXXFLAGS = -I. -I./imgui
-CXXFLAGS += -g -Wall -Wformat
+CXXFLAGS += -g -Wall -Wformat -O3
 LIBS =
 
 CXXFLAGS += -I./libs/opentimelineio/src/deps
