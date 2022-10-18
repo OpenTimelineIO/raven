@@ -395,6 +395,7 @@ void DrawButtons(ImVec2 button_size)
   int fps = rint(1.0f / ImGui::GetIO().DeltaTime);
   ImGui::Text("/ Frame: %d / FPS: %3d", ImGui::GetFrameCount(), fps);
   
+#ifdef THEME_EDITOR
   for (int i=0; i<AppThemeCol_COUNT; i++) {
     ImGui::SameLine();
     ImVec4 col4f = ImColor(appTheme.colors[i]);
@@ -403,6 +404,7 @@ void DrawButtons(ImVec2 button_size)
       SaveTheme();
     }
   }
+#endif
 }
 
 void SelectObject(otio::SerializableObject* object)
