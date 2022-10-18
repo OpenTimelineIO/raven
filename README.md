@@ -4,8 +4,22 @@
 
 ## Building
 
-	% make
-	% ./raven
+	% mkdir build
+	% cd build
+	% cmake ..
+	% cmake --build .
+	% ./raven ../example.otio
+
+## Toubleshooting
+
+If you have trouble building, these hints might help...
+
+You might need this dependency:
+  % brew install glfw3
+
+You might need to init/update submodules:
+  % git submodule init
+  % git submodule update
 
 See `.github/workflows/build.yaml` for more details.
 
@@ -55,3 +69,4 @@ Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui).
     - effect_type
   - LinearTimeWarp:
     - time_scale
+
