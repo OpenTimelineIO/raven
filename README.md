@@ -1,4 +1,6 @@
-# Raven NLE
+# Raven - OTIO Viewer
+
+An experimental re-write of OpenTimelineIO's `otioview` timeline viewer application.
 
 ![screenshot](screenshot.png)
 
@@ -25,7 +27,20 @@ See `.github/workflows/build.yaml` for more details.
 
 ## Thanks
 
-Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui).
+Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui) and [OpenTimelineIO](https://opentimeline.io)
+
+## Help Wanted
+
+- Fully standalone executable:
+  - Embed fonts into executable
+  - Link *static* dependencies:
+    - OpenTimelineIO
+    - glfw3
+- Cross-platform build + GitHub Actions
+  - Mac (done)
+  - Linux
+  - Windows
+  - Emscripten
 
 ## To Do
 
