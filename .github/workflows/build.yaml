@@ -51,36 +51,36 @@ jobs:
   #       shell: cmd
   #       run: '"%MSBUILD_PATH%\MSBuild.exe" raven.vcxproj /p:Platform=x64 /p:Configuration=Release'
 
-  Linux:
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
+  # Linux:
+  #   runs-on: ubuntu-18.04
+  #   steps:
+  #   - uses: actions/checkout@v1
+  #     with:
+  #       fetch-depth: 1
 
-    - name: Install Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libglfw3-dev gcc-multilib g++-multilib libfreetype6-dev
+  #   - name: Install Dependencies
+  #     run: |
+  #       sudo apt-get update
+  #       sudo apt-get install -y libglfw3-dev gcc-multilib g++-multilib libfreetype6-dev
 
-    - name: Build
-      run: make
+  #   - name: Build
+  #     run: make
 
-    - name: Check Product
-      run: |
-        ls -l raven
-        file raven
+  #   - name: Check Product
+  #     run: |
+  #       ls -l raven
+  #       file raven
 
-    - name: Package Product
-      run: |
-        chmod +x raven
-        zip -r raven-linux.zip raven fonts
+  #   - name: Package Product
+  #     run: |
+  #       chmod +x raven
+  #       zip -r raven-linux.zip raven fonts
 
-    - name: Archive Product
-      uses: actions/upload-artifact@v1
-      with:
-        name: raven-linux.zip
-        path: raven-linux.zip
+  #   - name: Archive Product
+  #     uses: actions/upload-artifact@v1
+  #     with:
+  #       name: raven-linux.zip
+  #       path: raven-linux.zip
 
   # Windows-Cross-Compile:
   #   runs-on: ubuntu-18.04
@@ -167,37 +167,37 @@ jobs:
   #       # Code signing is required, but we disable it because it is irrelevant for CI builds.
   #       xcodebuild -project examples/example_apple_metal/example_apple_metal.xcodeproj -target example_apple_metal_ios CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
-  Emscripten:
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
+  # Emscripten:
+  #   runs-on: ubuntu-18.04
+  #   steps:
+  #   - uses: actions/checkout@v1
+  #     with:
+  #       fetch-depth: 1
 
-    - name: Install Dependencies
-      run: |
-        wget -q https://github.com/emscripten-core/emsdk/archive/master.tar.gz
-        tar -xvf master.tar.gz
-        emsdk-master/emsdk update
-        emsdk-master/emsdk install latest
-        emsdk-master/emsdk activate latest
+  #   - name: Install Dependencies
+  #     run: |
+  #       wget -q https://github.com/emscripten-core/emsdk/archive/master.tar.gz
+  #       tar -xvf master.tar.gz
+  #       emsdk-master/emsdk update
+  #       emsdk-master/emsdk install latest
+  #       emsdk-master/emsdk activate latest
 
-    - name: Build
-      run: |
-        source emsdk-master/emsdk_env.sh
-        make -f Makefile.emscripten
+  #   - name: Build
+  #     run: |
+  #       source emsdk-master/emsdk_env.sh
+  #       make -f Makefile.emscripten
 
-    - name: Check Product
-      run: |
-        ls -l raven_emscripten.*
-        file raven_emscripten.*
+  #   - name: Check Product
+  #     run: |
+  #       ls -l raven_emscripten.*
+  #       file raven_emscripten.*
 
-    - name: Package Product
-      run: |
-        zip -r raven-web.zip raven_emscripten.*
+  #   - name: Package Product
+  #     run: |
+  #       zip -r raven-web.zip raven_emscripten.*
 
-    - name: Archive Product
-      uses: actions/upload-artifact@v1
-      with:
-        name: raven-web.zip
-        path: raven-web.zip
+  #   - name: Archive Product
+  #     uses: actions/upload-artifact@v1
+  #     with:
+  #       name: raven-web.zip
+  #       path: raven-web.zip
