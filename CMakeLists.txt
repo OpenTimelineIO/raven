@@ -3,12 +3,12 @@ cmake_policy(SET CMP0076 NEW)
 
 project(raven VERSION 1.0)
 
-add_subdirectory("imgui")
-
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_executable(raven)
+
+add_subdirectory("imgui")
 
 target_sources(raven
   PUBLIC
