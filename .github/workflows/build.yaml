@@ -127,15 +127,21 @@ jobs:
         brew install glfw3
 
     - name: Build
-      run: make
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        cmake --build .
 
     - name: Check Product
       run: |
+        cd build
         ls -l raven
         file raven
 
     - name: Package Product
       run: |
+        cd build
         chmod +x raven
         zip -r raven-mac.zip raven fonts
 
@@ -143,7 +149,7 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: raven-mac.zip
-        path: raven-mac.zip
+        path: build/raven-mac.zip
 
     # - run: |
     #     pwd
