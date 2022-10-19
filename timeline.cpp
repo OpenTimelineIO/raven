@@ -12,7 +12,7 @@
 #include <opentimelineio/linearTimeWarp.h>
 
 
-void DrawItem(otio::Item* item, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
+void DrawItem(otio::Item* item, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto duration = item->duration();
     auto trimmed_range = item->trimmed_range();
@@ -35,7 +35,7 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
     
     ImVec2 size(width, height);
     ImVec2 render_pos(
-        item_range.start_time().to_seconds() * scale + left_x,
+        item_range.start_time().to_seconds() * scale + origin.x,
         ImGui::GetCursorPosY()
     );
 
@@ -136,7 +136,7 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
     ImGui::SetCursorPos(old_pos);    
 }
 
-void DrawTransition(otio::Transition* transition, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
+void DrawTransition(otio::Transition* transition, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto duration = transition->duration();
     float width = duration.to_seconds() * scale;
@@ -150,7 +150,7 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
 
     ImVec2 size(width, height);
     ImVec2 render_pos(
-        item_range.start_time().to_seconds() * scale + left_x,
+        item_range.start_time().to_seconds() * scale + origin.x,
         ImGui::GetCursorPosY()
     );
     ImVec2 text_offset(5.0f, 5.0f);
@@ -213,7 +213,7 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
     ImGui::SetCursorPos(old_pos);
 }
 
-void DrawEffects(otio::Item* item, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
+void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto effects = item->effects();
     if (effects.size() == 0) return;
@@ -238,7 +238,7 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
     auto item_range = range_it->second;    
 
     ImVec2 size(width, height/2);
-    float item_x = item_range.start_time().to_seconds() * scale + left_x;
+    float item_x = item_range.start_time().to_seconds() * scale + origin.x;
     ImVec2 render_pos(
         item_x + item_width/2 - width/2, // centered
         ImGui::GetCursorPosY() + height/4
@@ -330,7 +330,7 @@ ImU32 MarkerColor(std::string color)
     return IM_COL32(0x88, 0x88, 0x88, 0xff);
 }
 
-void DrawMarkers(otio::Item* item, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
+void DrawMarkers(otio::Item* item, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto markers = item->markers();
     if (markers.size() == 0) return;
@@ -357,7 +357,7 @@ void DrawMarkers(otio::Item* item, float scale, float left_x, float height, std:
 
         ImVec2 size(width, arrow_width);
         ImVec2 render_pos(
-            (item_start_in_parent + (start - item_trimmed_start)).to_seconds() * scale + left_x - arrow_width/2,
+            (item_start_in_parent + (start - item_trimmed_start)).to_seconds() * scale + origin.x - arrow_width/2,
             ImGui::GetCursorPosY()
         );
 
@@ -460,7 +460,7 @@ void DrawTrackLabel(otio::Track* track, int index, float height)
     ImGui::EndGroup();
 }
 
-void DrawTrack(otio::Track* track, int index, float scale, float left_x, float full_width, float height)
+void DrawTrack(otio::Track* track, int index, float scale, ImVec2 origin, float full_width, float height)
 {
     ImGui::BeginGroup();
 
@@ -474,22 +474,22 @@ void DrawTrack(otio::Track* track, int index, float scale, float left_x, float f
     for (const auto& child : track->children())
     {
         if (const auto& item = dynamic_cast<otio::Item*>(child.value)) {
-            DrawItem(item, scale, left_x, height, range_map);
+            DrawItem(item, scale, origin, height, range_map);
         }
     }
     
     for (const auto& child : track->children())
     {
         if (const auto& transition = dynamic_cast<otio::Transition*>(child.value)) {
-            DrawTransition(transition, scale, left_x, height, range_map);
+            DrawTransition(transition, scale, origin, height, range_map);
         }
     }
 
     for (const auto& child : track->children())
     {
         if (const auto& item = dynamic_cast<otio::Item*>(child.value)) {
-            DrawEffects(item, scale, left_x, height, range_map);
-            DrawMarkers(item, scale, left_x, height, range_map);
+            DrawEffects(item, scale, origin, height, range_map);
+            DrawMarkers(item, scale, origin, height, range_map);
         }
     }
 
@@ -787,24 +787,23 @@ void DrawTimeline(otio::Timeline* timeline)
         ImGui::Text("%s", playhead_string.c_str());
         ImGui::TableNextColumn();
 
-        // Remember the left edge, so that we can pass this into DrawTrack for overlays.
-        float left_x = ImGui::GetCursorPosX();
-        // auto top = ImGui::GetCursorPos();
+        // Remember the top/left edge, so that we can overlay all the elements on the timeline.
+        auto origin = ImGui::GetCursorPos();
         
         auto old_pos = ImGui::GetCursorPos();
-        if (DrawTimecodeTrack(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height)) {
+        if (DrawTimecodeTrack(start, end, playhead, appState.scale, full_width, appState.track_height, full_height)) {
             // scroll_to_playhead = true;
         }
-        auto top = ImGui::GetItemRectMin();
         ImGui::SetCursorPos(old_pos);
 
         // draw just the top of the playhead in the fixed timecode track
         float playhead_x = DrawPlayhead(start, end, appState.playhead, appState.scale, full_width, appState.track_height, appState.track_height, top, true);
         ImGui::SetCursorPos(old_pos);
-        top.y = ImGui::GetItemRectMax().y;
+        // now shift the origin down below the timecode track
+        origin.y += appState.track_height;
 
         std::map<otio::Composable*, otio::TimeRange> empty_map;
-        DrawMarkers(timeline->tracks(), appState.scale, left_x, appState.track_height, empty_map);
+        DrawMarkers(timeline->tracks(), appState.scale, origin, appState.track_height, empty_map);
 
         int index = video_tracks.size();
         for (auto i = video_tracks.rbegin(); i != video_tracks.rend(); ++i)
@@ -816,7 +815,7 @@ void DrawTimeline(otio::Timeline* timeline)
                 DrawTrackLabel(video_track, index, appState.track_height);
             }
             if (ImGui::TableNextColumn()) {
-                DrawTrack(video_track, index, appState.scale, left_x, full_width, appState.track_height);
+                DrawTrack(video_track, index, appState.scale, origin, full_width, appState.track_height);
             }
             index--;
         }
@@ -839,7 +838,7 @@ void DrawTimeline(otio::Timeline* timeline)
                 DrawTrackLabel(audio_track, index, appState.track_height);
             }
             if (ImGui::TableNextColumn()) {
-                DrawTrack(audio_track, index, appState.scale, left_x, full_width, appState.track_height);
+                DrawTrack(audio_track, index, appState.scale, origin, full_width, appState.track_height);
             }
             index++;
         }
