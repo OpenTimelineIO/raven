@@ -51,7 +51,6 @@ Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui) and [Open
   - avoid rendering items out of scroll region
   - avoid rendering items smaller than a tiny sliver
 - Arrow keys to navigate by selection
-- Fit zoom when document opens
 - Inspector:
   - Dockable side-by-side inspector
     - Look at ImGui document-based demo code
