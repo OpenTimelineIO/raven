@@ -2,6 +2,7 @@
 
 #include "app.h"
 #include "widgets.h"
+#include "timeline.h"
 
 #include <opentimelineio/clip.h>
 #include <opentimelineio/gap.h>
@@ -11,6 +12,17 @@
 #include <opentimelineio/composable.h>
 #include <opentimelineio/linearTimeWarp.h>
 
+
+float TimeScalarForItem(otio::Item* item)
+{
+    float time_scalar = 1.0;
+    for (const auto& effect : item->effects()) {
+        if (const auto& timewarp = dynamic_cast<otio::LinearTimeWarp*>(effect.value)) {
+            time_scalar *= timewarp->time_scalar();
+        }
+    }
+    return time_scalar;
+}
 
 void DrawItem(otio::Item* item, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
@@ -104,15 +116,23 @@ void DrawItem(otio::Item* item, float scale, ImVec2 origin, float height, std::m
         }
     }
     if (show_time_range) {
-        auto str1 = std::to_string(trimmed_range.start_time().to_frames());
-        auto str2 = std::to_string(trimmed_range.end_time_inclusive().to_frames());
-        auto pos1 = ImVec2(p0.x + text_offset.x, p1.y - text_offset.y - font_height);
-        auto pos2 = ImVec2(p1.x - text_offset.x - ImGui::CalcTextSize(str2.c_str()).x, p1.y - text_offset.y - font_height);
-        draw_list->AddText(pos1, label_color, str1.c_str());
-        draw_list->AddText(pos2, label_color, str2.c_str());
+        // auto str1 = std::to_string(trimmed_range.start_time().to_frames());
+        // auto str2 = std::to_string(trimmed_range.end_time_inclusive().to_frames());
+        // auto pos1 = ImVec2(p0.x + text_offset.x, p1.y - text_offset.y - font_height);
+        // auto pos2 = ImVec2(p1.x - text_offset.x - ImGui::CalcTextSize(str2.c_str()).x, p1.y - text_offset.y - font_height);
+        // draw_list->AddText(pos1, label_color, str1.c_str());
+        // draw_list->AddText(pos2, label_color, str2.c_str());
+        auto time_scalar = TimeScalarForItem(item);
+        auto trimmed_range = item->trimmed_range();
+        auto start = trimmed_range.start_time();
+        auto duration = trimmed_range.duration();
+        auto end = start + otio::RationalTime(duration.value() * time_scalar, duration.rate());
+        auto rate = start.rate();
+        ImGui::SetCursorPos(ImVec2(render_pos.x, render_pos.y + height/2));
+        DrawTimecodeRuler(item+1, start, end, rate, time_scalar, scale, width, height/2);
     }
     
-    if (ImGui::IsItemHovered())   {
+    if (ImGui::IsItemHovered()) {
         std::string extra;
         if (const auto& comp = dynamic_cast<otio::Composition*>(item)) {
             extra = "\nChildren: " + std::to_string(comp->children().size());
@@ -132,7 +152,7 @@ void DrawItem(otio::Item* item, float scale, ImVec2 origin, float height, std::m
     ImGui::EndGroup();
     ImGui::PopID();
 
-    ImGui::SetCursorPos(old_pos);    
+    ImGui::SetCursorPos(old_pos);
 }
 
 void DrawTransition(otio::Transition* transition, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
@@ -498,31 +518,21 @@ static bool _divisible(float t, float interval) {
     return fabsf(remainder) < epsilon;
 }
 
-bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height)
+void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::RationalTime end, float frame_rate, float time_scalar, float zoom_scale, float width, float height)
 {
-    bool moved_playhead = false;
+    float scale = zoom_scale / time_scalar;
 
-    float width = ImGui::GetContentRegionAvailWidth();
-    ImVec2 size(fmaxf(full_width, width), track_height);
+    ImVec2 size(width, height);
     ImVec2 text_offset(7.0f, 5.0f);
 
     auto old_pos = ImGui::GetCursorPos();
-    ImGui::PushID("##DrawTimecodeTrack");
+    ImGui::PushID(ptr_id);
     ImGui::BeginGroup();
-
-    ImGui::InvisibleButton("##empty", size);
+    
+    ImGui::Dummy(size);
     const ImVec2 p0 = ImGui::GetItemRectMin();
     const ImVec2 p1 = ImGui::GetItemRectMax();
     ImGui::SetItemAllowOverlap();
-
-    if (ImGui::IsItemActive()) // && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-    {
-        // MousePos is in SCREEN space
-        // Subtract p0 which is also in SCREEN space, and includes scrolling, etc.
-        float mouse_x_widget = ImGui::GetIO().MousePos.x - p0.x;
-        SeekPlayhead(mouse_x_widget / scale + start.to_seconds());
-        moved_playhead = true;
-    }
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
@@ -532,11 +542,11 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     auto tick_label_color = appTheme.colors[AppThemeCol_Label];
 
     // background
-    draw_list->AddRectFilled(p0, p1, fill_color);
+    // draw_list->AddRectFilled(p0, p1, fill_color);
 
     // draw every frame?
     // Note: "width" implies pixels, but "duration" implies time.
-    float single_frame_width = scale / playhead.rate();
+    float single_frame_width = scale / frame_rate;
     float tick_width = single_frame_width;
     float min_tick_width = 30;
     if (tick_width < min_tick_width) {
@@ -564,14 +574,14 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     // tick marks - roughly every N pixels
     float pixels_per_second = scale;
     float seconds_per_tick = tick_width / pixels_per_second;
-    auto tick_duration = otio::RationalTime::from_seconds(seconds_per_tick, playhead.rate());
-    int tick_count = ceilf(full_width / tick_width);
-    float last_label_end_x = 0;
+    auto tick_duration = otio::RationalTime::from_seconds(seconds_per_tick, frame_rate);
+    int tick_count = ceilf(width / tick_width);
+    float last_label_end_x = p0.x - text_offset.x*2;
     for (int tick_index=0; tick_index<tick_count; tick_index++) {
         auto tick_time = start + otio::RationalTime(tick_index * tick_duration.value(), tick_duration.rate());
 
         float tick_x = tick_index * tick_width;
-        const ImVec2 tick_start = ImVec2(p0.x + tick_x, p0.y + track_height/2);
+        const ImVec2 tick_start = ImVec2(p0.x + tick_x, p0.y + height/2);
         const ImVec2 tick_end = ImVec2(tick_start.x, p1.y);
         draw_list->AddLine(tick_start, tick_end, tick_color);
         
@@ -587,6 +597,42 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
 
     // For debugging, this is very helpful...
     // ImGui::SetTooltip("tick_width = %f\nseconds_per_tick = %f\npixels_per_second = %f", tick_width, seconds_per_tick, pixels_per_second);
+    
+    ImGui::EndGroup();
+    ImGui::PopID();
+    ImGui::SetCursorPos(old_pos);
+}
+
+bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, float frame_rate, float scale, float full_width, float track_height, bool interactive=true)
+{
+    bool moved_playhead = false;
+
+    float width = ImGui::GetContentRegionAvailWidth();
+    ImVec2 size(fmaxf(full_width, width), track_height);
+
+    auto old_pos = ImGui::GetCursorPos();
+    ImGui::PushID("##DrawTimecodeTrack");
+    ImGui::BeginGroup();
+
+    if (interactive) {
+        ImGui::InvisibleButton("##empty", size);
+    }else{
+        ImGui::Dummy(size);
+    }
+    const ImVec2 p0 = ImGui::GetItemRectMin();
+    ImGui::SetItemAllowOverlap();
+
+    if (interactive && ImGui::IsItemActive()) // && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    {
+        // MousePos is in SCREEN space
+        // Subtract p0 which is also in SCREEN space, and includes scrolling, etc.
+        float mouse_x_widget = ImGui::GetIO().MousePos.x - p0.x;
+        SeekPlayhead(mouse_x_widget / scale + start.to_seconds());
+        moved_playhead = true;
+    }
+
+    ImGui::SetCursorPos(old_pos);
+    DrawTimecodeRuler("##TimecodeTrackRuler", start, end, frame_rate, 1.0, scale, size.x, size.y);
 
     ImGui::EndGroup();
     ImGui::PopID();
@@ -824,7 +870,7 @@ void DrawTimeline(otio::Timeline* timeline)
         // Remember the top/left edge, so that we can overlay all the elements on the timeline.
         auto origin = ImGui::GetCursorPos();
         
-        if (DrawTimecodeTrack(start, end, playhead, appState.scale, full_width, appState.track_height, full_height)) {
+        if (DrawTimecodeTrack(start, end, playhead.rate(), appState.scale, full_width, appState.track_height)) {
             // scroll_to_playhead = true;
         }
 
