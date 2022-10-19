@@ -550,16 +550,20 @@ float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::Ratio
     const ImVec2 playhead_max = ImVec2(playhead_pos.x + playhead_size.x, playhead_pos.y + playhead_size.y);
     const ImVec2 playhead_line_start = playhead_pos;
     const ImVec2 playhead_line_end = ImVec2(playhead_pos.x, playhead_pos.y + full_height);
+    auto background_color = appTheme.colors[AppThemeCol_Background];
     auto playhead_fill_color = appTheme.colors[AppThemeCol_Playhead];
     auto playhead_line_color = appTheme.colors[AppThemeCol_PlayheadLine];
 
     std::string label_str = playhead.to_timecode() + " / " + playhead.to_time_string();
     auto label_color = appTheme.colors[AppThemeCol_Label];
+    const ImVec2 label_size = ImGui::CalcTextSize(label_str.c_str());
     const ImVec2 label_pos = ImVec2(playhead_max.x + text_offset.x, p0.y + text_offset.y);
-    
+    const ImVec2 label_end = ImVec2(label_pos.x + label_size.x, label_pos.y + label_size.y);
+
     // playhead
     draw_list->AddRectFilled(playhead_pos, playhead_max, playhead_fill_color);
     draw_list->AddLine(playhead_line_start, playhead_line_end, playhead_line_color);
+    draw_list->AddRectFilled(label_pos, label_end, background_color); // for readability
     draw_list->AddText(label_pos, label_color, label_str.c_str());
     
     ImGui::EndGroup();
