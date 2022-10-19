@@ -14,7 +14,16 @@
 void DrawItem(otio::Item* item, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto duration = item->duration();
+    auto trimmed_range = item->trimmed_range();
     float width = duration.to_seconds() * scale;
+
+    const ImVec2 text_offset(5.0f, 5.0f);
+    float font_height = ImGui::GetTextLineHeight();
+    float font_width = font_height * 0.5; // estimate
+    // is there enough horizontal space for labels at all?
+    bool show_label = width > text_offset.x * 2;
+    // is there enough vertical *and* horizontal space for time ranges?
+    bool show_time_range = (height > font_height*2 + text_offset.y*2) && (width > font_width*15);
 
     auto range_it = range_map.find(item);
     if (range_it == range_map.end()) {
@@ -28,7 +37,6 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
         item_range.start_time().to_seconds() * scale + left_x,
         ImGui::GetCursorPosY()
     );
-    ImVec2 text_offset(5.0f, 5.0f);
 
     std::string label_str = item->name();
     auto label_color = appTheme.colors[AppThemeCol_Label];
@@ -38,11 +46,13 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
     bool fancy_corners = true;
 
     if (auto gap = dynamic_cast<otio::Gap*>(item)) {
+        // different colors & style
         fill_color = appTheme.colors[AppThemeCol_Background];
         selected_fill_color = appTheme.colors[AppThemeCol_GapSelected];
         hover_fill_color = appTheme.colors[AppThemeCol_GapHovered];
         label_str = "";
         fancy_corners = false;
+        show_time_range = false;
     }
     
     auto old_pos = ImGui::GetCursorPos();
@@ -86,11 +96,20 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
     }else{
         draw_list->AddRectFilled(p0, p1, fill_color);
     }
-    if (width > text_offset.x*2) {
+    
+    if (show_label) {
         const ImVec2 text_pos = ImVec2(p0.x + text_offset.x, p0.y + text_offset.y);
         if (label_str != "") {
             draw_list->AddText(text_pos, label_color, label_str.c_str());
         }
+    }
+    if (show_time_range) {
+        auto str1 = std::to_string(trimmed_range.start_time().to_frames());
+        auto str2 = std::to_string(trimmed_range.end_time_inclusive().to_frames());
+        auto pos1 = ImVec2(p0.x + text_offset.x, p1.y - text_offset.y - font_height);
+        auto pos2 = ImVec2(p1.x - text_offset.x - ImGui::CalcTextSize(str2.c_str()).x, p1.y - text_offset.y - font_height);
+        draw_list->AddText(pos1, label_color, str1.c_str());
+        draw_list->AddText(pos2, label_color, str2.c_str());
     }
     
     ImGui::PopClipRect();
