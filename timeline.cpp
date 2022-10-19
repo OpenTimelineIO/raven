@@ -535,6 +535,7 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     draw_list->AddRectFilled(p0, p1, fill_color);
 
     // draw every frame?
+    // Note: "width" implies pixels, but "duration" implies time.
     float single_frame_width = scale / playhead.rate();
     float tick_width = single_frame_width;
     float min_tick_width = 30;
@@ -550,9 +551,6 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
             }
         }
     }
-    // while (tick_width > min_tick_width*2 && tick_width > single_frame_width) {
-    //     tick_width /= 2;
-    // }
 
     // assert(_divisible(1, 1));
     // assert(_divisible(1000, 1));
@@ -564,35 +562,31 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     // assert(!_divisible(1.0/24.0, 3600));
 
     // tick marks - roughly every N pixels
-    float seconds_per_tick = tick_width / scale;
-    auto snapped_start = otio::RationalTime::from_seconds(start.to_seconds() - fmodf(start.to_seconds(), seconds_per_tick), playhead.rate());
-    auto step = otio::RationalTime::from_seconds(seconds_per_tick, playhead.rate());
-    for (auto t=snapped_start; t<end; t+=step) {
-        float x = (t - start).to_seconds() * scale;
-        const ImVec2 tick_start = ImVec2(p0.x + x, p0.y + track_height/2);
-        const ImVec2 tick_end = ImVec2(tick_start.x, tick_start.y + track_height/2);
+    float pixels_per_second = scale;
+    float seconds_per_tick = tick_width / pixels_per_second;
+    auto tick_duration = otio::RationalTime::from_seconds(seconds_per_tick, playhead.rate());
+    int tick_count = ceilf(full_width / tick_width);
+    float last_label_end_x = 0;
+    for (int tick_index=0; tick_index<tick_count; tick_index++) {
+        auto tick_time = start + otio::RationalTime(tick_index * tick_duration.value(), tick_duration.rate());
+
+        float tick_x = tick_index * tick_width;
+        const ImVec2 tick_start = ImVec2(p0.x + tick_x, p0.y + track_height/2);
+        const ImVec2 tick_end = ImVec2(tick_start.x, p1.y);
         draw_list->AddLine(tick_start, tick_end, tick_color);
-        const ImVec2 tick_label_pos = ImVec2(p0.x + x + text_offset.x, p0.y + text_offset.y);
-        char tick_label[100];
-        char tick_unit = 'f';
-        int tick_value = 0;
-        float seconds = t.to_seconds();
-        if (_divisible(seconds, 3600.0f)) {
-            tick_unit = 'h';
-            tick_value = floorf(seconds / 3600.0f);
-        }else if (_divisible(seconds, 60.0f)) {
-            tick_unit = 'm';
-            tick_value = floorf(fmodf(seconds, 3600.0f) / 60.0f);
-        }else if (_divisible(seconds, 1.0f)) {
-            tick_unit = 's';
-            tick_value = floorf(fmodf(seconds, 60.0f));
-        }else{
-            tick_unit = 'f';
-            tick_value = floorf(fmodf(seconds, 1.0f) * playhead.rate());
+        
+        const ImVec2 tick_label_pos = ImVec2(p0.x + tick_x + text_offset.x, p0.y + text_offset.y);
+        if (tick_label_pos.x > last_label_end_x + text_offset.x) {
+            char tick_label[100];
+            snprintf(tick_label, sizeof(tick_label), "%s", tick_time.to_timecode().c_str());
+            auto label_size = ImGui::CalcTextSize(tick_label);
+            draw_list->AddText(tick_label_pos, tick_label_color, tick_label);
+            last_label_end_x = tick_label_pos.x + label_size.x;
         }
-        snprintf(tick_label, sizeof(tick_label), "%d%c", tick_value, tick_unit);
-        draw_list->AddText(tick_label_pos, tick_label_color, tick_label);
     }
+
+    // For debugging, this is very helpful...
+    // ImGui::SetTooltip("tick_width = %f\nseconds_per_tick = %f\npixels_per_second = %f", tick_width, seconds_per_tick, pixels_per_second);
 
     ImGui::EndGroup();
     ImGui::PopID();
