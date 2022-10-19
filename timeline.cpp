@@ -219,7 +219,7 @@ void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float height, std
     std::string label_str;
     for (const auto& effect : effects) {
         if (label_str != "") label_str += ", ";
-        label_str += effect->name();
+        label_str += effect->name()!="" ? effect->name() : effect->effect_name();
     }
     const auto text_size = ImGui::CalcTextSize(label_str.c_str());
     ImVec2 text_offset(5.0f, 5.0f);
@@ -238,8 +238,8 @@ void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float height, std
     ImVec2 size(width, height/2);
     float item_x = item_range.start_time().to_seconds() * scale + origin.x;
     ImVec2 render_pos(
-        item_x + item_width/2 - width/2, // centered
-        ImGui::GetCursorPosY() + height/4
+        item_x + item_width/2 - size.x/2, // centered
+        ImGui::GetCursorPosY() + height/2 - size.y/2 // centered
     );
 
     auto label_color = appTheme.colors[AppThemeCol_Label];
@@ -283,10 +283,10 @@ void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float height, std
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
     draw_list->AddRectFilled(p0, p1, fill_color);
-    if (width > text_size.x*2 && label_str != "") {
+    if (size.x > text_size.x && label_str != "") {
         const ImVec2 text_pos = ImVec2(
-            p0.x + width/2 - text_size.x/2,
-            p0.y + height/4 - text_size.y/2
+            p0.x + size.x/2 - text_size.x/2,
+            p0.y + size.y/2 - text_size.y/2
         );
         draw_list->AddText(text_pos, label_color, label_str.c_str());
     }
