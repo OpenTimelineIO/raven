@@ -506,6 +506,7 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     ImVec2 size(fmaxf(full_width, width), track_height);
     ImVec2 text_offset(7.0f, 5.0f);
 
+    auto old_pos = ImGui::GetCursorPos();
     ImGui::PushID("##DrawTimecodeTrack");
     ImGui::BeginGroup();
 
@@ -514,8 +515,10 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     const ImVec2 p1 = ImGui::GetItemRectMax();
     ImGui::SetItemAllowOverlap();
 
-    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    if (ImGui::IsItemActive()) // && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
+        // MousePos is in SCREEN space
+        // Subtract p0 which is also in SCREEN space, and includes scrolling, etc.
         float mouse_x_widget = ImGui::GetIO().MousePos.x - p0.x;
         SeekPlayhead(mouse_x_widget / scale + start.to_seconds());
         moved_playhead = true;
@@ -593,64 +596,96 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
 
     ImGui::EndGroup();
     ImGui::PopID();
+    ImGui::SetCursorPos(old_pos);
 
     return moved_playhead;
 }
 
-float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height, ImVec2 top, bool draw_arrow)
+float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::RationalTime playhead, float scale, float full_width, float track_height, float full_height, ImVec2 origin, bool draw_arrow)
 {
     float playhead_width = scale / playhead.rate();
     float playhead_x = (playhead - start).to_seconds() * scale;
 
-    ImVec2 size(full_width, track_height);
+    ImVec2 size(playhead_width, full_height);
     ImVec2 text_offset(7.0f, 5.0f);
-    
-    bool draw_label = draw_arrow;
-    if (draw_arrow) {
-        ImGui::PushID("##PlayheadArrow");
-    }else{
-        ImGui::PushID("##Playhead");
-    }
-    ImGui::BeginGroup();
 
-    // ImGui::InvisibleButton("##empty", size);
-    ImGui::Dummy(size);
-    ImGui::SetItemAllowOverlap();
-    const ImVec2 p0 = top;
-    
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    
-    const ImVec2 playhead_pos = ImVec2(p0.x + playhead_x, p0.y);
-    const ImVec2 playhead_size = ImVec2(playhead_width, full_height);
-    const ImVec2 playhead_max = ImVec2(playhead_pos.x + playhead_size.x, playhead_pos.y + playhead_size.y);
-    const ImVec2 playhead_line_start = playhead_pos;
-    const ImVec2 playhead_line_end = ImVec2(playhead_pos.x, playhead_pos.y + full_height);
     auto background_color = appTheme.colors[AppThemeCol_Background];
     auto playhead_fill_color = appTheme.colors[AppThemeCol_Playhead];
     auto playhead_line_color = appTheme.colors[AppThemeCol_PlayheadLine];
 
+    // Ask for this position in the timeline
+    ImVec2 render_pos(
+        playhead_x + origin.x,
+        origin.y
+    );
+
+    auto old_pos = ImGui::GetCursorPos();
+    ImGui::SetCursorPos(render_pos);
+    
+    ImGui::PushID("##Playhead");
+    ImGui::BeginGroup();
+    ImGui::InvisibleButton("##Playhead2", size);
+
+    // Compute where we are rendering in screen space for draw list functions.
+    ImVec2 p0 = ImGui::GetItemRectMin();
+    ImVec2 p1 = ImGui::GetItemRectMax();
+    ImGui::SetItemAllowOverlap();
+
+    // compute the playhead x position in the local (aka window) coordinate system
+    // so that later we can use SetScrollFromPosX() to scroll the timeline.
+    // p0 is in screen space - where we're actually drawn (which includes current scroll)
+    // origin is the offset to the edge of the tracks in window space.
+    // So we compute SCREEN_RENDER_POS.x - LOCAL_EDGE.x - WINDOW_POS.x => LOCAL_RENDER_POS.x
+    // float playhead_scroll_x = p0.x - origin.x - ImGui::GetWindowPos().x;
+    float playhead_scroll_x = playhead_x;
+
+    if (ImGui::IsItemActive()) // && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    {
+        // MousePos is in SCREEN space
+        float mouse_x_widget = ImGui::GetIO().MousePos.x
+            // Subtract WindowPos to get WINDOW space
+            - ImGui::GetWindowPos().x
+            // Subtract origin.x to get TIMELINE space
+            - origin.x
+            // Add ScrollX to compensate for scrolling
+            + ImGui::GetScrollX();
+        SeekPlayhead(mouse_x_widget / scale + start.to_seconds());
+        // Note: Using MouseDelta doesn't work since it is directionally
+        // biased by playhead snapping, and other factors I don't understand.
+        // float drag_x = ImGui::GetIO().MouseDelta.x * 0.5f;
+        // SeekPlayhead(playhead.to_seconds() + drag_x / scale);
+    }
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    
+    const ImVec2 playhead_line_start = p0;
+    const ImVec2 playhead_line_end = ImVec2(p0.x, p1.y);
+
     std::string label_str = playhead.to_timecode() + " / " + playhead.to_time_string();
     auto label_color = appTheme.colors[AppThemeCol_Label];
     const ImVec2 label_size = ImGui::CalcTextSize(label_str.c_str());
-    const ImVec2 label_pos = ImVec2(playhead_max.x + text_offset.x, p0.y + text_offset.y);
+    const ImVec2 label_pos = ImVec2(p1.x + text_offset.x, p0.y + text_offset.y);
     const ImVec2 label_end = ImVec2(label_pos.x + label_size.x, label_pos.y + label_size.y);
 
+    bool draw_label = draw_arrow;  // link these
     if (draw_label) {
         // for readability, put a black rectangle behind the area where the label will be
-        draw_list->AddRectFilled(ImVec2(playhead_pos.x, label_pos.y), label_end, background_color);
+        draw_list->AddRectFilled(ImVec2(label_pos.x - text_offset.x, label_pos.y - text_offset.x),
+                                 ImVec2(label_end.x + text_offset.x, label_end.y + text_offset.y),
+                                 background_color);
     }
 
     // playhead vertical bar is one frame thick, with hairline on left edge
-    draw_list->AddRectFilled(playhead_pos, playhead_max, playhead_fill_color);
+    draw_list->AddRectFilled(p0, p1, playhead_fill_color);
     draw_list->AddLine(playhead_line_start, playhead_line_end, playhead_line_color);
 
     // playhead arrow and label
     if (draw_arrow) {
         const ImVec2 arrow_size(track_height/2, track_height/2);
         draw_list->AddTriangleFilled(
-            ImVec2(playhead_pos.x - arrow_size.x/2, playhead_pos.y),
-            ImVec2(playhead_pos.x + arrow_size.x/2, playhead_pos.y),
-            ImVec2(playhead_pos.x, playhead_pos.y + arrow_size.y),
+            ImVec2(p0.x - arrow_size.x/2, p0.y),
+            ImVec2(p0.x + arrow_size.x/2, p0.y),
+            ImVec2(p0.x, p0.y + arrow_size.y),
             playhead_line_color);
     }
     
@@ -662,7 +697,9 @@ float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::Ratio
     ImGui::EndGroup();
     ImGui::PopID();
     
-    return playhead_pos.x - ImGui::GetWindowPos().x;
+    ImGui::SetCursorPos(old_pos);
+
+    return playhead_scroll_x;
 }
 
 bool DrawTransportControls(otio::Timeline* timeline)
@@ -737,11 +774,13 @@ void DrawTimeline(otio::Timeline* timeline)
         return;
     }
 
+    auto playhead = appState.playhead;
+    
     auto start = appState.playhead_limit.start_time();
     auto duration = appState.playhead_limit.duration();
     auto end = appState.playhead_limit.end_time_exclusive();
 
-    auto playhead_string = appState.playhead.to_timecode();
+    auto playhead_string = playhead.to_timecode();
   
     auto video_tracks = timeline->video_tracks();
     auto audio_tracks = timeline->audio_tracks();
@@ -786,15 +825,13 @@ void DrawTimeline(otio::Timeline* timeline)
         // Remember the top/left edge, so that we can overlay all the elements on the timeline.
         auto origin = ImGui::GetCursorPos();
         
-        auto old_pos = ImGui::GetCursorPos();
         if (DrawTimecodeTrack(start, end, playhead, appState.scale, full_width, appState.track_height, full_height)) {
             // scroll_to_playhead = true;
         }
-        ImGui::SetCursorPos(old_pos);
 
         // draw just the top of the playhead in the fixed timecode track
-        float playhead_x = DrawPlayhead(start, end, appState.playhead, appState.scale, full_width, appState.track_height, appState.track_height, top, true);
-        ImGui::SetCursorPos(old_pos);
+        float playhead_x = DrawPlayhead(start, end, playhead, appState.scale, full_width, appState.track_height, appState.track_height, origin, true);
+        
         // now shift the origin down below the timecode track
         origin.y += appState.track_height;
 
@@ -844,10 +881,12 @@ void DrawTimeline(otio::Timeline* timeline)
         ImGui::TableNextColumn();
         // ImGui::Text("%s", playhead_string.c_str());
         ImGui::TableNextColumn();
-        DrawPlayhead(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height, top, false);
+        playhead_x = DrawPlayhead(start, end, playhead, appState.scale, full_width, appState.track_height, full_height, origin, false);
 
         if (appState.scroll_to_playhead) {
-            ImGui::SetScrollFromPosX(playhead_x);
+            // This is almost the same as calling ImGui::SetScrollX(playhead_x)
+            // but aligns to the center instead of to the left edge, which is nicer looking.
+            ImGui::SetScrollFromPosX(playhead_x - ImGui::GetScrollX());
             appState.scroll_to_playhead = false;
         }
         
