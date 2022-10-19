@@ -727,7 +727,7 @@ bool DrawTransportControls(otio::Timeline* timeline)
     ImGui::Text("%s", start_string.c_str());
     ImGui::SameLine();
 
-    ImGui::SetNextItemWidth(-220);
+    ImGui::SetNextItemWidth(-270);
     float playhead_seconds = appState.playhead.to_seconds();
     if (ImGui::SliderFloat("##Playhead", &playhead_seconds, appState.playhead_limit.start_time().to_seconds(), appState.playhead_limit.end_time_exclusive().to_seconds(), playhead_string.c_str())) {
         SeekPlayhead(playhead_seconds);
@@ -741,6 +741,11 @@ bool DrawTransportControls(otio::Timeline* timeline)
     ImGui::SetNextItemWidth(100);
     if (ImGui::SliderFloat("##Zoom", &appState.scale, 0.5f, 5000.0f, "Zoom", ImGuiSliderFlags_Logarithmic)) {
         moved_playhead = true;
+    }
+  
+    ImGui::SameLine();
+    if (ImGui::Button("Fit")) {
+        FitZoomWholeTimeline();
     }
     
     ImGui::EndGroup();

@@ -387,11 +387,6 @@ void DrawButtons(ImVec2 button_size)
   if (IconButton("\uF013#Demo", button_size)) {
     appState.show_demo_window = !appState.show_demo_window;
   }
-  
-  ImGui::SameLine();
-  if (ImGui::Button("Fit")) {
-    FitZoomWholeTimeline();
-  }
 
   ImGui::SameLine();
   if (ImGui::Checkbox("Snap", &appState.snap_to_frame)) {
