@@ -9,12 +9,22 @@
 #include <opentimelineio/effect.h>
 #include <opentimelineio/marker.h>
 #include <opentimelineio/composable.h>
+#include <opentimelineio/linearTimeWarp.h>
 
 
-void DrawItem(otio::Item* item, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
+void DrawItem(otio::Item* item, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto duration = item->duration();
+    auto trimmed_range = item->trimmed_range();
     float width = duration.to_seconds() * scale;
+
+    const ImVec2 text_offset(5.0f, 5.0f);
+    float font_height = ImGui::GetTextLineHeight();
+    float font_width = font_height * 0.5; // estimate
+    // is there enough horizontal space for labels at all?
+    bool show_label = width > text_offset.x * 2;
+    // is there enough vertical *and* horizontal space for time ranges?
+    bool show_time_range = (height > font_height*2 + text_offset.y*2) && (width > font_width*15);
 
     auto range_it = range_map.find(item);
     if (range_it == range_map.end()) {
@@ -25,10 +35,9 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
     
     ImVec2 size(width, height);
     ImVec2 render_pos(
-        item_range.start_time().to_seconds() * scale + left_x,
+        item_range.start_time().to_seconds() * scale + origin.x,
         ImGui::GetCursorPosY()
     );
-    ImVec2 text_offset(5.0f, 5.0f);
 
     std::string label_str = item->name();
     auto label_color = appTheme.colors[AppThemeCol_Label];
@@ -38,11 +47,13 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
     bool fancy_corners = true;
 
     if (auto gap = dynamic_cast<otio::Gap*>(item)) {
+        // different colors & style
         fill_color = appTheme.colors[AppThemeCol_Background];
         selected_fill_color = appTheme.colors[AppThemeCol_GapSelected];
         hover_fill_color = appTheme.colors[AppThemeCol_GapHovered];
         label_str = "";
         fancy_corners = false;
+        show_time_range = false;
     }
     
     auto old_pos = ImGui::GetCursorPos();
@@ -51,8 +62,7 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
     ImGui::PushID(item);
     ImGui::BeginGroup();
 
-    // ImGui::InvisibleButton("##empty", size);
-    ImGui::Dummy(size);
+    ImGui::InvisibleButton("##Item", size);
     
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
@@ -86,11 +96,36 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
     }else{
         draw_list->AddRectFilled(p0, p1, fill_color);
     }
-    if (width > text_offset.x*2) {
+    
+    if (show_label) {
         const ImVec2 text_pos = ImVec2(p0.x + text_offset.x, p0.y + text_offset.y);
         if (label_str != "") {
             draw_list->AddText(text_pos, label_color, label_str.c_str());
         }
+    }
+    if (show_time_range) {
+        auto str1 = std::to_string(trimmed_range.start_time().to_frames());
+        auto str2 = std::to_string(trimmed_range.end_time_inclusive().to_frames());
+        auto pos1 = ImVec2(p0.x + text_offset.x, p1.y - text_offset.y - font_height);
+        auto pos2 = ImVec2(p1.x - text_offset.x - ImGui::CalcTextSize(str2.c_str()).x, p1.y - text_offset.y - font_height);
+        draw_list->AddText(pos1, label_color, str1.c_str());
+        draw_list->AddText(pos2, label_color, str2.c_str());
+    }
+    
+    if (ImGui::IsItemHovered())   {
+        std::string extra;
+        if (const auto& comp = dynamic_cast<otio::Composition*>(item)) {
+            extra = "\nChildren: " + std::to_string(comp->children().size());
+        }
+        ImGui::SetTooltip(
+            "%s: %s\nRange: %d - %d\nDuration: %d frames%s",
+            item->schema_name().c_str(),
+            item->name().c_str(),
+            trimmed_range.start_time().to_frames(),
+            trimmed_range.end_time_inclusive().to_frames(),
+            duration.to_frames(),
+            extra.c_str()
+        );
     }
     
     ImGui::PopClipRect();
@@ -100,7 +135,7 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
     ImGui::SetCursorPos(old_pos);    
 }
 
-void DrawTransition(otio::Transition* transition, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
+void DrawTransition(otio::Transition* transition, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto duration = transition->duration();
     float width = duration.to_seconds() * scale;
@@ -114,7 +149,7 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
 
     ImVec2 size(width, height);
     ImVec2 render_pos(
-        item_range.start_time().to_seconds() * scale + left_x,
+        item_range.start_time().to_seconds() * scale + origin.x,
         ImGui::GetCursorPosY()
     );
     ImVec2 text_offset(5.0f, 5.0f);
@@ -130,8 +165,7 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
     ImGui::PushID(transition);
     ImGui::BeginGroup();
 
-    // ImGui::InvisibleButton("##empty", size);
-    ImGui::Dummy(size);
+    ImGui::InvisibleButton("##Item", size);
 
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
@@ -159,6 +193,17 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
     draw_list->AddRectFilled(p0, p1, fill_color, corner_radius, corners_tl_br);
     draw_list->AddLine(line_start, line_end, line_color);
 
+    if (ImGui::IsItemHovered())   {
+        ImGui::SetTooltip(
+            "%s: %s\nIn/Out Offset: %d / %d\nDuration: %d frames",
+            transition->schema_name().c_str(),
+            transition->name().c_str(),
+            transition->in_offset().to_frames(),
+            transition->out_offset().to_frames(),
+            duration.to_frames()
+        );
+    }
+    
     ImGui::PopClipRect();
     ImGui::EndGroup();
     ImGui::PopID();
@@ -166,7 +211,7 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
     ImGui::SetCursorPos(old_pos);
 }
 
-void DrawEffects(otio::Item* item, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
+void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto effects = item->effects();
     if (effects.size() == 0) return;
@@ -174,7 +219,7 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
     std::string label_str;
     for (const auto& effect : effects) {
         if (label_str != "") label_str += ", ";
-        label_str += effect->name();
+        label_str += effect->name()!="" ? effect->name() : effect->effect_name();
     }
     const auto text_size = ImGui::CalcTextSize(label_str.c_str());
     ImVec2 text_offset(5.0f, 5.0f);
@@ -191,10 +236,10 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
     auto item_range = range_it->second;    
 
     ImVec2 size(width, height/2);
-    float item_x = item_range.start_time().to_seconds() * scale + left_x;
+    float item_x = item_range.start_time().to_seconds() * scale + origin.x;
     ImVec2 render_pos(
-        item_x + item_width/2 - width/2, // centered
-        ImGui::GetCursorPosY() + height/4
+        item_x + item_width/2 - size.x/2, // centered
+        ImGui::GetCursorPosY() + height/2 - size.y/2 // centered
     );
 
     auto label_color = appTheme.colors[AppThemeCol_Label];
@@ -208,8 +253,7 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
     ImGui::PushID(item);
     ImGui::BeginGroup();
 
-    // ImGui::InvisibleButton("##empty", size);
-    ImGui::Dummy(size);
+    ImGui::InvisibleButton("##Effect", size);
     
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
@@ -239,12 +283,25 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
     draw_list->AddRectFilled(p0, p1, fill_color);
-    if (width > text_size.x*2 && label_str != "") {
+    if (size.x > text_size.x && label_str != "") {
         const ImVec2 text_pos = ImVec2(
-            p0.x + width/2 - text_size.x/2,
-            p0.y + height/4 - text_size.y/2
+            p0.x + size.x/2 - text_size.x/2,
+            p0.y + size.y/2 - text_size.y/2
         );
         draw_list->AddText(text_pos, label_color, label_str.c_str());
+    }
+
+    if (ImGui::IsItemHovered())   {
+        std::string tooltip;
+        for (const auto& effect : effects) {
+            if (tooltip != "") tooltip += "\n\n";
+            tooltip += effect->schema_name() + ": " + effect->name();
+            tooltip += "\nEffect Name: " + effect->effect_name();
+            if (const auto& timewarp = dynamic_cast<otio::LinearTimeWarp*>(effect.value)) {
+                tooltip += "\nTime Scale: " + std::to_string(timewarp->time_scalar());
+            }
+        }
+        ImGui::SetTooltip("%s", tooltip.c_str());
     }
     
     ImGui::PopClipRect();
@@ -270,7 +327,7 @@ ImU32 MarkerColor(std::string color)
     return IM_COL32(0x88, 0x88, 0x88, 0xff);
 }
 
-void DrawMarkers(otio::Item* item, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
+void DrawMarkers(otio::Item* item, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto markers = item->markers();
     if (markers.size() == 0) return;
@@ -297,7 +354,7 @@ void DrawMarkers(otio::Item* item, float scale, float left_x, float height, std:
 
         ImVec2 size(width, arrow_width);
         ImVec2 render_pos(
-            (item_start_in_parent + (start - item_trimmed_start)).to_seconds() * scale + left_x - arrow_width/2,
+            (item_start_in_parent + (start - item_trimmed_start)).to_seconds() * scale + origin.x - arrow_width/2,
             ImGui::GetCursorPosY()
         );
 
@@ -311,8 +368,7 @@ void DrawMarkers(otio::Item* item, float scale, float left_x, float height, std:
         ImGui::PushID(item);
         ImGui::BeginGroup();
 
-        // ImGui::InvisibleButton("##empty", size);
-        ImGui::Dummy(size);
+        ImGui::InvisibleButton("##Marker", size);
         
         ImVec2 p0 = ImGui::GetItemRectMin();
         ImVec2 p1 = ImGui::GetItemRectMax();
@@ -335,6 +391,18 @@ void DrawMarkers(otio::Item* item, float scale, float left_x, float height, std:
         draw_list->AddRectFilled(ImVec2(p0.x + arrow_width/2, p0.y), ImVec2(p1.x - arrow_width/2, p1.y), fill_color);
         draw_list->AddTriangleFilled(ImVec2(p1.x - arrow_width/2, p0.y), ImVec2(p1.x - arrow_width/2, p1.y), ImVec2(p1.x, p0.y), fill_color);
 
+        if (ImGui::IsItemHovered())   {
+            ImGui::SetTooltip(
+                "%s: %s\nColor: %s\nRange: %d - %d\nDuration: %d frames",
+                marker->schema_name().c_str(),
+                marker->name().c_str(),
+                marker->color().c_str(),
+                range.start_time().to_frames(),
+                range.end_time_exclusive().to_frames(),
+                duration.to_frames()
+            );
+        }
+        
         ImGui::PopClipRect();
         ImGui::EndGroup();
         ImGui::PopID();
@@ -388,7 +456,7 @@ void DrawTrackLabel(otio::Track* track, int index, float height)
     ImGui::EndGroup();
 }
 
-void DrawTrack(otio::Track* track, int index, float scale, float left_x, float full_width, float height)
+void DrawTrack(otio::Track* track, int index, float scale, ImVec2 origin, float full_width, float height)
 {
     ImGui::BeginGroup();
 
@@ -402,22 +470,22 @@ void DrawTrack(otio::Track* track, int index, float scale, float left_x, float f
     for (const auto& child : track->children())
     {
         if (const auto& item = dynamic_cast<otio::Item*>(child.value)) {
-            DrawItem(item, scale, left_x, height, range_map);
+            DrawItem(item, scale, origin, height, range_map);
         }
     }
     
     for (const auto& child : track->children())
     {
         if (const auto& transition = dynamic_cast<otio::Transition*>(child.value)) {
-            DrawTransition(transition, scale, left_x, height, range_map);
+            DrawTransition(transition, scale, origin, height, range_map);
         }
     }
 
     for (const auto& child : track->children())
     {
         if (const auto& item = dynamic_cast<otio::Item*>(child.value)) {
-            DrawEffects(item, scale, left_x, height, range_map);
-            DrawMarkers(item, scale, left_x, height, range_map);
+            DrawEffects(item, scale, origin, height, range_map);
+            DrawMarkers(item, scale, origin, height, range_map);
         }
     }
 
@@ -438,6 +506,7 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     ImVec2 size(fmaxf(full_width, width), track_height);
     ImVec2 text_offset(7.0f, 5.0f);
 
+    auto old_pos = ImGui::GetCursorPos();
     ImGui::PushID("##DrawTimecodeTrack");
     ImGui::BeginGroup();
 
@@ -446,8 +515,10 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     const ImVec2 p1 = ImGui::GetItemRectMax();
     ImGui::SetItemAllowOverlap();
 
-    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    if (ImGui::IsItemActive()) // && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
     {
+        // MousePos is in SCREEN space
+        // Subtract p0 which is also in SCREEN space, and includes scrolling, etc.
         float mouse_x_widget = ImGui::GetIO().MousePos.x - p0.x;
         SeekPlayhead(mouse_x_widget / scale + start.to_seconds());
         moved_playhead = true;
@@ -464,6 +535,7 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     draw_list->AddRectFilled(p0, p1, fill_color);
 
     // draw every frame?
+    // Note: "width" implies pixels, but "duration" implies time.
     float single_frame_width = scale / playhead.rate();
     float tick_width = single_frame_width;
     float min_tick_width = 30;
@@ -479,9 +551,6 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
             }
         }
     }
-    // while (tick_width > min_tick_width*2 && tick_width > single_frame_width) {
-    //     tick_width /= 2;
-    // }
 
     // assert(_divisible(1, 1));
     // assert(_divisible(1000, 1));
@@ -493,79 +562,138 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     // assert(!_divisible(1.0/24.0, 3600));
 
     // tick marks - roughly every N pixels
-    float seconds_per_tick = tick_width / scale;
-    auto snapped_start = otio::RationalTime::from_seconds(start.to_seconds() - fmodf(start.to_seconds(), seconds_per_tick), playhead.rate());
-    auto step = otio::RationalTime::from_seconds(seconds_per_tick, playhead.rate());
-    for (auto t=snapped_start; t<end; t+=step) {
-        float x = (t - start).to_seconds() * scale;
-        const ImVec2 tick_start = ImVec2(p0.x + x, p0.y + track_height/2);
-        const ImVec2 tick_end = ImVec2(tick_start.x, tick_start.y + track_height/2);
+    float pixels_per_second = scale;
+    float seconds_per_tick = tick_width / pixels_per_second;
+    auto tick_duration = otio::RationalTime::from_seconds(seconds_per_tick, playhead.rate());
+    int tick_count = ceilf(full_width / tick_width);
+    float last_label_end_x = 0;
+    for (int tick_index=0; tick_index<tick_count; tick_index++) {
+        auto tick_time = start + otio::RationalTime(tick_index * tick_duration.value(), tick_duration.rate());
+
+        float tick_x = tick_index * tick_width;
+        const ImVec2 tick_start = ImVec2(p0.x + tick_x, p0.y + track_height/2);
+        const ImVec2 tick_end = ImVec2(tick_start.x, p1.y);
         draw_list->AddLine(tick_start, tick_end, tick_color);
-        const ImVec2 tick_label_pos = ImVec2(p0.x + x + text_offset.x, p0.y + text_offset.y);
-        char tick_label[100];
-        char tick_unit = 'f';
-        int tick_value = 0;
-        float seconds = t.to_seconds();
-        if (_divisible(seconds, 3600.0f)) {
-            tick_unit = 'h';
-            tick_value = floorf(seconds / 3600.0f);
-        }else if (_divisible(seconds, 60.0f)) {
-            tick_unit = 'm';
-            tick_value = floorf(fmodf(seconds, 3600.0f) / 60.0f);
-        }else if (_divisible(seconds, 1.0f)) {
-            tick_unit = 's';
-            tick_value = floorf(fmodf(seconds, 60.0f));
-        }else{
-            tick_unit = 'f';
-            tick_value = floorf(fmodf(seconds, 1.0f) * playhead.rate());
+        
+        const ImVec2 tick_label_pos = ImVec2(p0.x + tick_x + text_offset.x, p0.y + text_offset.y);
+        if (tick_label_pos.x > last_label_end_x + text_offset.x) {
+            char tick_label[100];
+            snprintf(tick_label, sizeof(tick_label), "%s", tick_time.to_timecode().c_str());
+            auto label_size = ImGui::CalcTextSize(tick_label);
+            draw_list->AddText(tick_label_pos, tick_label_color, tick_label);
+            last_label_end_x = tick_label_pos.x + label_size.x;
         }
-        snprintf(tick_label, sizeof(tick_label), "%d%c", tick_value, tick_unit);
-        draw_list->AddText(tick_label_pos, tick_label_color, tick_label);
     }
+
+    // For debugging, this is very helpful...
+    // ImGui::SetTooltip("tick_width = %f\nseconds_per_tick = %f\npixels_per_second = %f", tick_width, seconds_per_tick, pixels_per_second);
 
     ImGui::EndGroup();
     ImGui::PopID();
+    ImGui::SetCursorPos(old_pos);
 
     return moved_playhead;
 }
 
-float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height, ImVec2 top)
+float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::RationalTime playhead, float scale, float full_width, float track_height, float full_height, ImVec2 origin, bool draw_arrow)
 {
     float playhead_width = scale / playhead.rate();
     float playhead_x = (playhead - start).to_seconds() * scale;
-    
-    ImVec2 size(full_width, track_height);
-    ImVec2 text_offset(7.0f, 5.0f);
-    
-    ImGui::PushID("##Playhead");
-    ImGui::BeginGroup();
 
-    ImGui::InvisibleButton("##empty", size);
-    const ImVec2 p0 = top;
-    
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    
-    const ImVec2 playhead_pos = ImVec2(p0.x + playhead_x, p0.y);
-    const ImVec2 playhead_size = ImVec2(playhead_width, full_height);
-    const ImVec2 playhead_max = ImVec2(playhead_pos.x + playhead_size.x, playhead_pos.y + playhead_size.y);
-    const ImVec2 playhead_line_start = playhead_pos;
-    const ImVec2 playhead_line_end = ImVec2(playhead_pos.x, playhead_pos.y + full_height);
+    ImVec2 size(playhead_width, full_height);
+    ImVec2 text_offset(7.0f, 5.0f);
+
+    auto background_color = appTheme.colors[AppThemeCol_Background];
     auto playhead_fill_color = appTheme.colors[AppThemeCol_Playhead];
     auto playhead_line_color = appTheme.colors[AppThemeCol_PlayheadLine];
 
+    // Ask for this position in the timeline
+    ImVec2 render_pos(
+        playhead_x + origin.x,
+        origin.y
+    );
+
+    auto old_pos = ImGui::GetCursorPos();
+    ImGui::SetCursorPos(render_pos);
+    
+    ImGui::PushID("##Playhead");
+    ImGui::BeginGroup();
+    ImGui::InvisibleButton("##Playhead2", size);
+
+    // Compute where we are rendering in screen space for draw list functions.
+    ImVec2 p0 = ImGui::GetItemRectMin();
+    ImVec2 p1 = ImGui::GetItemRectMax();
+    ImGui::SetItemAllowOverlap();
+
+    // compute the playhead x position in the local (aka window) coordinate system
+    // so that later we can use SetScrollFromPosX() to scroll the timeline.
+    // p0 is in screen space - where we're actually drawn (which includes current scroll)
+    // origin is the offset to the edge of the tracks in window space.
+    // So we compute SCREEN_RENDER_POS.x - LOCAL_EDGE.x - WINDOW_POS.x => LOCAL_RENDER_POS.x
+    // float playhead_scroll_x = p0.x - origin.x - ImGui::GetWindowPos().x;
+    float playhead_scroll_x = playhead_x;
+
+    if (ImGui::IsItemActive()) // && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+    {
+        // MousePos is in SCREEN space
+        float mouse_x_widget = ImGui::GetIO().MousePos.x
+            // Subtract WindowPos to get WINDOW space
+            - ImGui::GetWindowPos().x
+            // Subtract origin.x to get TIMELINE space
+            - origin.x
+            // Add ScrollX to compensate for scrolling
+            + ImGui::GetScrollX();
+        SeekPlayhead(mouse_x_widget / scale + start.to_seconds());
+        // Note: Using MouseDelta doesn't work since it is directionally
+        // biased by playhead snapping, and other factors I don't understand.
+        // float drag_x = ImGui::GetIO().MouseDelta.x * 0.5f;
+        // SeekPlayhead(playhead.to_seconds() + drag_x / scale);
+    }
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    
+    const ImVec2 playhead_line_start = p0;
+    const ImVec2 playhead_line_end = ImVec2(p0.x, p1.y);
+
     std::string label_str = playhead.to_timecode() + " / " + playhead.to_time_string();
     auto label_color = appTheme.colors[AppThemeCol_Label];
-    const ImVec2 label_pos = ImVec2(playhead_max.x + text_offset.x, p0.y + text_offset.y);
-    
-    // playhead
-    draw_list->AddRectFilled(playhead_pos, playhead_max, playhead_fill_color);
+    const ImVec2 label_size = ImGui::CalcTextSize(label_str.c_str());
+    const ImVec2 label_pos = ImVec2(p1.x + text_offset.x, p0.y + text_offset.y);
+    const ImVec2 label_end = ImVec2(label_pos.x + label_size.x, label_pos.y + label_size.y);
+
+    bool draw_label = draw_arrow;  // link these
+    if (draw_label) {
+        // for readability, put a black rectangle behind the area where the label will be
+        draw_list->AddRectFilled(ImVec2(label_pos.x - text_offset.x, label_pos.y - text_offset.x),
+                                 ImVec2(label_end.x + text_offset.x, label_end.y + text_offset.y),
+                                 background_color);
+    }
+
+    // playhead vertical bar is one frame thick, with hairline on left edge
+    draw_list->AddRectFilled(p0, p1, playhead_fill_color);
     draw_list->AddLine(playhead_line_start, playhead_line_end, playhead_line_color);
-    draw_list->AddText(label_pos, label_color, label_str.c_str());
+
+    // playhead arrow and label
+    if (draw_arrow) {
+        const ImVec2 arrow_size(track_height/2, track_height/2);
+        draw_list->AddTriangleFilled(
+            ImVec2(p0.x - arrow_size.x/2, p0.y),
+            ImVec2(p0.x + arrow_size.x/2, p0.y),
+            ImVec2(p0.x, p0.y + arrow_size.y),
+            playhead_line_color);
+    }
+    
+    // label
+    if (draw_label) {
+        draw_list->AddText(label_pos, label_color, label_str.c_str());
+    }
     
     ImGui::EndGroup();
     ImGui::PopID();
     
-    return playhead_pos.x - ImGui::GetWindowPos().x;
+    ImGui::SetCursorPos(old_pos);
+
+    return playhead_scroll_x;
 }
 
 bool DrawTransportControls(otio::Timeline* timeline)
@@ -593,7 +721,7 @@ bool DrawTransportControls(otio::Timeline* timeline)
     ImGui::Text("%s", start_string.c_str());
     ImGui::SameLine();
 
-    ImGui::SetNextItemWidth(-220);
+    ImGui::SetNextItemWidth(-270);
     float playhead_seconds = appState.playhead.to_seconds();
     if (ImGui::SliderFloat("##Playhead", &playhead_seconds, appState.playhead_limit.start_time().to_seconds(), appState.playhead_limit.end_time_exclusive().to_seconds(), playhead_string.c_str())) {
         SeekPlayhead(playhead_seconds);
@@ -607,6 +735,11 @@ bool DrawTransportControls(otio::Timeline* timeline)
     ImGui::SetNextItemWidth(100);
     if (ImGui::SliderFloat("##Zoom", &appState.scale, 0.5f, 5000.0f, "Zoom", ImGuiSliderFlags_Logarithmic)) {
         moved_playhead = true;
+    }
+  
+    ImGui::SameLine();
+    if (ImGui::Button("Fit")) {
+        FitZoomWholeTimeline();
     }
     
     ImGui::EndGroup();
@@ -640,19 +773,24 @@ void DrawTimeline(otio::Timeline* timeline)
         return;
     }
 
+    auto playhead = appState.playhead;
+    
     auto start = appState.playhead_limit.start_time();
     auto duration = appState.playhead_limit.duration();
     auto end = appState.playhead_limit.end_time_exclusive();
 
-    auto playhead_string = appState.playhead.to_timecode();
+    auto playhead_string = playhead.to_timecode();
   
     auto video_tracks = timeline->video_tracks();
     auto audio_tracks = timeline->audio_tracks();
     
     // Tracks
 
+    auto available_size = ImGui::GetContentRegionAvail();
+    appState.timeline_width = 0.8f * available_size.x;
+
     float full_width = duration.to_seconds() * appState.scale;
-    float full_height = ImGui::GetContentRegionAvail().y - ImGui::GetFrameHeightWithSpacing();
+    float full_height = available_size.y - ImGui::GetFrameHeightWithSpacing();
 
     static ImVec2 cell_padding(2.0f, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, cell_padding);
@@ -683,24 +821,21 @@ void DrawTimeline(otio::Timeline* timeline)
         ImGui::Text("%s", playhead_string.c_str());
         ImGui::TableNextColumn();
 
-        // Remember the left edge, so that we can pass this into DrawTrack for overlays.
-        float left_x = ImGui::GetCursorPosX();
-        // auto top = ImGui::GetCursorPos();
+        // Remember the top/left edge, so that we can overlay all the elements on the timeline.
+        auto origin = ImGui::GetCursorPos();
         
-        auto old_pos = ImGui::GetCursorPos();
-        if (DrawTimecodeTrack(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height)) {
+        if (DrawTimecodeTrack(start, end, playhead, appState.scale, full_width, appState.track_height, full_height)) {
             // scroll_to_playhead = true;
         }
-        auto top = ImGui::GetItemRectMin();
-        ImGui::SetCursorPos(old_pos);
-        // otio::ErrorStatus error_status;
-        // auto range_map = track->range_of_all_children(&error_status);
-        // if (otio::is_error(error_status)) {
-        //     Message("Error calculating timing: %s", otio_error_string(error_status).c_str());
-        //     assert(false);
-        // }
+
+        // draw just the top of the playhead in the fixed timecode track
+        float playhead_x = DrawPlayhead(start, end, playhead, appState.scale, full_width, appState.track_height, appState.track_height, origin, true);
+        
+        // now shift the origin down below the timecode track
+        origin.y += appState.track_height;
+
         std::map<otio::Composable*, otio::TimeRange> empty_map;
-        DrawMarkers(timeline->tracks(), appState.scale, left_x, appState.track_height, empty_map);
+        DrawMarkers(timeline->tracks(), appState.scale, origin, appState.track_height, empty_map);
 
         int index = video_tracks.size();
         for (auto i = video_tracks.rbegin(); i != video_tracks.rend(); ++i)
@@ -712,7 +847,7 @@ void DrawTimeline(otio::Timeline* timeline)
                 DrawTrackLabel(video_track, index, appState.track_height);
             }
             if (ImGui::TableNextColumn()) {
-                DrawTrack(video_track, index, appState.scale, left_x, full_width, appState.track_height);
+                DrawTrack(video_track, index, appState.scale, origin, full_width, appState.track_height);
             }
             index--;
         }
@@ -735,7 +870,7 @@ void DrawTimeline(otio::Timeline* timeline)
                 DrawTrackLabel(audio_track, index, appState.track_height);
             }
             if (ImGui::TableNextColumn()) {
-                DrawTrack(audio_track, index, appState.scale, left_x, full_width, appState.track_height);
+                DrawTrack(audio_track, index, appState.scale, origin, full_width, appState.track_height);
             }
             index++;
         }
@@ -745,10 +880,12 @@ void DrawTimeline(otio::Timeline* timeline)
         ImGui::TableNextColumn();
         // ImGui::Text("%s", playhead_string.c_str());
         ImGui::TableNextColumn();
-        float playhead_x = DrawPlayhead(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height, top);
+        playhead_x = DrawPlayhead(start, end, playhead, appState.scale, full_width, appState.track_height, full_height, origin, false);
 
         if (appState.scroll_to_playhead) {
-            ImGui::SetScrollFromPosX(playhead_x);
+            // This is almost the same as calling ImGui::SetScrollX(playhead_x)
+            // but aligns to the center instead of to the left edge, which is nicer looking.
+            ImGui::SetScrollFromPosX(playhead_x - ImGui::GetScrollX());
             appState.scroll_to_playhead = false;
         }
         

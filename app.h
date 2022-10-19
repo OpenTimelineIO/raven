@@ -86,6 +86,7 @@ struct AppState
   char file_path[ImGuiFs::MAX_PATH_BYTES];
   otio::SerializableObject::Retainer<otio::Timeline> timeline;
 
+  float timeline_width = 100.0f;
   float scale = 100.0f;
   float track_height = 30.0f;
   otio::RationalTime playhead;
@@ -109,10 +110,14 @@ extern AppTheme appTheme;
 extern ImFont *gTechFont;
 extern ImFont *gIconFont;
 
+void Log(const char* format, ...);
+void Message(const char* format, ...);
+
 std::string otio_error_string(otio::ErrorStatus const& error_status);
 ImU32 ImLerpColors(ImU32 col_a, ImU32 col_b, float t);
+
 void SelectObject(otio::SerializableObject* object);
 void SeekPlayhead(float seconds);
 void SnapPlayhead();
-void Log(const char* format, ...);
-void Message(const char* format, ...);
+void FitZoomWholeTimeline();
+

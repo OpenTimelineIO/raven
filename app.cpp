@@ -20,7 +20,8 @@
 
 #include <iostream>
 
-void DrawButtons(ImVec2 buttonSize);
+void DrawMenu();
+void DrawToolbar(ImVec2 buttonSize);
 
 #define DEFINE_APP_THEME_NAMES
 #include "app.h"
@@ -172,6 +173,8 @@ void LoadTimeline(otio::Timeline* timeline)
     timeline->global_start_time().value_or(otio::RationalTime()),
     timeline->duration()
   );
+  appState.playhead = appState.playhead_limit.start_time();
+  FitZoomWholeTimeline();
 }
 
 void LoadFile(const char* path)
@@ -188,8 +191,10 @@ void LoadFile(const char* path)
   Message("Loaded %s", timeline->name().c_str());
 }
 
-void MainInit(int argc, char** argv)
+void MainInit(int argc, char** argv, int initial_width, int initial_height)
 {
+  appState.timeline_width = initial_width * 0.8f;
+
   ApplyAppStyle();
 
   std::string resourcePath = argv[0];
@@ -272,6 +277,7 @@ void MainGui()
       window_title,
       &appState.show_main_window,
       ImGuiWindowFlags_NoCollapse |
+      ImGuiWindowFlags_MenuBar |
       // ImGuiWindowFlags_NoDocking |
       // ImGuiWindowFlags_AlwaysAutoResize |
       0
@@ -282,13 +288,14 @@ void MainGui()
     exit(0);
   }
 
+  DrawMenu();
+
   ImVec2 button_size = ImVec2(
     ImGui::GetTextLineHeightWithSpacing(),
     ImGui::GetTextLineHeightWithSpacing()
     );
 
-  ImGui::SameLine();
-  DrawButtons(button_size);
+  // DrawToolbar(button_size);
 
   // ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - button_size.x + style.ItemSpacing.x);
 
@@ -377,48 +384,78 @@ void SaveTheme()
   fclose(file);
 }
 
-void DrawButtons(ImVec2 button_size)
-{
-  // ImGuiStyle& style = ImGui::GetStyle();
+static ImGuiFs::Dialog __open_file_dialog;
 
-  const bool browseButtonPressed = IconButton("\uF07C##Load", button_size);                          // we need a trigger boolean variable
-  static ImGuiFs::Dialog dlg;
+bool MaybeLoadFile(bool shouldBrowse)
+{
+  // TODO: The browse window sometimes appears offset strangely...
   // ImGui::SetNextWindowPos(ImVec2(300,300));
-  const char* chosenPath = dlg.chooseFileDialog(
-    browseButtonPressed,
-    dlg.getLastDirectory(),
+  const char* chosenPath = __open_file_dialog.chooseFileDialog(
+    shouldBrowse,
+    __open_file_dialog.getLastDirectory(),
     ".otio",
     "Load OTIO File"
   );
   if (strlen(chosenPath)>0) {
     LoadFile(chosenPath);
+    return true;
   }
-  ImGui::SameLine();
+  return false;
+}
 
-  // if (IconButton("\uF074##NodeGraph", button_size)) {
-  //   appState.show_node_graph = !appState.show_node_graph;
-  // }
-  // ImGui::SameLine();
-
-  // if (IconButton("\uF0AE##Style", button_size)) {
-  //   appState.show_style_editor = !appState.show_style_editor;
-  // }
-  // ImGui::SameLine();
-
-  if (IconButton("\uF013#Demo", button_size)) {
-    appState.show_demo_window = !appState.show_demo_window;
-  }
-  
-  ImGui::SameLine();
-  if (ImGui::Checkbox("Snap", &appState.snap_to_frame)) {
-    if (appState.snap_to_frame) {
-      SnapPlayhead();
+void DrawMenu()
+{
+  bool showFileOpenBrowser = false;
+  if (ImGui::BeginMenuBar())
+  {
+    if (ImGui::BeginMenu("File"))
+    {
+      if (ImGui::MenuItem("Open..."))
+      {
+        showFileOpenBrowser = true;
+      }
+      if (ImGui::MenuItem("Close", NULL, false, appState.timeline))
+      {
+        appState.timeline = NULL;
+      }
+      if (ImGui::MenuItem("Fit to Window"))
+      {
+        FitZoomWholeTimeline();
+      }
+      if (ImGui::MenuItem("Snap Playhead to Frames", NULL, &appState.snap_to_frame))
+      {
+        if (appState.snap_to_frame) {
+          SnapPlayhead();
+        }
+      }
+      if (ImGui::MenuItem("Show Dear ImGui Demo", NULL, &appState.show_demo_window))
+      {
+      }
+      if (ImGui::MenuItem("Exit", "Alt+F4"))
+      {
+        MainCleanup();
+        exit(0);
+      }
+      ImGui::EndMenu();
     }
+    ImGui::EndMenuBar();
   }
+  MaybeLoadFile(showFileOpenBrowser);
+}
+
+void DrawToolbar(ImVec2 button_size)
+{
+  // ImGuiStyle& style = ImGui::GetStyle();
+
+  MaybeLoadFile(IconButton("\uF07C##Load", button_size));
   
   ImGui::SameLine();
+  ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 300, 5));
+
+  ImGui::SameLine();
+
   int fps = rint(1.0f / ImGui::GetIO().DeltaTime);
-  ImGui::Text("/ Frame: %d / FPS: %3d", ImGui::GetFrameCount(), fps);
+  ImGui::Text("Frame: %d / FPS: %3d", ImGui::GetFrameCount(), fps);
   
 #ifdef THEME_EDITOR
   for (int i=0; i<AppThemeCol_COUNT; i++) {
@@ -462,3 +499,9 @@ void SnapPlayhead()
 {
   appState.playhead = otio::RationalTime::from_frames(appState.playhead.to_frames(), appState.playhead.rate());
 }
+
+void FitZoomWholeTimeline()
+{
+  appState.scale = appState.timeline_width / appState.timeline->duration().to_seconds();
+}
+
