@@ -216,7 +216,8 @@ namespace ImStb
 // Error handling
 // Down the line in some frameworks/languages we would like to have a way to redirect those to the programmer and recover from more faults.
 #ifndef IM_ASSERT_USER_ERROR
-#define IM_ASSERT_USER_ERROR(_EXP,_MSG) IM_ASSERT((_EXP) && _MSG)   // Recoverable User Error
+//#define IM_ASSERT_USER_ERROR(_EXP,_MSG) IM_ASSERT((_EXP) && _MSG)   // Recoverable User Error
+#define IM_ASSERT_USER_ERROR(_EXP,_MSG) if (!(_EXP)) { fprintf(stderr, "Dear Imgui error: %s\n", _MSG); }
 #endif
 
 // Misc Macros
