@@ -285,7 +285,7 @@ void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float height, std
     if (effects.size() == 1) {
         const auto& effect = effects[0];
         if (ImGui::IsItemClicked()) {
-            SelectObject(effect);
+            SelectObject(effect, item);
         }
         if (appState.selected_object == effect) {
             fill_color = selected_fill_color;
@@ -398,7 +398,7 @@ void DrawMarkers(otio::Item* item, float scale, ImVec2 origin, float height, std
             fill_color = hover_fill_color;
         }
         if (ImGui::IsItemClicked()) {
-            SelectObject(marker);
+            SelectObject(marker, item);
         }
         if (appState.selected_object == marker) {
             fill_color = selected_fill_color;

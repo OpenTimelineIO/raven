@@ -26,6 +26,7 @@ void DrawToolbar(ImVec2 buttonSize);
 #define DEFINE_APP_THEME_NAMES
 #include "app.h"
 #include "timeline.h"
+#include "editing.h"
 
 const char *app_name = "Raven";
 
@@ -295,7 +296,7 @@ void MainGui()
     ImGui::GetTextLineHeightWithSpacing()
     );
 
-  // DrawToolbar(button_size);
+  DrawToolbar(button_size);
 
   // ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - button_size.x + style.ItemSpacing.x);
 
@@ -418,6 +419,34 @@ void DrawMenu()
       {
         appState.timeline = NULL;
       }
+      if (ImGui::MenuItem("Exit", "Alt+F4"))
+      {
+        MainCleanup();
+        exit(0);
+      }
+      ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("Edit"))
+    {
+      if (ImGui::MenuItem("Delete", NULL, false, appState.selected_object != NULL))
+      {
+        DeleteSelectedObject();
+      }
+      if (ImGui::MenuItem("Add Marker"))
+      {
+        AddMarkerAtPlayhead();
+      }
+      ImGui::EndMenu();
+    }
+
+    if (ImGui::BeginMenu("View"))
+    {
+      bool showTimecodeOnClips = appState.track_height >= appState.default_track_height*2;
+      if (ImGui::MenuItem("Show Timecode on Clips", NULL, &showTimecodeOnClips))
+      {
+        appState.track_height = showTimecodeOnClips ? appState.default_track_height*2 : appState.default_track_height;
+      }
       if (ImGui::MenuItem("Fit to Window"))
       {
         FitZoomWholeTimeline();
@@ -431,11 +460,6 @@ void DrawMenu()
       if (ImGui::MenuItem("Show Dear ImGui Demo", NULL, &appState.show_demo_window))
       {
       }
-      if (ImGui::MenuItem("Exit", "Alt+F4"))
-      {
-        MainCleanup();
-        exit(0);
-      }
       ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
@@ -447,8 +471,16 @@ void DrawToolbar(ImVec2 button_size)
 {
   // ImGuiStyle& style = ImGui::GetStyle();
 
-  MaybeLoadFile(IconButton("\uF07C##Load", button_size));
+  if (IconButton("\uF014##Delete", button_size)) {
+      DeleteSelectedObject();
+  }
+
+  ImGui::SameLine();
+  if (IconButton("\uF02B##Mark", button_size)) {
+      AddMarkerAtPlayhead();
+  }
   
+  // skip to the far right edge
   ImGui::SameLine();
   ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 300, 5));
 
@@ -469,9 +501,10 @@ void DrawToolbar(ImVec2 button_size)
 #endif
 }
 
-void SelectObject(otio::SerializableObject* object)
+void SelectObject(otio::SerializableObject* object, otio::SerializableObject* context)
 {
   appState.selected_object = object;
+  appState.selected_context = context;
   
   if (object == NULL) {
     appState.selected_text = "No selection";

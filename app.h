@@ -88,6 +88,7 @@ struct AppState
 
   float timeline_width = 100.0f;
   float scale = 100.0f;
+  float default_track_height = 30.0f;
   float track_height = 30.0f;
   otio::RationalTime playhead;
   bool scroll_to_playhead = false;
@@ -97,6 +98,7 @@ struct AppState
   uint32_t selection_length = 1;
 
   otio::SerializableObject* selected_object;
+  otio::SerializableObject* selected_context;
   std::string selected_text;
   char message[1024];
 
@@ -116,7 +118,7 @@ void Message(const char* format, ...);
 std::string otio_error_string(otio::ErrorStatus const& error_status);
 ImU32 ImLerpColors(ImU32 col_a, ImU32 col_b, float t);
 
-void SelectObject(otio::SerializableObject* object);
+void SelectObject(otio::SerializableObject* object, otio::SerializableObject* context=NULL);
 void SeekPlayhead(float seconds);
 void SnapPlayhead();
 void FitZoomWholeTimeline();
