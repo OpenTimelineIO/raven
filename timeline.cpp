@@ -9,6 +9,7 @@
 #include <opentimelineio/effect.h>
 #include <opentimelineio/marker.h>
 #include <opentimelineio/composable.h>
+#include <opentimelineio/linearTimeWarp.h>
 
 
 void DrawItem(otio::Item* item, float scale, float left_x, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
@@ -112,6 +113,22 @@ void DrawItem(otio::Item* item, float scale, float left_x, float height, std::ma
         draw_list->AddText(pos2, label_color, str2.c_str());
     }
     
+    if (ImGui::IsItemHovered())   {
+        std::string extra;
+        if (const auto& comp = dynamic_cast<otio::Composition*>(item)) {
+            extra = "\nChildren: " + std::to_string(comp->children().size());
+        }
+        ImGui::SetTooltip(
+            "%s: %s\nRange: %d - %d\nDuration: %d frames%s",
+            item->schema_name().c_str(),
+            item->name().c_str(),
+            trimmed_range.start_time().to_frames(),
+            trimmed_range.end_time_inclusive().to_frames(),
+            duration.to_frames(),
+            extra.c_str()
+        );
+    }
+    
     ImGui::PopClipRect();
     ImGui::EndGroup();
     ImGui::PopID();
@@ -178,6 +195,17 @@ void DrawTransition(otio::Transition* transition, float scale, float left_x, flo
     draw_list->AddRectFilled(p0, p1, fill_color, corner_radius, corners_tl_br);
     draw_list->AddLine(line_start, line_end, line_color);
 
+    if (ImGui::IsItemHovered())   {
+        ImGui::SetTooltip(
+            "%s: %s\nIn/Out Offset: %d / %d\nDuration: %d frames",
+            transition->schema_name().c_str(),
+            transition->name().c_str(),
+            transition->in_offset().to_frames(),
+            transition->out_offset().to_frames(),
+            duration.to_frames()
+        );
+    }
+    
     ImGui::PopClipRect();
     ImGui::EndGroup();
     ImGui::PopID();
@@ -264,6 +292,19 @@ void DrawEffects(otio::Item* item, float scale, float left_x, float height, std:
             p0.y + height/4 - text_size.y/2
         );
         draw_list->AddText(text_pos, label_color, label_str.c_str());
+    }
+
+    if (ImGui::IsItemHovered())   {
+        std::string tooltip;
+        for (const auto& effect : effects) {
+            if (tooltip != "") tooltip += "\n\n";
+            tooltip += effect->schema_name() + ": " + effect->name();
+            tooltip += "\nEffect Name: " + effect->effect_name();
+            if (const auto& timewarp = dynamic_cast<otio::LinearTimeWarp*>(effect.value)) {
+                tooltip += "\nTime Scale: " + std::to_string(timewarp->time_scalar());
+            }
+        }
+        ImGui::SetTooltip("%s", tooltip.c_str());
     }
     
     ImGui::PopClipRect();
@@ -354,6 +395,18 @@ void DrawMarkers(otio::Item* item, float scale, float left_x, float height, std:
         draw_list->AddRectFilled(ImVec2(p0.x + arrow_width/2, p0.y), ImVec2(p1.x - arrow_width/2, p1.y), fill_color);
         draw_list->AddTriangleFilled(ImVec2(p1.x - arrow_width/2, p0.y), ImVec2(p1.x - arrow_width/2, p1.y), ImVec2(p1.x, p0.y), fill_color);
 
+        if (ImGui::IsItemHovered())   {
+            ImGui::SetTooltip(
+                "%s: %s\nColor: %s\nRange: %d - %d\nDuration: %d frames",
+                marker->schema_name().c_str(),
+                marker->name().c_str(),
+                marker->color().c_str(),
+                range.start_time().to_frames(),
+                range.end_time_exclusive().to_frames(),
+                duration.to_frames()
+            );
+        }
+        
         ImGui::PopClipRect();
         ImGui::EndGroup();
         ImGui::PopID();
