@@ -437,6 +437,10 @@ void DrawMenu()
       {
         AddMarkerAtPlayhead();
       }
+      if (ImGui::MenuItem("Add Track"))
+      {
+        AddTrack();
+      }
       ImGui::EndMenu();
     }
 
@@ -478,6 +482,11 @@ void DrawToolbar(ImVec2 button_size)
   ImGui::SameLine();
   if (IconButton("\uF02B##Mark", button_size)) {
       AddMarkerAtPlayhead();
+  }
+
+  ImGui::SameLine();
+  if (IconButton("\uF03C +Track", ImVec2(0, button_size.y))) {
+      AddTrack();
   }
   
   // skip to the far right edge

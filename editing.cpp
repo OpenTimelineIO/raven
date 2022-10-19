@@ -82,3 +82,56 @@ void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color)
   item->markers().push_back(marker);
 }
 
+void AddTrack(std::string kind)
+{
+  const auto& timeline = appState.timeline;
+  if (!timeline) return;
+
+  // Fall back to the top level stack.
+  int insertion_index = -1;
+  otio::Stack* stack = timeline->tracks();
+  
+  // Start with the selected object, if it is a Composable.
+  auto child = dynamic_cast<otio::Composable*>(appState.selected_object);
+  if (child) {
+    // Walk up from the selected object until we find a Stack
+    otio::Composition* search = child->parent();
+    while (search) {
+      if (const auto& found = dynamic_cast<otio::Stack*>(search)) {
+        stack = found;
+        
+        auto& children = stack->children();
+        auto it = std::find(children.begin(), children.end(), child);
+        if (it != children.end()) {
+          insertion_index = std::distance(children.begin(), it) + 1;
+        }
+        
+        if (kind == "") {
+          if (const auto& peer = dynamic_cast<otio::Track*>(child)) {
+            kind = peer->kind();
+          }
+        }
+
+        break;
+      }
+      child = search;
+      search = search->parent();
+    }
+  }
+  
+  if (stack) {
+    otio::SerializableObject::Retainer<otio::Track> new_track = new otio::Track("", nonstd::nullopt, kind);
+    
+    otio::ErrorStatus error_status;
+    if (insertion_index == -1) {
+      stack->append_child(new_track, &error_status);
+    }else{
+      stack->insert_child(insertion_index, new_track, &error_status);
+    }
+    if (otio::is_error(error_status)) {
+      Message("Error inserting track: %s", otio_error_string(error_status).c_str());
+      return;
+    }
+  }
+}
+
