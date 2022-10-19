@@ -62,8 +62,7 @@ void DrawItem(otio::Item* item, float scale, ImVec2 origin, float height, std::m
     ImGui::PushID(item);
     ImGui::BeginGroup();
 
-    // ImGui::InvisibleButton("##empty", size);
-    ImGui::Dummy(size);
+    ImGui::InvisibleButton("##Item", size);
     
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
@@ -166,8 +165,7 @@ void DrawTransition(otio::Transition* transition, float scale, ImVec2 origin, fl
     ImGui::PushID(transition);
     ImGui::BeginGroup();
 
-    // ImGui::InvisibleButton("##empty", size);
-    ImGui::Dummy(size);
+    ImGui::InvisibleButton("##Item", size);
 
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
@@ -255,8 +253,7 @@ void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float height, std
     ImGui::PushID(item);
     ImGui::BeginGroup();
 
-    // ImGui::InvisibleButton("##empty", size);
-    ImGui::Dummy(size);
+    ImGui::InvisibleButton("##Effect", size);
     
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
@@ -371,8 +368,7 @@ void DrawMarkers(otio::Item* item, float scale, ImVec2 origin, float height, std
         ImGui::PushID(item);
         ImGui::BeginGroup();
 
-        // ImGui::InvisibleButton("##empty", size);
-        ImGui::Dummy(size);
+        ImGui::InvisibleButton("##Marker", size);
         
         ImVec2 p0 = ImGui::GetItemRectMin();
         ImVec2 p1 = ImGui::GetItemRectMax();
