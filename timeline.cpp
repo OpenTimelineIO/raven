@@ -601,18 +601,25 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, otio::R
     return moved_playhead;
 }
 
-float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height, ImVec2 top)
+float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::RationalTime &playhead, float scale, float full_width, float track_height, float full_height, ImVec2 top, bool draw_arrow)
 {
     float playhead_width = scale / playhead.rate();
     float playhead_x = (playhead - start).to_seconds() * scale;
-    
+
     ImVec2 size(full_width, track_height);
     ImVec2 text_offset(7.0f, 5.0f);
     
-    ImGui::PushID("##Playhead");
+    bool draw_label = draw_arrow;
+    if (draw_arrow) {
+        ImGui::PushID("##PlayheadArrow");
+    }else{
+        ImGui::PushID("##Playhead");
+    }
     ImGui::BeginGroup();
 
-    ImGui::InvisibleButton("##empty", size);
+    // ImGui::InvisibleButton("##empty", size);
+    ImGui::Dummy(size);
+    ImGui::SetItemAllowOverlap();
     const ImVec2 p0 = top;
     
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -632,11 +639,29 @@ float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::Ratio
     const ImVec2 label_pos = ImVec2(playhead_max.x + text_offset.x, p0.y + text_offset.y);
     const ImVec2 label_end = ImVec2(label_pos.x + label_size.x, label_pos.y + label_size.y);
 
-    // playhead
+    if (draw_label) {
+        // for readability, put a black rectangle behind the area where the label will be
+        draw_list->AddRectFilled(ImVec2(playhead_pos.x, label_pos.y), label_end, background_color);
+    }
+
+    // playhead vertical bar is one frame thick, with hairline on left edge
     draw_list->AddRectFilled(playhead_pos, playhead_max, playhead_fill_color);
     draw_list->AddLine(playhead_line_start, playhead_line_end, playhead_line_color);
-    draw_list->AddRectFilled(label_pos, label_end, background_color); // for readability
-    draw_list->AddText(label_pos, label_color, label_str.c_str());
+
+    // playhead arrow and label
+    if (draw_arrow) {
+        const ImVec2 arrow_size(track_height/2, track_height/2);
+        draw_list->AddTriangleFilled(
+            ImVec2(playhead_pos.x - arrow_size.x/2, playhead_pos.y),
+            ImVec2(playhead_pos.x + arrow_size.x/2, playhead_pos.y),
+            ImVec2(playhead_pos.x, playhead_pos.y + arrow_size.y),
+            playhead_line_color);
+    }
+    
+    // label
+    if (draw_label) {
+        draw_list->AddText(label_pos, label_color, label_str.c_str());
+    }
     
     ImGui::EndGroup();
     ImGui::PopID();
@@ -772,12 +797,12 @@ void DrawTimeline(otio::Timeline* timeline)
         }
         auto top = ImGui::GetItemRectMin();
         ImGui::SetCursorPos(old_pos);
-        // otio::ErrorStatus error_status;
-        // auto range_map = track->range_of_all_children(&error_status);
-        // if (otio::is_error(error_status)) {
-        //     Message("Error calculating timing: %s", otio_error_string(error_status).c_str());
-        //     assert(false);
-        // }
+
+        // draw just the top of the playhead in the fixed timecode track
+        float playhead_x = DrawPlayhead(start, end, appState.playhead, appState.scale, full_width, appState.track_height, appState.track_height, top, true);
+        ImGui::SetCursorPos(old_pos);
+        top.y = ImGui::GetItemRectMax().y;
+
         std::map<otio::Composable*, otio::TimeRange> empty_map;
         DrawMarkers(timeline->tracks(), appState.scale, left_x, appState.track_height, empty_map);
 
@@ -824,7 +849,7 @@ void DrawTimeline(otio::Timeline* timeline)
         ImGui::TableNextColumn();
         // ImGui::Text("%s", playhead_string.c_str());
         ImGui::TableNextColumn();
-        float playhead_x = DrawPlayhead(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height, top);
+        DrawPlayhead(start, end, appState.playhead, appState.scale, full_width, appState.track_height, full_height, top, false);
 
         if (appState.scroll_to_playhead) {
             ImGui::SetScrollFromPosX(playhead_x);
