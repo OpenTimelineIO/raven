@@ -57,7 +57,7 @@ void Message(const char* format, ...)
 
 // Files in the application fonts/ folder are supposed to be embedded
 // automatically (on iOS/Android/Emscripten), but that's not wired up.
-void LoadFonts()
+bool LoadFonts(const std::string& resourcePath)
 {
   ImGuiIO& io = ImGui::GetIO();
 
@@ -67,10 +67,14 @@ void LoadFonts()
   gTechFont = io.Fonts->AddFontDefault();
   gIconFont = gTechFont;
 #else
-  gTechFont = io.Fonts->AddFontFromFileTTF("fonts/ShareTechMono-Regular.ttf", 20.0f);
+  std::string path = resourcePath + "ShareTechMono-Regular.ttf";
+  gTechFont = io.Fonts->AddFontFromFileTTF(path.c_str(), 20.0f);
   static const ImWchar icon_fa_ranges[] = { 0xF000, 0xF18B, 0 };
-  gIconFont = io.Fonts->AddFontFromFileTTF("fonts/fontawesome-webfont.ttf", 16.0f, NULL, icon_fa_ranges);
+  path = resourcePath + "fontawesome-webfont.ttf";
+  gIconFont = io.Fonts->AddFontFromFileTTF(path.c_str(), 16.0f, NULL, icon_fa_ranges);
 #endif
+    
+  return gTechFont != nullptr && gIconFont != nullptr;
 }
 
 void ApplyAppStyle()
@@ -187,7 +191,28 @@ void LoadFile(const char* path)
 void MainInit(int argc, char** argv)
 {
   ApplyAppStyle();
-  LoadFonts();
+
+  std::string resourcePath = argv[0];
+  auto slashPos = resourcePath.rfind('/');
+    if (slashPos == std::string::npos) {
+        slashPos = resourcePath.rfind('\\');
+    }
+  if (slashPos != std::string::npos) {
+    resourcePath = resourcePath.substr(0, slashPos + 1);
+      resourcePath += "raven_rsrc/";
+  }
+
+    // note, the intention is to intern the fonts within the application,
+    // so this pattern, and the terrifying fallback of looking into the
+    // source code itself, won't last long.
+    if (!LoadFonts(resourcePath)) {
+        // why two macros? because preprocessor, hahaha
+        #define STRINGIFY(x) #x
+        #define TO_STRING(x) STRINGIFY(x)
+        resourcePath = TO_STRING(BUILT_RESOURCE_PATH);
+        resourcePath += "/raven_rsrc/";
+        LoadFonts(resourcePath);
+    }
   
   if (argc > 1) {
     LoadFile(argv[1]);
