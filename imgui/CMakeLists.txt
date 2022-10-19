@@ -2,8 +2,7 @@ cmake_policy(SET CMP0076 NEW)
 
 add_library(IMGUI STATIC)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set_property(TARGET IMGUI PROPERTY CXX_STANDARD 11)
 
 target_sources(IMGUI
   PRIVATE
