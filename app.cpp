@@ -168,6 +168,8 @@ void LoadTimeline(otio::Timeline* timeline)
     timeline->global_start_time().value_or(otio::RationalTime()),
     timeline->duration()
   );
+  appState.playhead = appState.playhead_limit.start_time();
+  FitZoomWholeTimeline();
 }
 
 void LoadFile(const char* path)
@@ -184,8 +186,10 @@ void LoadFile(const char* path)
   Message("Loaded %s", timeline->name().c_str());
 }
 
-void MainInit(int argc, char** argv)
+void MainInit(int argc, char** argv, int initial_width, int initial_height)
 {
+  appState.timeline_width = initial_width * 0.8f;
+
   ApplyAppStyle();
   LoadFonts();
   
@@ -385,6 +389,11 @@ void DrawButtons(ImVec2 button_size)
   }
   
   ImGui::SameLine();
+  if (ImGui::Button("Fit")) {
+    FitZoomWholeTimeline();
+  }
+
+  ImGui::SameLine();
   if (ImGui::Checkbox("Snap", &appState.snap_to_frame)) {
     if (appState.snap_to_frame) {
       SnapPlayhead();
@@ -437,3 +446,9 @@ void SnapPlayhead()
 {
   appState.playhead = otio::RationalTime::from_frames(appState.playhead.to_frames(), appState.playhead.rate());
 }
+
+void FitZoomWholeTimeline()
+{
+  appState.scale = appState.timeline_width / appState.timeline->duration().to_seconds();
+}
+

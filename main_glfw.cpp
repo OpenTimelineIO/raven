@@ -51,7 +51,7 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-void MainInit(int argc, char** argv);
+void MainInit(int argc, char** argv, int initial_width, int initial_height);
 void MainGui();
 void MainCleanup();
 
@@ -86,7 +86,9 @@ int main(int argc, char** argv)
 #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Raven", NULL, NULL);
+    int initial_width = 800;
+    int initial_height = 600;
+    GLFWwindow* window = glfwCreateWindow(initial_width, initial_height, "Raven", NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);
@@ -144,7 +146,7 @@ int main(int argc, char** argv)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    MainInit(argc, argv);
+    MainInit(argc, argv, initial_width, initial_height);
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.

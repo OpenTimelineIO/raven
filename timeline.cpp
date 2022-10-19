@@ -727,8 +727,11 @@ void DrawTimeline(otio::Timeline* timeline)
     
     // Tracks
 
+    auto available_size = ImGui::GetContentRegionAvail();
+    appState.timeline_width = 0.8f * available_size.x;
+
     float full_width = duration.to_seconds() * appState.scale;
-    float full_height = ImGui::GetContentRegionAvail().y - ImGui::GetFrameHeightWithSpacing();
+    float full_height = available_size.y - ImGui::GetFrameHeightWithSpacing();
 
     static ImVec2 cell_padding(2.0f, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, cell_padding);
