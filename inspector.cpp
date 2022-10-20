@@ -52,7 +52,7 @@ void DrawInspector()
 
   int flags =
       ImGuiTableFlags_SizingFixedFit |
-      ImGuiTableFlags_Resizable |
+      // ImGuiTableFlags_Resizable |
       ImGuiTableFlags_NoSavedSettings |
       // ImGuiTableFlags_BordersInnerV |
       // ImGuiTableFlags_ScrollX |
@@ -60,16 +60,23 @@ void DrawInspector()
       0;
   if (ImGui::BeginTable("Inspector", 2, flags))
   {
-    ImGui::TableSetupColumn("Name"); //, 0, 100);
-    ImGui::TableSetupColumn("Value"); //, ImGuiTableColumnFlags_WidthFixed);
+    ImGui::TableSetupColumn("Name", 0, 100);
+    ImGui::TableSetupColumn("Value", 0, 300); //, ImGuiTableColumnFlags_WidthFixed);
     // ImGui::TableSetupScrollFreeze(1, 1);
+
+    char tmp_str[1000];
+    int tmp_ints[4];
 
     if (const auto& obj = dynamic_cast<otio::SerializableObjectWithMetadata*>(selected_object)) {
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
       ImGui::Text("Name");
       ImGui::TableNextColumn();
-      ImGui::Text("%s", obj->name().c_str());
+      snprintf(tmp_str, sizeof(tmp_str), "%s", obj->name().c_str());
+      ImGui::SetNextItemWidth(-1);
+      if (ImGui::InputText("##Name", tmp_str, sizeof(tmp_str))) {
+        obj->set_name(tmp_str);
+      }
     }
     
     ImGui::TableNextRow();
@@ -80,22 +87,37 @@ void DrawInspector()
     
     if (const auto& item = dynamic_cast<otio::Item*>(selected_object)) {
       auto trimmed_range = item->trimmed_range();
+      auto rate = trimmed_range.start_time().rate();
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
       ImGui::Text("Range:");
       ImGui::TableNextColumn();
-      ImGui::Text("%d - %d",
-          trimmed_range.start_time().to_frames(),
-          trimmed_range.end_time_inclusive().to_frames()
-      );
-
+      tmp_ints[0] = trimmed_range.start_time().to_frames();
+      tmp_ints[1] = trimmed_range.end_time_inclusive().to_frames();
+      ImGui::SetNextItemWidth(-1);
+      if (ImGui::InputInt2("##Range", tmp_ints)) {
+        item->set_source_range(
+          otio::TimeRange::range_from_start_end_time_inclusive(
+            otio::RationalTime::from_frames(tmp_ints[0], rate),
+            otio::RationalTime::from_frames(tmp_ints[1], rate)
+          )
+        );
+      }
+      
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
       ImGui::Text("Duration:");
       ImGui::TableNextColumn();
-      ImGui::Text("%d frames",
-          trimmed_range.duration().to_frames()
-      );
+      tmp_ints[0] = trimmed_range.duration().to_frames();
+      ImGui::SetNextItemWidth(-1);
+      if (ImGui::DragInt("##Duration", tmp_ints, 1, 1, tmp_ints[0]*2)) {
+        item->set_source_range(
+          otio::TimeRange(
+            trimmed_range.start_time(),
+            otio::RationalTime::from_frames(tmp_ints[0], rate)
+          )
+        );
+      }
     }
   
     if (const auto& comp = dynamic_cast<otio::Composition*>(selected_object)) {
