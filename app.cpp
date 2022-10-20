@@ -295,8 +295,8 @@ void MainGui()
 
   // ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - button_size.x + style.ItemSpacing.x);
 
-  ImVec2 contentSize = ImGui::GetContentRegionAvail();
-  if (contentSize.y < 500) contentSize.y = 500;
+  // ImVec2 contentSize = ImGui::GetContentRegionAvail();
+  // if (contentSize.y < 500) contentSize.y = 500;
 
   // float splitter_size = 2.0f;
   // float w = contentSize.x - splitter_size - style.WindowPadding.x * 2;
@@ -358,11 +358,20 @@ void MainGui()
     
       DrawToolbar(button_size);
 
+      ImGui::Separator();
+
+      // Wrap the timeline so we can control how much room is left below it
+      ImVec2 contentSize = ImGui::GetContentRegionAvail();
+      contentSize.y -= ImGui::GetTextLineHeightWithSpacing() + 7;
+      ImGui::BeginChild("##TimelineContainer", contentSize);
+
+      DrawTimeline(appState.timeline);
+      
+      ImGui::EndChild();
+
       if (DrawTransportControls(appState.timeline)) {
           appState.scroll_to_playhead = true;
       }
-
-      DrawTimeline(appState.timeline);
   }
   ImGui::End();
 
