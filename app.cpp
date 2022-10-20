@@ -276,15 +276,19 @@ void MainGui()
     snprintf(window_title, sizeof(window_title), "%s%s", app_name, window_id);
   }
 
+  // Avoid double window padding since we have a dockspace window
+  // which fills our whole main window.
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
+
   ImGui::Begin(
       window_title,
       &appState.show_main_window,
       ImGuiWindowFlags_NoCollapse |
       ImGuiWindowFlags_MenuBar |
-      // ImGuiWindowFlags_NoDocking |
-      // ImGuiWindowFlags_AlwaysAutoResize |
       0
       );
+  
+  ImGui::PopStyleVar();
 
   if (!appState.show_main_window) {
     MainCleanup();
@@ -342,11 +346,10 @@ void MainGui()
   }
 
   ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_AutoHideTabBar);
-  
+
   ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
   int window_flags =
     ImGuiWindowFlags_NoCollapse |
-    // ImGuiWindowFlags_NoTitleBar |
     0;
   bool visible = ImGui::Begin("Timeline", NULL, window_flags);
   if (visible) {
@@ -395,39 +398,6 @@ void MainGui()
     ImGui::SetWindowFocus("Inspector");
     ImGui::SetWindowFocus("Timeline");
   }
-/*
-  ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()*2)); // Leave room for 1 line below us
-  
-  if (ImGui::BeginTabBar("MyTabBar", ImGuiTabBarFlags_None))
-  {
-    if (ImGui::BeginTabItem("Timeline"))
-    {
-      DrawTimeline(appState.timeline);
-
-      ImGui::EndTabItem();
-    }
-    if (ImGui::BeginTabItem("Selection"))
-    {
-      char buf[10000];
-      snprintf(buf, sizeof(buf), "%s", appState.selected_text.c_str());
-      ImGui::InputTextMultiline("Selection", buf, sizeof(buf), ImVec2(-FLT_MIN, -FLT_MIN), 0);
-
-      ImGui::EndTabItem();
-    }
-    if (ImGui::BeginTabItem("Settings"))
-    {
-      ImGui::ShowStyleEditor();
-
-      ImGui::EndTabItem();
-    }
-    ImGui::EndTabBar();
-  }
-  
-  ImGui::EndChild();
-  */
-
-  // Status message at the very bottom
-  // ImGui::Text("%s", appState.message);
 
   ImGui::End();
   
