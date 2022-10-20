@@ -14,11 +14,8 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
-#ifdef HELLOIMGUI_USE_SDL_OPENGL3
-#include <SDL.h>
-#endif
-
 #include <iostream>
+#include <chrono>
 
 void DrawMenu();
 void DrawToolbar(ImVec2 buttonSize);
@@ -56,6 +53,7 @@ void Message(const char* format, ...)
   va_end(args);
   Log(appState.message);
 }
+
 
 // Files in the application fonts/ folder are supposed to be embedded
 // automatically (on iOS/Android/Emscripten), but that's not wired up.
@@ -180,16 +178,20 @@ void LoadTimeline(otio::Timeline* timeline)
 
 void LoadFile(const char* path)
 {
+  auto start = std::chrono::high_resolution_clock::now();
   std::string input(path);
   otio::ErrorStatus error_status;
   auto timeline = dynamic_cast<otio::Timeline*>(otio::Timeline::from_json_file(input, &error_status));
   if (!timeline || otio::is_error(error_status)) {
-    Message("Error loading %s: %s", path, otio_error_string(error_status).c_str());
+    Message("Error loading \"%s\": %s", path, otio_error_string(error_status).c_str());
     return;
   }
   LoadTimeline(timeline);
   strncpy(appState.file_path, path, sizeof(appState.file_path));
-  Message("Loaded %s", timeline->name().c_str());
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = (end - start);
+  double elapsed_seconds = elapsed.count();
+  Message("Loaded \"%s\" in %.3f seconds", timeline->name().c_str(), elapsed_seconds);
 }
 
 void MainInit(int argc, char** argv, int initial_width, int initial_height)
