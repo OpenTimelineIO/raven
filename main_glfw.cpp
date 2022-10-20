@@ -86,8 +86,8 @@ int main(int argc, char** argv)
 #endif
 
     // Create window with graphics context
-    int initial_width = 800;
-    int initial_height = 600;
+    int initial_width = 1280;
+    int initial_height = 768;
     GLFWwindow* window = glfwCreateWindow(initial_width, initial_height, "Raven", NULL, NULL);
     if (window == NULL)
         return 1;
