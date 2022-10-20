@@ -95,7 +95,9 @@ void DrawInspector()
       tmp_ints[0] = trimmed_range.start_time().to_frames();
       tmp_ints[1] = trimmed_range.end_time_inclusive().to_frames();
       ImGui::SetNextItemWidth(-1);
-      if (ImGui::InputInt2("##Range", tmp_ints)) {
+      if (ImGui::DragInt2("##Range", tmp_ints, 1, 0, INT_MAX)) {
+        // don't allow negative duration - but 0 is okay
+        if (tmp_ints[1] < tmp_ints[0]) tmp_ints[1] = tmp_ints[0];
         item->set_source_range(
           otio::TimeRange::range_from_start_end_time_inclusive(
             otio::RationalTime::from_frames(tmp_ints[0], rate),
@@ -110,7 +112,8 @@ void DrawInspector()
       ImGui::TableNextColumn();
       tmp_ints[0] = trimmed_range.duration().to_frames();
       ImGui::SetNextItemWidth(-1);
-      if (ImGui::DragInt("##Duration", tmp_ints, 1, 1, tmp_ints[0]*2)) {
+      // don't allow negative duration - but 0 is okay
+      if (ImGui::DragInt("##Duration", tmp_ints, 1, 0, INT_MAX)) {
         item->set_source_range(
           otio::TimeRange(
             trimmed_range.start_time(),
