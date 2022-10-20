@@ -497,16 +497,7 @@ void DrawToolbar(ImVec2 button_size)
   if (IconButton("\uF03C +Track", ImVec2(0, button_size.y))) {
       AddTrack();
   }
-  
-  // skip to the far right edge
-  ImGui::SameLine();
-  ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 300, 5));
 
-  ImGui::SameLine();
-
-  int fps = rint(1.0f / ImGui::GetIO().DeltaTime);
-  ImGui::Text("Frame: %d / FPS: %3d", ImGui::GetFrameCount(), fps);
-  
 #ifdef THEME_EDITOR
   for (int i=0; i<AppThemeCol_COUNT; i++) {
     ImGui::SameLine();
@@ -516,6 +507,22 @@ void DrawToolbar(ImVec2 button_size)
       SaveTheme();
     }
   }
+#endif
+
+#ifdef SHOW_FPS
+  // skip to the far right edge
+  ImGui::SameLine();
+  ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 250, 5));
+
+  int fps = rint(1.0f / ImGui::GetIO().DeltaTime);
+  ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+  ImGui::PushFont(gIconFont);
+  ImGui::SameLine();
+  ImGui::Text("\uF0E4"); // dashboard meter icon
+  ImGui::PopFont();
+  ImGui::PopStyleColor();
+  ImGui::SameLine();
+  ImGui::Text("Frame: %d @ %3d fps", ImGui::GetFrameCount(), fps);
 #endif
 }
 

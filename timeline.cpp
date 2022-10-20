@@ -761,7 +761,7 @@ bool DrawTransportControls(otio::Timeline* timeline)
     auto playhead_string = appState.playhead.to_timecode();
     auto end_string = end.to_timecode();
     
-    ImGui::PushID("##Transport");
+    ImGui::PushID("##TransportControls");
     ImGui::BeginGroup();
     
     ImGui::Text("%s", start_string.c_str());
