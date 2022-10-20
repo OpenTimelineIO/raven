@@ -44,72 +44,152 @@ void DrawInspector()
 {
   auto selected_object = appState.selected_object;
   // auto selected_context = appState.selected_context;
-  
+    
   if (!selected_object) {
     ImGui::Text("Nothing selected.");
     return;
   }
 
-  if (const auto& obj = dynamic_cast<otio::SerializableObjectWithMetadata*>(selected_object)) {
-    ImGui::Text("Name: %s", obj->name().c_str());
-  }
-  
-  ImGui::Text("Schema: %s.%d", selected_object->schema_name().c_str(), selected_object->schema_version());
-  
-  if (const auto& item = dynamic_cast<otio::Item*>(selected_object)) {
-    auto trimmed_range = item->trimmed_range();
-    ImGui::Text(
-        "Range: %d - %d\nDuration: %d frames",
-        trimmed_range.start_time().to_frames(),
-        trimmed_range.end_time_inclusive().to_frames(),
-        trimmed_range.duration().to_frames()
-    );
-  }
+  int flags =
+      ImGuiTableFlags_SizingFixedFit |
+      ImGuiTableFlags_Resizable |
+      ImGuiTableFlags_NoSavedSettings |
+      // ImGuiTableFlags_BordersInnerV |
+      // ImGuiTableFlags_ScrollX |
+      // ImGuiTableFlags_ScrollY |
+      0;
+  if (ImGui::BeginTable("Inspector", 2, flags))
+  {
+    ImGui::TableSetupColumn("Name"); //, 0, 100);
+    ImGui::TableSetupColumn("Value"); //, ImGuiTableColumnFlags_WidthFixed);
+    // ImGui::TableSetupScrollFreeze(1, 1);
 
-  if (const auto& comp = dynamic_cast<otio::Composition*>(selected_object)) {
-    ImGui::Text(
-        "Children: %ld",
-        comp->children().size()
-    );
-  }
-
-  if (const auto& transition = dynamic_cast<otio::Transition*>(selected_object)) {
-    ImGui::Text(
-        "In/Out Offset: %d / %d\nDuration: %d frames",
-        transition->in_offset().to_frames(),
-        transition->out_offset().to_frames(),
-        transition->duration().to_frames()
-    );
-  }
-
-  if (const auto& effect = dynamic_cast<otio::Effect*>(selected_object)) {
-    ImGui::Text("Effect Name: %s", effect->effect_name().c_str());
-    if (const auto& timewarp = dynamic_cast<otio::LinearTimeWarp*>(effect)) {
-      ImGui::Text("Time Scale: %f", timewarp->time_scalar());
+    if (const auto& obj = dynamic_cast<otio::SerializableObjectWithMetadata*>(selected_object)) {
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("Name");
+      ImGui::TableNextColumn();
+      ImGui::Text("%s", obj->name().c_str());
     }
-  }
+    
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    ImGui::Text("Schema:");
+    ImGui::TableNextColumn();
+    ImGui::Text("%s.%d", selected_object->schema_name().c_str(), selected_object->schema_version());
+    
+    if (const auto& item = dynamic_cast<otio::Item*>(selected_object)) {
+      auto trimmed_range = item->trimmed_range();
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("Range:");
+      ImGui::TableNextColumn();
+      ImGui::Text("%d - %d",
+          trimmed_range.start_time().to_frames(),
+          trimmed_range.end_time_inclusive().to_frames()
+      );
 
-  if (const auto& marker = dynamic_cast<otio::Marker*>(selected_object)) {
-    auto range = marker->marked_range();
-    ImGui::Text(
-        "Color: %s\nRange: %d - %d\nDuration: %d frames",
-        marker->color().c_str(),
-        range.start_time().to_frames(),
-        range.end_time_exclusive().to_frames(),
-        range.duration().to_frames()
-    );
-  }
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("Duration:");
+      ImGui::TableNextColumn();
+      ImGui::Text("%d frames",
+          trimmed_range.duration().to_frames()
+      );
+    }
+  
+    if (const auto& comp = dynamic_cast<otio::Composition*>(selected_object)) {
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("Children");
+      ImGui::TableNextColumn();
+      ImGui::Text("%ld",comp->children().size());
+    }
+  
+    if (const auto& transition = dynamic_cast<otio::Transition*>(selected_object)) {
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("In/Out Offset");
+      ImGui::TableNextColumn();
+      ImGui::Text("%d / %d",
+          transition->in_offset().to_frames(),
+          transition->out_offset().to_frames()
+      );
 
-  if (const auto& track = dynamic_cast<otio::Track*>(selected_object)) {
-    ImGui::SetTooltip(
-        "Kind: %s",
-        track->kind().c_str()
-    );
-  }
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("Duration:");
+      ImGui::TableNextColumn();
+      ImGui::Text("%d frames",
+          transition->duration().to_frames()
+      );
+    }
+  
+    if (const auto& effect = dynamic_cast<otio::Effect*>(selected_object)) {
+      ImGui::Text("Effect Name: %s", effect->effect_name().c_str());
+      if (const auto& timewarp = dynamic_cast<otio::LinearTimeWarp*>(effect)) {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::Text("Time Scale:");
+        ImGui::TableNextColumn();
+        ImGui::Text("%f",
+            timewarp->time_scalar()
+        );
+      }
+    }
+  
+    if (const auto& marker = dynamic_cast<otio::Marker*>(selected_object)) {
+      auto range = marker->marked_range();
+      
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("Color:");
+      ImGui::TableNextColumn();
+      ImGui::Text("%s",
+          marker->color().c_str()
+      );
 
-  if (const auto& obj = dynamic_cast<otio::SerializableObjectWithMetadata*>(selected_object)) {
-    auto& metadata = obj->metadata();
-    ImGui::Text("Metadata: %ld", metadata.size());
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("Range:");
+      ImGui::TableNextColumn();
+      ImGui::Text("%d - %d",
+          range.start_time().to_frames(),
+          range.end_time_exclusive().to_frames()
+      );
+
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("Duration:");
+      ImGui::TableNextColumn();
+      ImGui::Text("%d frames",
+          range.duration().to_frames()
+      );
+    }
+  
+    if (const auto& track = dynamic_cast<otio::Track*>(selected_object)) {
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("Kind:");
+      ImGui::TableNextColumn();
+      ImGui::Text("%s",
+          track->kind().c_str()
+      );
+    }
+  
+    if (const auto& obj = dynamic_cast<otio::SerializableObjectWithMetadata*>(selected_object)) {
+      auto& metadata = obj->metadata();
+      
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("Metadata:");
+      ImGui::TableNextColumn();
+      ImGui::Text("%ld keys",
+          metadata.size()
+      );
+    }
+    
+    ImGui::EndTable();
   }
 }
 
