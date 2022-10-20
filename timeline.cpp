@@ -517,7 +517,22 @@ void DrawTrackLabel(otio::Track* track, int index, float height)
     draw_list->AddText(text_pos, label_color, label_str);
     
     ImGui::PopClipRect();
-        
+
+    if (ImGui::IsItemHovered()) {
+        auto trimmed_range = track->trimmed_range();
+        ImGui::SetTooltip(
+            "%s: %s\n%s #%d\nRange: %d - %d\nDuration: %d frames\nChildren: %d",
+            track->schema_name().c_str(),
+            track->name().c_str(),
+            track->kind().c_str(),
+            index,
+            trimmed_range.start_time().to_frames(),
+            trimmed_range.end_time_inclusive().to_frames(),
+            trimmed_range.duration().to_frames(),
+            int(track->children().size())
+        );
+    }
+    
     ImGui::EndGroup();
 }
 
