@@ -293,13 +293,6 @@ void MainGui()
 
   DrawMenu();
 
-  ImVec2 button_size = ImVec2(
-    ImGui::GetTextLineHeightWithSpacing(),
-    ImGui::GetTextLineHeightWithSpacing()
-    );
-
-  DrawToolbar(button_size);
-
   // ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - button_size.x + style.ItemSpacing.x);
 
   ImVec2 contentSize = ImGui::GetContentRegionAvail();
@@ -324,6 +317,51 @@ void MainGui()
   // ImGui::SameLine();
   // ImGui::BeginChild("2", ImVec2(sz2, h), true);
 
+  ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
+  ImGui::DockSpace(dockspace_id);
+  
+  bool redock_all = false;
+
+  ImGui::SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+  int window_flags =
+    ImGuiWindowFlags_NoCollapse |
+    // ImGuiWindowFlags_NoTitleBar |
+    0;
+  bool visible = ImGui::Begin("Timeline", NULL, window_flags);
+  if (visible) {
+
+      ImVec2 button_size = ImVec2(
+        ImGui::GetTextLineHeightWithSpacing(),
+        ImGui::GetTextLineHeightWithSpacing()
+        );
+    
+      DrawToolbar(button_size);
+
+      if (DrawTransportControls(appState.timeline)) {
+          appState.scroll_to_playhead = true;
+      }
+
+      DrawTimeline(appState.timeline);
+  }
+  ImGui::End();
+
+  ImGui::SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+  visible = ImGui::Begin("Inspector", NULL, window_flags);
+  if (visible) {
+      char buf[10000];
+      snprintf(buf, sizeof(buf), "%s", appState.selected_text.c_str());
+      ImGui::InputTextMultiline("Inspector", buf, sizeof(buf), ImVec2(-FLT_MIN, -FLT_MIN), 0);
+  }
+  ImGui::End();
+
+  ImGui::SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+  visible = ImGui::Begin("Settings", NULL, window_flags);
+  if (visible) {
+      ImGui::ShowStyleEditor();
+  }
+  ImGui::End();
+
+/*
   ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()*2)); // Leave room for 1 line below us
   
   if (ImGui::BeginTabBar("MyTabBar", ImGuiTabBarFlags_None))
@@ -352,15 +390,10 @@ void MainGui()
   }
   
   ImGui::EndChild();
-
-  ImGui::Separator();
-
-  if (DrawTransportControls(appState.timeline)) {
-      appState.scroll_to_playhead = true;
-  }
+  */
 
   // Status message at the very bottom
-  ImGui::Text("%s", appState.message);
+  // ImGui::Text("%s", appState.message);
 
   ImGui::End();
   
