@@ -318,11 +318,32 @@ void MainGui()
   // ImGui::BeginChild("2", ImVec2(sz2, h), true);
 
   ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
-  ImGui::DockSpace(dockspace_id);
-  
-  bool redock_all = false;
 
-  ImGui::SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+  bool initial_setup = false;
+  if (ImGui::DockBuilderGetNode(dockspace_id) == NULL) {
+    // Set up initial layout
+    initial_setup = true;
+    
+    ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing layout
+    ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace); // Add empty node
+    // ImGui::DockBuilderSetNodeSize(dockspace_id, ImVec2(100, 100)); // doesn't seem to matter?
+    
+    ImGuiID dock_main_id = dockspace_id; // This variable will track the document node, however we are not using it here as we aren't docking anything into it.
+    ImGuiID dock_id_side = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.30f, NULL, &dock_main_id);
+    ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Down, 0.20f, NULL, &dock_main_id);
+    
+    // ImGui::DockBuilderDockWindow("Log", dock_id_bottom);
+    ImGui::DockBuilderDockWindow("Timeline", dock_main_id);
+    ImGui::DockBuilderDockWindow("JSON", dock_id_side);
+    ImGui::DockBuilderDockWindow("Settings", dock_id_side);
+    ImGui::DockBuilderDockWindow("Inspector", dock_id_side);
+    ImGui::DockBuilderFinish(dockspace_id);
+    
+  }
+
+  ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_AutoHideTabBar);
+  
+  ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
   int window_flags =
     ImGuiWindowFlags_NoCollapse |
     // ImGuiWindowFlags_NoTitleBar |
@@ -345,7 +366,7 @@ void MainGui()
   }
   ImGui::End();
 
-  ImGui::SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+  ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
   visible = ImGui::Begin("Inspector", NULL, window_flags);
   if (visible) {
       char buf[10000];
@@ -354,13 +375,17 @@ void MainGui()
   }
   ImGui::End();
 
-  ImGui::SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+  ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
   visible = ImGui::Begin("Settings", NULL, window_flags);
   if (visible) {
       ImGui::ShowStyleEditor();
   }
   ImGui::End();
 
+  if (initial_setup) {
+    ImGui::SetWindowFocus("Inspector");
+    ImGui::SetWindowFocus("Timeline");
+  }
 /*
   ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()*2)); // Leave room for 1 line below us
   
