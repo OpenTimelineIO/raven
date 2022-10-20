@@ -13,6 +13,11 @@
 #include <opentimelineio/linearTimeWarp.h>
 
 
+// counters to measure visibility-check performance optimization
+static int __tracks_rendered;
+static int __items_rendered;
+
+
 float TimeScalarForItem(otio::Item* item)
 {
     float time_scalar = 1.0;
@@ -75,6 +80,13 @@ void DrawItem(otio::Item* item, float scale, ImVec2 origin, float height, std::m
     ImGui::BeginGroup();
 
     ImGui::InvisibleButton("##Item", size);
+    if (!ImGui::IsItemVisible()) {
+        // exit early if this item is off-screen
+        ImGui::EndGroup();
+        ImGui::PopID();
+        ImGui::SetCursorPos(old_pos);
+        return;
+    }
     
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
@@ -153,6 +165,8 @@ void DrawItem(otio::Item* item, float scale, ImVec2 origin, float height, std::m
     ImGui::PopID();
 
     ImGui::SetCursorPos(old_pos);
+    
+    __items_rendered++;
 }
 
 void DrawTransition(otio::Transition* transition, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
@@ -570,6 +584,8 @@ void DrawTrack(otio::Track* track, int index, float scale, ImVec2 origin, float 
     }
 
     ImGui::EndGroup();
+    
+    __tracks_rendered++;
 }
 
 static bool _divisible(float t, float interval) {
@@ -901,6 +917,10 @@ void DrawTimeline(otio::Timeline* timeline)
     static ImVec2 cell_padding(2.0f, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, cell_padding);
 
+    // reset counters
+    __tracks_rendered = 0;
+    __items_rendered = 0;
+
     int flags =
         ImGuiTableFlags_SizingFixedFit |
         ImGuiTableFlags_Resizable |
@@ -996,6 +1016,9 @@ void DrawTimeline(otio::Timeline* timeline)
             ImGui::SetScrollFromPosX(playhead_x - ImGui::GetScrollX());
             appState.scroll_to_playhead = false;
         }
+        
+        // This is helpful when debugging visibility performance optimization
+        // ImGui::SetTooltip("Tracks rendered: %d\nItems rendered: %d", __tracks_rendered, __items_rendered);
         
         ImGui::EndTable();
     }
