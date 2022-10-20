@@ -16,9 +16,6 @@ An experimental re-write of OpenTimelineIO's `otioview` timeline viewer applicat
 
 If you have trouble building, these hints might help...
 
-You might need this dependency:
-  % brew install glfw3
-
 You might need to init/update submodules:
   % git submodule init
   % git submodule update
@@ -51,9 +48,11 @@ Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui) and [Open
   - avoid rendering items out of scroll region
   - avoid rendering items smaller than a tiny sliver
 - Arrow keys to navigate by selection
+  - This sort of works already via ImGui's navigation system, but it is too easy to get stuck on a marker, or to walk out of the timeline.
+  - Can this be rectified by turning off keyboard navigation on the widgets outside the timeline?
+- Multiple timelines in separate tabs?
+  - Look at ImGui document-based demo code for reference.
 - Inspector:
-  - Dockable side-by-side inspector
-    - Look at ImGui document-based demo code
   - Show summarized timing information (ala otiotool --inspect)
   - Syntax highlighting
     - Maybe this one? https://github.com/BalazsJako/ImGuiColorTextEdit
