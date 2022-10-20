@@ -777,7 +777,7 @@ float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::Ratio
     const ImVec2 playhead_line_start = p0;
     const ImVec2 playhead_line_end = ImVec2(p0.x, p1.y);
 
-    std::string label_str = playhead.to_timecode() + " / " + playhead.to_time_string();
+    std::string label_str = appState.snap_to_frame ? playhead.to_timecode() : playhead.to_time_string();
     auto label_color = appTheme.colors[AppThemeCol_Label];
     const ImVec2 label_size = ImGui::CalcTextSize(label_str.c_str());
     const ImVec2 label_pos = ImVec2(p1.x + text_offset.x, p0.y + text_offset.y);
