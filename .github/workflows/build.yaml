@@ -124,7 +124,6 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        brew install glfw3
         git submodule init
         git submodule update
 
@@ -138,7 +137,7 @@ jobs:
     - name: Check Product
       run: |
         cd build
-        ls -l raven
+        ls -l
         file raven
 
     - name: Package Product
