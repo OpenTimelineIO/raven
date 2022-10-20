@@ -193,6 +193,7 @@ void LoadFile(const char* path)
   std::chrono::duration<double> elapsed = (end - start);
   double elapsed_seconds = elapsed.count();
   Message("Loaded \"%s\" in %.3f seconds", timeline->name().c_str(), elapsed_seconds);
+  SelectObject(timeline);
 }
 
 void MainInit(int argc, char** argv, int initial_width, int initial_height)
