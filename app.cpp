@@ -556,6 +556,20 @@ void DrawToolbar(ImVec2 button_size)
       AddTrack();
   }
 
+  // spacer
+  ImGui::SameLine();
+  ImGui::Dummy(ImVec2(10,10));
+
+  // Show current Message() text with an icon
+  ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+  ImGui::PushFont(gIconFont);
+  ImGui::SameLine();
+  ImGui::Text("\uF05A"); // (i) icon
+  ImGui::PopFont();
+  ImGui::PopStyleColor();
+  ImGui::SameLine();
+  ImGui::Text("%s", appState.message);
+
 #ifdef THEME_EDITOR
   for (int i=0; i<AppThemeCol_COUNT; i++) {
     ImGui::SameLine();
