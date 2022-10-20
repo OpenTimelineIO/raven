@@ -431,6 +431,51 @@ void DrawMarkers(otio::Item* item, float scale, ImVec2 origin, float height, std
     }
 }
 
+void DrawObjectLabel(otio::SerializableObjectWithMetadata* object, float height)
+{
+    float width = ImGui::GetContentRegionAvailWidth();
+    
+    ImGui::BeginGroup();
+    ImGui::AlignTextToFramePadding();
+    ImVec2 size(width, height);
+    ImGui::InvisibleButton("##empty", size);
+    
+    char label_str[200];
+    snprintf(label_str, sizeof(label_str), "%s: %s", object->schema_name().c_str(), object->name().c_str());
+
+    auto label_color = appTheme.colors[AppThemeCol_Label];
+    auto fill_color = appTheme.colors[AppThemeCol_Track];
+    auto selected_fill_color = appTheme.colors[AppThemeCol_TrackSelected];
+    auto hover_fill_color = appTheme.colors[AppThemeCol_TrackHovered];
+
+    ImVec2 text_offset(5.0f, 5.0f);
+
+    if (ImGui::IsItemHovered()) {
+        fill_color = hover_fill_color;
+    }
+    if (ImGui::IsItemClicked()) {
+        SelectObject(object);
+    }
+    
+    if (appState.selected_object == object) {
+        fill_color = selected_fill_color;
+    }
+    
+    ImVec2 p0 = ImGui::GetItemRectMin();
+    ImVec2 p1 = ImGui::GetItemRectMax();
+    const ImVec2 text_pos = ImVec2(p0.x + text_offset.x, p0.y + text_offset.y);
+
+    ImGui::PushClipRect(p0, p1, true);
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    
+    draw_list->AddRectFilled(p0, p1, fill_color);
+    draw_list->AddText(text_pos, label_color, label_str);
+    
+    ImGui::PopClipRect();
+        
+    ImGui::EndGroup();
+}
+
 void DrawTrackLabel(otio::Track* track, int index, float height)
 {
     float width = ImGui::GetContentRegionAvailWidth();
@@ -851,7 +896,7 @@ void DrawTimeline(otio::Timeline* timeline)
         0;
     if (ImGui::BeginTable("Tracks", 2, flags))
     {
-        ImGui::TableSetupColumn("Track");
+        ImGui::TableSetupColumn("Track", 0, 100);
         ImGui::TableSetupColumn("Composition", ImGuiTableColumnFlags_WidthFixed);
         if (ImGui::GetFrameCount() > 1) {  // crash if we call this on the 1st frame?!
             // We allow the 1st column to be user-resizable, but
@@ -864,7 +909,9 @@ void DrawTimeline(otio::Timeline* timeline)
         
         ImGui::TableNextRow(ImGuiTableRowFlags_None, appState.track_height);
         ImGui::TableNextColumn();
-        ImGui::Text("%s", playhead_string.c_str());
+        
+        DrawObjectLabel(timeline, appState.track_height);
+        
         ImGui::TableNextColumn();
 
         // Remember the top/left edge, so that we can overlay all the elements on the timeline.
