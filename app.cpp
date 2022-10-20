@@ -325,9 +325,10 @@ void MainGui()
 
   ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
 
+  static bool first_launch = true;
   bool initial_setup = false;
   if (ImGui::DockBuilderGetNode(dockspace_id) == NULL) {
-    // Set up initial layout
+    // Set up initial layout, on 1st launch with no imgui.ini saved state
     initial_setup = true;
     
     ImGui::DockBuilderRemoveNode(dockspace_id); // Clear out existing layout
@@ -394,9 +395,10 @@ void MainGui()
   }
   ImGui::End();
 
-  if (initial_setup) {
+  if (first_launch) {
     ImGui::SetWindowFocus("Inspector");
     ImGui::SetWindowFocus("Timeline");
+    first_launch = false;
   }
 
   ImGui::End();
