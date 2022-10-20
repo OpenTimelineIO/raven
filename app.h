@@ -105,6 +105,7 @@ struct AppState
   bool show_main_window = true;
   bool show_style_editor = false;
   bool show_demo_window = false;
+  bool show_metrics = false;
 };
 
 extern AppState appState;

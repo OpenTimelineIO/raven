@@ -364,6 +364,10 @@ void MainGui()
 
   ImGui::End();
   
+  if (appState.show_metrics) {
+    ImGui::ShowMetricsWindow();
+  }
+
   if (appState.show_demo_window) {
     ImGui::ShowDemoWindow();
   }
@@ -462,6 +466,9 @@ void DrawMenu()
         if (appState.snap_to_frame) {
           SnapPlayhead();
         }
+      }
+      if (ImGui::MenuItem("Show Dear ImGui Metrics", NULL, &appState.show_metrics))
+      {
       }
       if (ImGui::MenuItem("Show Dear ImGui Demo", NULL, &appState.show_demo_window))
       {
