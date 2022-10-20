@@ -16,6 +16,7 @@ target_sources(raven
     main_glfw.cpp
     app.cpp
     editing.cpp
+    inspector.cpp
     timeline.cpp
     widgets.cpp
 )

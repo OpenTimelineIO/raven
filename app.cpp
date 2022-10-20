@@ -24,6 +24,7 @@ void DrawToolbar(ImVec2 buttonSize);
 #include "app.h"
 #include "timeline.h"
 #include "editing.h"
+#include "inspector.h"
 
 const char *app_name = "Raven";
 
@@ -381,9 +382,7 @@ void MainGui()
   ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
   visible = ImGui::Begin("Inspector", NULL, window_flags);
   if (visible) {
-      char buf[10000];
-      snprintf(buf, sizeof(buf), "%s", appState.selected_text.c_str());
-      ImGui::InputTextMultiline("Inspector", buf, sizeof(buf), ImVec2(-FLT_MIN, -FLT_MIN), 0);
+    DrawInspector();
   }
   ImGui::End();
 
