@@ -45,6 +45,8 @@ void DrawInspector()
   auto selected_object = appState.selected_object;
   // auto selected_context = appState.selected_context;
     
+  auto playhead = appState.playhead;
+
   if (!selected_object) {
     ImGui::Text("Nothing selected.");
     return;
@@ -67,6 +69,7 @@ void DrawInspector()
     char tmp_str[1000];
     int tmp_ints[4];
 
+    // SerializableObjectWithMetadata
     if (const auto& obj = dynamic_cast<otio::SerializableObjectWithMetadata*>(selected_object)) {
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
@@ -79,12 +82,32 @@ void DrawInspector()
       }
     }
     
+    // SerializableObject (everything)
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
     ImGui::Text("Schema:");
     ImGui::TableNextColumn();
     ImGui::Text("%s.%d", selected_object->schema_name().c_str(), selected_object->schema_version());
     
+    // Timeline
+    if (const auto& timeline = dynamic_cast<otio::Timeline*>(selected_object)) {
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      ImGui::Text("Global Start");
+      ImGui::TableNextColumn();
+
+      auto rate = timeline->global_start_time().value_or(playhead).rate();
+      tmp_ints[0] = timeline->global_start_time().value_or(otio::RationalTime(0, rate)).to_frames();
+      ImGui::SetNextItemWidth(-1);
+      // don't allow negative duration - but 0 is okay
+      if (ImGui::DragInt("##GlobalStart", tmp_ints, 1, 0, INT_MAX)) {
+        timeline->set_global_start_time(
+          otio::RationalTime::from_frames(tmp_ints[0], rate)
+        );
+      }
+    }
+    
+    // Item
     if (const auto& item = dynamic_cast<otio::Item*>(selected_object)) {
       auto trimmed_range = item->trimmed_range();
       auto rate = trimmed_range.start_time().rate();
@@ -123,6 +146,7 @@ void DrawInspector()
       }
     }
   
+    // Composition
     if (const auto& comp = dynamic_cast<otio::Composition*>(selected_object)) {
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
@@ -131,6 +155,7 @@ void DrawInspector()
       ImGui::Text("%ld",comp->children().size());
     }
   
+    // Transition
     if (const auto& transition = dynamic_cast<otio::Transition*>(selected_object)) {
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
@@ -150,6 +175,7 @@ void DrawInspector()
       );
     }
   
+    // Effect
     if (const auto& effect = dynamic_cast<otio::Effect*>(selected_object)) {
       ImGui::Text("Effect Name: %s", effect->effect_name().c_str());
       if (const auto& timewarp = dynamic_cast<otio::LinearTimeWarp*>(effect)) {
@@ -157,15 +183,18 @@ void DrawInspector()
         ImGui::TableNextColumn();
         ImGui::Text("Time Scale:");
         ImGui::TableNextColumn();
-        ImGui::Text("%f",
-            timewarp->time_scalar()
-        );
+        float val = timewarp->time_scalar();
+        ImGui::SetNextItemWidth(-1);
+        if (ImGui::DragFloat("##TimeScale", &val, 0.01, -FLT_MAX, FLT_MAX)) {
+          timewarp->set_time_scalar(val);
+        }
       }
     }
   
+    // Marker
     if (const auto& marker = dynamic_cast<otio::Marker*>(selected_object)) {
-      auto range = marker->marked_range();
-      
+      auto rate = marker->marked_range().start_time().rate();
+    
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
       ImGui::Text("Color:");
@@ -178,20 +207,38 @@ void DrawInspector()
       ImGui::TableNextColumn();
       ImGui::Text("Range:");
       ImGui::TableNextColumn();
-      ImGui::Text("%d - %d",
-          range.start_time().to_frames(),
-          range.end_time_exclusive().to_frames()
-      );
-
+      tmp_ints[0] = marker->marked_range().start_time().to_frames();
+      tmp_ints[1] = marker->marked_range().end_time_inclusive().to_frames();
+      ImGui::SetNextItemWidth(-1);
+      if (ImGui::DragInt2("##MarkedRange", tmp_ints, 1, 0, INT_MAX)) {
+        // don't allow negative duration - but 0 is okay
+        if (tmp_ints[1] < tmp_ints[0]) tmp_ints[1] = tmp_ints[0];
+        marker->set_marked_range(
+          otio::TimeRange::range_from_start_end_time_inclusive(
+            otio::RationalTime::from_frames(tmp_ints[0], rate),
+            otio::RationalTime::from_frames(tmp_ints[1], rate)
+          )
+        );
+      }
+      
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
       ImGui::Text("Duration:");
       ImGui::TableNextColumn();
-      ImGui::Text("%d frames",
-          range.duration().to_frames()
-      );
+      tmp_ints[0] = marker->marked_range().duration().to_frames();
+      ImGui::SetNextItemWidth(-1);
+      // don't allow negative duration - but 0 is okay
+      if (ImGui::DragInt("##Duration", tmp_ints, 1, 0, INT_MAX)) {
+        marker->set_marked_range(
+          otio::TimeRange(
+            marker->marked_range().start_time(),
+            otio::RationalTime::from_frames(tmp_ints[0], rate)
+          )
+        );
+      }
     }
   
+    // Track
     if (const auto& track = dynamic_cast<otio::Track*>(selected_object)) {
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
@@ -202,6 +249,7 @@ void DrawInspector()
       );
     }
   
+    // SerializableObjectWithMetadata
     if (const auto& obj = dynamic_cast<otio::SerializableObjectWithMetadata*>(selected_object)) {
       auto& metadata = obj->metadata();
       
