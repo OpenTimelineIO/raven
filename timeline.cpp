@@ -28,6 +28,16 @@ double TimeScalarForItem(otio::Item* item)
     return time_scalar;
 }
 
+otio::RationalTime TopLevelTime(otio::RationalTime time, otio::Item* context)
+{
+  return context->transformed_time(time, appState.timeline->tracks());
+}
+
+otio::TimeRange TopLevelTimeRange(otio::TimeRange range, otio::Item* context)
+{
+  return context->transformed_time_range(range, appState.timeline->tracks());
+}
+
 void DrawItem(otio::Item* item, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto duration = item->duration();
@@ -47,7 +57,7 @@ void DrawItem(otio::Item* item, float scale, ImVec2 origin, float height, std::m
         Log("Couldn't find %s in range map?!", item->name().c_str());
         assert(false);
     }
-    auto item_range = range_it->second;    
+    auto item_range = TopLevelTimeRange(range_it->second, item->parent());
     
     ImVec2 size(width, height);
     ImVec2 render_pos(
@@ -185,7 +195,7 @@ void DrawTransition(otio::Transition* transition, float scale, ImVec2 origin, fl
         Log("Couldn't find %s in range map?!", transition->name().c_str());
         assert(false);
     }
-    auto item_range = range_it->second;    
+    auto item_range = TopLevelTimeRange(range_it->second, transition->parent());
 
     ImVec2 size(width, height);
     ImVec2 render_pos(
@@ -374,15 +384,15 @@ void DrawMarkers(otio::Item* item, float scale, ImVec2 origin, float height, std
     if (markers.size() == 0) return;
     
     auto item_trimmed_start = item->trimmed_range().start_time();
-    auto item_start_in_parent = otio::RationalTime();
+    auto item_start_in_top_level = otio::RationalTime();
     if (item->parent() != NULL) {
         auto range_it = range_map.find(item);
         if (range_it == range_map.end()) {
             Log("Couldn't find %s in range map?!", item->name().c_str());
             assert(false);
         }
-        auto item_range = range_it->second;    
-        item_start_in_parent = item_range.start_time();
+        auto item_range = TopLevelTimeRange(range_it->second, item->parent());
+        item_start_in_top_level = item_range.start_time();
     }
 
     for (const auto& marker : markers) {
@@ -395,7 +405,7 @@ void DrawMarkers(otio::Item* item, float scale, ImVec2 origin, float height, std
 
         ImVec2 size(width, arrow_width);
         ImVec2 render_pos(
-            (item_start_in_parent + (start - item_trimmed_start)).to_seconds() * scale + origin.x - arrow_width/2,
+            (item_start_in_top_level + (start - item_trimmed_start)).to_seconds() * scale + origin.x - arrow_width/2,
             ImGui::GetCursorPosY()
         );
 
