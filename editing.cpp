@@ -10,8 +10,8 @@
 void DeleteSelectedObject()
 {
     if (appState.selected_object == appState.timeline) {
-      SelectObject(NULL);
       appState.timeline = NULL;
+      SelectObject(NULL);
       return;
     }
 
@@ -24,6 +24,7 @@ void DeleteSelectedObject()
           parent->remove_child(index);
         }
       }
+      SelectObject(NULL);
       return;
     }
     
@@ -35,6 +36,7 @@ void DeleteSelectedObject()
           markers.erase(it);
         }
       }
+      SelectObject(NULL);
       return;
     }
 
@@ -46,6 +48,7 @@ void DeleteSelectedObject()
           effects.erase(it);
         }
       }
+      SelectObject(NULL);
       return;
     }
 }
