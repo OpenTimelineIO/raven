@@ -398,6 +398,9 @@ void MainGui()
   ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
   visible = ImGui::Begin("Settings", NULL, window_flags);
   if (visible) {
+
+      ImGui::DragFloat("Zebra Factor", &appState.zebra_factor, 0.001, 0, 1);
+
       ImGui::ShowStyleEditor();
   }
   ImGui::End();
