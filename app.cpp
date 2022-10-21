@@ -9,10 +9,11 @@
 #include "widgets.h"
 #include "imguihelper.h"
 #include "imgui_plot.h"
-#include "imguifilesystem.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
+
+#include "nfd.h"
 
 #include <iostream>
 #include <chrono>
@@ -175,25 +176,28 @@ void LoadTimeline(otio::Timeline* timeline)
   );
   appState.playhead = appState.playhead_limit.start_time();
   FitZoomWholeTimeline();
+  SelectObject(timeline);
 }
 
-void LoadFile(const char* path)
+void LoadFile(std::string path)
 {
   auto start = std::chrono::high_resolution_clock::now();
-  std::string input(path);
+  
   otio::ErrorStatus error_status;
-  auto timeline = dynamic_cast<otio::Timeline*>(otio::Timeline::from_json_file(input, &error_status));
+  auto timeline = dynamic_cast<otio::Timeline*>(otio::Timeline::from_json_file(path, &error_status));
   if (!timeline || otio::is_error(error_status)) {
-    Message("Error loading \"%s\": %s", path, otio_error_string(error_status).c_str());
+    Message("Error loading \"%s\": %s", path.c_str(), otio_error_string(error_status).c_str());
     return;
   }
+  
   LoadTimeline(timeline);
-  strncpy(appState.file_path, path, sizeof(appState.file_path));
+  
+  appState.file_path = path;
+  
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed = (end - start);
   double elapsed_seconds = elapsed.count();
   Message("Loaded \"%s\" in %.3f seconds", timeline->name().c_str(), elapsed_seconds);
-  SelectObject(timeline);
 }
 
 void MainInit(int argc, char** argv, int initial_width, int initial_height)
@@ -270,10 +274,9 @@ void MainGui()
 
   const char *window_id = "###MainWindow";
   char window_title[1024];
-  char filename[ImGuiFs::MAX_FILENAME_BYTES] = {""};
-  ImGuiFs::PathGetFileName(appState.file_path, filename);
-  if (strlen(filename)) {
-    snprintf(window_title, sizeof(window_title), "%s - %s%s", app_name, filename, window_id);
+  auto filename = appState.file_path.substr(appState.file_path.find_last_of("/\\") + 1);
+  if (filename != "") {
+    snprintf(window_title, sizeof(window_title), "%s - %s%s", app_name, filename.c_str(), window_id);
   }else{
     snprintf(window_title, sizeof(window_title), "%s%s", app_name, window_id);
   }
@@ -440,35 +443,37 @@ void SaveTheme()
   fclose(file);
 }
 
-static ImGuiFs::Dialog __open_file_dialog;
-
-bool MaybeLoadFile(bool shouldBrowse)
+std::string OpenFileDialog()
 {
-  // TODO: The browse window sometimes appears offset strangely...
-  // ImGui::SetNextWindowPos(ImVec2(300,300));
-  const char* chosenPath = __open_file_dialog.chooseFileDialog(
-    shouldBrowse,
-    __open_file_dialog.getLastDirectory(),
-    ".otio",
-    "Load OTIO File"
-  );
-  if (strlen(chosenPath)>0) {
-    LoadFile(chosenPath);
-    return true;
+  nfdchar_t *outPath = NULL;
+  nfdresult_t result = NFD_OpenDialog( "otio", NULL, &outPath );
+  if ( result == NFD_OKAY )
+  {
+    auto result = std::string(outPath);
+    free(outPath);
+    return result;
   }
-  return false;
+  else if ( result == NFD_CANCEL )
+  {
+    return "";
+  }
+  else 
+  {
+    Message("Error: %s\n", NFD_GetError());
+  }
+  return "";
 }
 
 void DrawMenu()
 {
-  bool showFileOpenBrowser = false;
   if (ImGui::BeginMenuBar())
   {
     if (ImGui::BeginMenu("File"))
     {
       if (ImGui::MenuItem("Open..."))
       {
-        showFileOpenBrowser = true;
+        auto path = OpenFileDialog();
+        if (path != "") LoadFile(path);
       }
       if (ImGui::MenuItem("Close", NULL, false, appState.timeline))
       {
@@ -526,7 +531,6 @@ void DrawMenu()
     }
     ImGui::EndMenuBar();
   }
-  MaybeLoadFile(showFileOpenBrowser);
 }
 
 void DrawToolbar(ImVec2 button_size)

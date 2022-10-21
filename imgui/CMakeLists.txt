@@ -16,7 +16,6 @@ target_sources(IMGUI
     # add-ons
     imguihelper.cpp
     imgui_plot.cpp
-    imguifilesystem.cpp
 
     # backends
     imgui_impl_glfw.cpp

@@ -1,3 +1,6 @@
 [submodule "libs/opentimelineio"]
 	path = libs/opentimelineio
 	url = https://github.com/AcademySoftwareFoundation/OpenTimelineIO.git
+[submodule "libs/nativefiledialog"]
+	path = libs/nativefiledialog
+	url = https://github.com/mlabbe/nativefiledialog.git

@@ -21,6 +21,11 @@ target_sources(raven
     widgets.cpp
 )
 
+add_subdirectory("libs")
+include_directories(
+  ${PROJECT_SOURCE_DIR}/libs/nativefiledialog/src/include
+)
+
 add_subdirectory("libs/opentimelineio")
 include_directories(
   ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src
@@ -35,13 +40,14 @@ target_link_libraries(raven
     OTIO::opentimelineio
     IMGUI
     glfw
+    nativefiledialog
 )
 
 if (APPLE)
   find_library(COREFOUNDATION_LIBRARY CoreFoundation)
-  target_link_libraries(raven
-    ${COREFOUNDATION_LIBRARY}
-  )
+  target_link_libraries(raven ${COREFOUNDATION_LIBRARY})
+  find_library(COCOA_LIBRARY Cocoa)
+  target_link_libraries(raven ${COCOA_LIBRARY})
 endif (APPLE)
 
 install(FILES

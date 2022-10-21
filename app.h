@@ -6,7 +6,6 @@
 
 #include "imguihelper.h"
 #include "imgui_plot.h"
-#include "imguifilesystem.h"
 #include "imgui_internal.h"
 
 #include <opentimelineio/timeline.h>
@@ -83,7 +82,7 @@ struct AppTheme
 // Struct that holds the application's state
 struct AppState
 {
-  char file_path[ImGuiFs::MAX_PATH_BYTES];
+  std::string file_path;
   otio::SerializableObject::Retainer<otio::Timeline> timeline;
 
   float timeline_width = 100.0f;
