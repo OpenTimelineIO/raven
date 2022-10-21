@@ -34,7 +34,10 @@ Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui) and [Open
     - OpenTimelineIO
     - glfw3
 - Cross-platform build + GitHub Actions
-  - Mac (done)
+  - Mac
+    - Basic build workflow is working
+    - Needs universal build (currently only x86_64)
+    - Needs to package fonts & libraries (or embed/static as mentioned above)
   - Linux
   - Windows
   - Emscripten
@@ -44,8 +47,11 @@ Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui) and [Open
 - Double-click to expand/collapse nested compositions
 - Double-click a Clip to expand/collapse it's media reference
 - Show time-warped playhead inside media reference or nested composition
+- Mac build has Retina high DPI scaling issues
+  - When dragging the window from one display to another, it doesn't adapt to different DPI correctly
+  - When resizing the window, sometimes the window drifts or offsets strangely - worse when an external monitor is plugged into my laptop.
 - Performance optimization
-  - avoid rendering items out of scroll region
+  - avoid rendering tracks outside the scroll region
   - avoid rendering items smaller than a tiny sliver
 - Arrow keys to navigate by selection
   - This sort of works already via ImGui's navigation system, but it is too easy to get stuck on a marker, or to walk out of the timeline.
@@ -56,6 +62,8 @@ Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui) and [Open
   - Show summarized timing information (ala otiotool --inspect)
   - Syntax highlighting
     - Maybe this one? https://github.com/BalazsJako/ImGuiColorTextEdit
+  - This comment in imgui.h sounds helpful
+    - // - If you want to use InputText() with std::string or any custom dynamic string type, see misc/cpp/imgui_stdlib.h and comments in imgui_demo.cpp.
   - Edit JSON to replace selected object
     - This would let you explore & understand how changes affect the composition
   - Instead of raw text, try a tree view of JSON structure with collapse/expand anything
@@ -63,27 +71,27 @@ Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui) and [Open
     - How fancy can we get with introspection of otio::SerializableObject?
   - Per-schema inspector GUI
     - SerializableObjectWithMetadata (or any child):
-      - name
+      - name (done)
       - metadata
     - Items:
       - enable/disable
     - Clips:
-      - adjust source_range
+      - adjust source_range (WIP)
       - adjust available_range of media reference
     - Transitions:
       - adjust in/out offsets
     - Gaps:
-      - adjust duration
+      - adjust duration (done)
     - Markers:
-      - adjust marked range
+      - adjust marked range (WIP)
       - color
-      - name
-      - comment
+      - name (done)
+      - comment - OTIO doesn't have this?
     - Compositions:
-      - adjust source_range
+      - adjust source_range (WIP)
     - Effects:
       - name
       - effect_type
     - LinearTimeWarp:
-      - time_scale
+      - time_scale (done)
 
