@@ -428,8 +428,10 @@ void DrawMarkers(otio::Item* item, float scale, ImVec2 origin, float height, std
         ImGui::PushClipRect(p0, p1, true);
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
+        auto dimmed_fill_color = ImColor(fill_color);
+        dimmed_fill_color.Value.w = 0.5;
         draw_list->AddTriangleFilled(ImVec2(p0.x, p0.y), ImVec2(p0.x + arrow_width/2, p1.y), ImVec2(p0.x + arrow_width/2, p0.y), fill_color);
-        draw_list->AddRectFilled(ImVec2(p0.x + arrow_width/2, p0.y), ImVec2(p1.x - arrow_width/2, p1.y), fill_color);
+        draw_list->AddRectFilled(ImVec2(p0.x + arrow_width/2, p0.y), ImVec2(p1.x - arrow_width/2, p1.y), ImColor(dimmed_fill_color));
         draw_list->AddTriangleFilled(ImVec2(p1.x - arrow_width/2, p0.y), ImVec2(p1.x - arrow_width/2, p1.y), ImVec2(p1.x, p0.y), fill_color);
 
         if (ImGui::IsItemHovered())   {
