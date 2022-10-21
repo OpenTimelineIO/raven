@@ -112,11 +112,18 @@ void DrawItem(otio::Item* item, float scale, ImVec2 origin, float height, std::m
     
     ImGui::PushClipRect(p0, p1, true);
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    auto light_edge_color = ImColor(255,255,255, 255*0.4);
+    auto dark_edge_color = ImColor(0,0,0, 255*0.5);
     
     if (fancy_corners) {
         const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
         const float corner_radius = 5.0f;
         draw_list->AddRectFilled(p0, p1, fill_color, corner_radius, corners_tl_br);
+        // top edge
+        draw_list->AddLine(ImVec2(p0.x + corner_radius, p0.y), ImVec2(p1.x, p0.y), light_edge_color);
+        // bottom edge
+        draw_list->AddLine(ImVec2(p0.x,p1.y-1), ImVec2(p1.x - corner_radius, p1.y-1), dark_edge_color);
     }else{
         draw_list->AddRectFilled(p0, p1, fill_color);
     }
