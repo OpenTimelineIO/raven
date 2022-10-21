@@ -199,9 +199,31 @@ void DrawInspector()
       ImGui::TableNextColumn();
       ImGui::Text("Color:");
       ImGui::TableNextColumn();
-      ImGui::Text("%s",
-          marker->color().c_str()
-      );
+      const char* colors[] = {
+        "PINK",
+        "RED",
+        "ORANGE",
+        "YELLOW",
+        "GREEN",
+        "CYAN",
+        "BLUE",
+        "PURPLE",
+        "MAGENTA",
+        "BLACK",
+        "WHITE"
+      };
+      int current_index = -1;
+      for (int i=0; i<IM_ARRAYSIZE(colors); i++) {
+        if (marker->color() == colors[i]) {
+          current_index = i;
+          break;
+        }
+      }
+      if (ImGui::Combo("##Color", &current_index, colors, IM_ARRAYSIZE(colors))) {
+        if (current_index >= 0 && current_index < IM_ARRAYSIZE(colors)) {
+          marker->set_color(colors[current_index]);
+        }
+      }
 
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
