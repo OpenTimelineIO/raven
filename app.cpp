@@ -478,6 +478,7 @@ void DrawMenu()
       if (ImGui::MenuItem("Close", NULL, false, appState.timeline))
       {
         appState.timeline = NULL;
+        SelectObject(NULL);
       }
       if (ImGui::MenuItem("Exit", "Alt+F4"))
       {
