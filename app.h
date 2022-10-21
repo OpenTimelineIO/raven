@@ -106,6 +106,8 @@ struct AppState
   bool show_style_editor = false;
   bool show_demo_window = false;
   bool show_metrics = false;
+  
+  float zebra_factor = 0.1;
 };
 
 extern AppState appState;

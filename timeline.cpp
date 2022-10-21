@@ -625,6 +625,8 @@ void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::Ratio
     auto tick_color = appTheme.colors[AppThemeCol_TickMajor];
     // auto tick2_color = appTheme.colors[AppThemeCol_TickMinor];
     auto tick_label_color = appTheme.colors[AppThemeCol_Label];
+    auto zebra_color1 = ImColor(0,0,0, 255.0*appState.zebra_factor);
+    auto zebra_color2 = ImColor(255,255,255, 255.0*appState.zebra_factor);
 
     // background
     // draw_list->AddRectFilled(p0, p1, fill_color);
@@ -668,7 +670,13 @@ void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::Ratio
         float tick_x = tick_index * tick_width;
         const ImVec2 tick_start = ImVec2(p0.x + tick_x, p0.y + height/2);
         const ImVec2 tick_end = ImVec2(tick_start.x, p1.y);
-        draw_list->AddLine(tick_start, tick_end, tick_color);
+        if (seconds_per_tick >= 0.5) {
+            draw_list->AddLine(tick_start, tick_end, tick_color);
+        }else{
+            const ImVec2 zebra_start = ImVec2(p0.x + tick_x, p0.y);
+            const ImVec2 zebra_end = ImVec2(tick_start.x + tick_width, p1.y);
+            draw_list->AddRectFilled(zebra_start, zebra_end, (tick_index & 1) ? zebra_color1 : zebra_color2);
+        }
         
         const ImVec2 tick_label_pos = ImVec2(p0.x + tick_x + text_offset.x, p0.y + text_offset.y);
         if (tick_label_pos.x > last_label_end_x + text_offset.x) {
