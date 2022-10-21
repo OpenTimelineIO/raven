@@ -284,7 +284,7 @@ void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float row_height,
         Log("Couldn't find %s in range map?!", item->name().c_str());
         assert(false);
     }
-    auto item_range = range_it->second;    
+    auto item_range = TopLevelTimeRange(range_it->second, item->parent());
 
     ImVec2 size(width, height);
     float item_x = item_range.start_time().to_seconds() * scale + origin.x;
