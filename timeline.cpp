@@ -252,7 +252,7 @@ void DrawTransition(otio::Transition* transition, float scale, ImVec2 origin, fl
     ImGui::SetCursorPos(old_pos);
 }
 
-void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float height, std::map<otio::Composable*, otio::TimeRange> &range_map)
+void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float row_height, std::map<otio::Composable*, otio::TimeRange> &range_map)
 {
     auto effects = item->effects();
     if (effects.size() == 0) return;
@@ -268,6 +268,7 @@ void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float height, std
     auto item_duration = item->duration();
     float item_width = item_duration.to_seconds() * scale;
     float width = fminf(item_width, text_size.x + text_offset.x*2);
+    float height = fminf(row_height-2, text_size.y + text_offset.y*2);
 
     auto range_it = range_map.find(item);
     if (range_it == range_map.end()) {
@@ -276,11 +277,11 @@ void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float height, std
     }
     auto item_range = range_it->second;    
 
-    ImVec2 size(width, height/2);
+    ImVec2 size(width, height);
     float item_x = item_range.start_time().to_seconds() * scale + origin.x;
     ImVec2 render_pos(
         item_x + item_width/2 - size.x/2, // centered
-        ImGui::GetCursorPosY() + height/2 - size.y/2 // centered
+        ImGui::GetCursorPosY() + row_height/2 - size.y/2 // centered
     );
 
     auto label_color = appTheme.colors[AppThemeCol_Label];
@@ -323,7 +324,7 @@ void DrawEffects(otio::Item* item, float scale, ImVec2 origin, float height, std
     ImGui::PushClipRect(p0, p1, true);
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-    draw_list->AddRectFilled(p0, p1, fill_color);
+    draw_list->AddRectFilled(p0, p1, fill_color, 10);
     if (size.x > text_size.x && label_str != "") {
         const ImVec2 text_pos = ImVec2(
             p0.x + size.x/2 - text_size.x/2,
