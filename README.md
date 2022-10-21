@@ -69,6 +69,8 @@ Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui) and [Open
   - Instead of raw text, try a tree view of JSON structure with collapse/expand anything
     - Maybe also edit numbers?
     - How fancy can we get with introspection of otio::SerializableObject?
+  - Range slider could be useful:
+    - https://github.com/ocornut/imgui/issues/76#issuecomment-288304286
   - Per-schema inspector GUI
     - SerializableObjectWithMetadata (or any child):
       - name (done)
