@@ -200,6 +200,26 @@ void LoadFile(std::string path)
   Message("Loaded \"%s\" in %.3f seconds", timeline->name().c_str(), elapsed_seconds);
 }
 
+void SaveFile(std::string path)
+{
+  auto timeline = appState.timeline;
+  if (!timeline) return;
+
+  auto start = std::chrono::high_resolution_clock::now();
+
+  otio::ErrorStatus error_status;
+  auto success = timeline->to_json_file(path, &error_status);
+  if (!success || otio::is_error(error_status)) {
+    Message("Error saving \"%s\": %s", path.c_str(), otio_error_string(error_status).c_str());
+    return;
+  }
+  
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = (end - start);
+  double elapsed_seconds = elapsed.count();
+  Message("Saved \"%s\" in %.3f seconds", timeline->name().c_str(), elapsed_seconds);
+}
+
 void MainInit(int argc, char** argv, int initial_width, int initial_height)
 {
   appState.timeline_width = initial_width * 0.8f;
@@ -464,6 +484,27 @@ std::string OpenFileDialog()
   return "";
 }
 
+std::string SaveFileDialog()
+{
+  nfdchar_t *outPath = NULL;
+  nfdresult_t result = NFD_SaveDialog( "otio", NULL, &outPath );
+  if ( result == NFD_OKAY )
+  {
+    auto result = std::string(outPath);
+    free(outPath);
+    return result;
+  }
+  else if ( result == NFD_CANCEL )
+  {
+    return "";
+  }
+  else 
+  {
+    Message("Error: %s\n", NFD_GetError());
+  }
+  return "";
+}
+
 void DrawMenu()
 {
   if (ImGui::BeginMenuBar())
@@ -474,6 +515,15 @@ void DrawMenu()
       {
         auto path = OpenFileDialog();
         if (path != "") LoadFile(path);
+      }
+      if (ImGui::MenuItem("Save As..."))
+      {
+        auto path = SaveFileDialog();
+        if (path != "") SaveFile(path);
+      }
+      if (ImGui::MenuItem("Revert"))
+      {
+        LoadFile(appState.file_path);
       }
       if (ImGui::MenuItem("Close", NULL, false, appState.timeline))
       {
