@@ -635,7 +635,7 @@ void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::Ratio
     // Note: "width" implies pixels, but "duration" implies time.
     float single_frame_width = scale / frame_rate;
     float tick_width = single_frame_width;
-    float min_tick_width = 30;
+    float min_tick_width = 15;
     if (tick_width < min_tick_width) {
         // every second?
         tick_width = scale;
