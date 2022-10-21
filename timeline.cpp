@@ -965,14 +965,14 @@ void DrawTimeline(otio::Timeline* timeline)
             // scroll_to_playhead = true;
         }
 
+        std::map<otio::Composable*, otio::TimeRange> empty_map;
+        DrawMarkers(timeline->tracks(), appState.scale, origin, appState.track_height, empty_map);
+
         // draw just the top of the playhead in the fixed timecode track
         float playhead_x = DrawPlayhead(start, end, playhead, appState.scale, full_width, appState.track_height, appState.track_height, origin, true);
         
         // now shift the origin down below the timecode track
         origin.y += appState.track_height;
-
-        std::map<otio::Composable*, otio::TimeRange> empty_map;
-        DrawMarkers(timeline->tracks(), appState.scale, origin, appState.track_height, empty_map);
 
         int index = video_tracks.size();
         for (auto i = video_tracks.rbegin(); i != video_tracks.rend(); ++i)
