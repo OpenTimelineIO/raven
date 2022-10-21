@@ -251,6 +251,10 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height)
   if (argc > 1) {
     LoadFile(argv[1]);
   }
+  else {
+    auto tl = new otio::Timeline();
+    LoadTimeline(tl);
+  }
 }
 
 void MainCleanup()
