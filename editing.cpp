@@ -4,6 +4,7 @@
 #include <opentimelineio/marker.h>
 #include <opentimelineio/effect.h>
 #include <opentimelineio/item.h>
+#include <opentimelineio/stackAlgorithm.h>
 #include <stdlib.h>
 
 
@@ -136,5 +137,77 @@ void AddTrack(std::string kind)
       return;
     }
   }
+}
+
+
+void FlattenTrackDown()
+{
+  const auto& timeline = appState.timeline;
+  if (!timeline) {
+    Message("Cannot flatten: No timeline.");
+    return;
+  }
+
+  if (appState.selected_object == NULL) {
+    Message("Cannot flatten: No Track is selected.");
+    return;
+  }
+
+  auto selected_track = dynamic_cast<otio::Track*>(appState.selected_object);
+  if (selected_track == NULL) {
+    Message("Cannot flatten: Selected object is not a Track.");
+    return;
+  }
+
+  otio::Stack* stack = dynamic_cast<otio::Stack*>(selected_track->parent());
+  if (stack == NULL) {
+    Message("Cannot flatten: Parent of selected Track is not a Stack.");
+    return;
+  }
+
+  int selected_index = -1;
+  auto& children = stack->children();
+  auto it = std::find(children.begin(), children.end(), selected_track);
+  if (it != children.end()) {
+    selected_index = std::distance(children.begin(), it);
+  }
+  if (selected_index < 0) {
+    Message("Cannot flatten: Cannot find selected Track in Stack.");
+    return;
+  }
+  if (selected_index == 0) {
+    Message("Cannot flatten: Selected Track has nothing below it.");
+    return;
+  }
+  auto track_below = dynamic_cast<otio::Track*>(children[selected_index - 1].value);
+  if (track_below == NULL) {
+    Message("Cannot flatten: Item below selected Track is not a Track itself.");
+    return;
+  }
+
+  otio::ErrorStatus error_status;
+  std::vector<otio::Track*> tracks;
+  tracks.push_back(track_below);
+  tracks.push_back(selected_track);
+  auto flat_track = otio::flatten_stack(tracks, &error_status);
+  if (!flat_track or is_error(error_status))
+  {
+    Message("Cannot flatten: %s.", otio_error_string(error_status).c_str());
+    return;
+  }
+  int insertion_index = selected_index + 1;
+    
+  stack->insert_child(insertion_index, flat_track, &error_status);
+  
+  if (otio::is_error(error_status)) {
+    Message("Error inserting track: %s", otio_error_string(error_status).c_str());
+    return;
+  }
+
+  // stack->remove_child(selected_index - 1);
+  // stack->remove_child(selected_index);
+  SelectObject(flat_track);
+  
+  // Success!
 }
 

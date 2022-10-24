@@ -556,6 +556,10 @@ void DrawMenu()
       {
         AddTrack();
       }
+      if (ImGui::MenuItem("Flatten Track Down"))
+      {
+        FlattenTrackDown();
+      }
       ImGui::EndMenu();
     }
 
