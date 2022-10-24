@@ -625,8 +625,8 @@ void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::Ratio
     auto tick_color = appTheme.colors[AppThemeCol_TickMajor];
     // auto tick2_color = appTheme.colors[AppThemeCol_TickMinor];
     auto tick_label_color = appTheme.colors[AppThemeCol_Label];
-    auto zebra_color1 = ImColor(0,0,0, 255.0*appState.zebra_factor);
-    auto zebra_color2 = ImColor(255,255,255, 255.0*appState.zebra_factor);
+    auto zebra_color_dark = ImColor(0,0,0, 255.0*appState.zebra_factor);
+    auto zebra_color_light = ImColor(255,255,255, 255.0*appState.zebra_factor);
 
     // background
     // draw_list->AddRectFilled(p0, p1, fill_color);
@@ -675,7 +675,7 @@ void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::Ratio
         }else{
             const ImVec2 zebra_start = ImVec2(p0.x + tick_x, p0.y);
             const ImVec2 zebra_end = ImVec2(tick_start.x + tick_width, p1.y);
-            draw_list->AddRectFilled(zebra_start, zebra_end, (tick_index & 1) ? zebra_color1 : zebra_color2);
+            draw_list->AddRectFilled(zebra_start, zebra_end, (tick_index & 1) ? zebra_color_dark : zebra_color_light);
         }
         
         const ImVec2 tick_label_pos = ImVec2(p0.x + tick_x + text_offset.x, p0.y + text_offset.y);
@@ -734,6 +734,16 @@ bool DrawTimecodeTrack(otio::RationalTime start, otio::RationalTime end, float f
     return moved_playhead;
 }
 
+ImColor ColorOverColor(ImColor a, ImColor b)
+{
+    const float alpha = a.Value.w; // for readability
+    return ImColor(
+        a.Value.x * alpha + b.Value.x * (1.0 - alpha),
+        a.Value.y * alpha + b.Value.y * (1.0 - alpha),
+        a.Value.z * alpha + b.Value.z * (1.0 - alpha),
+        b.Value.w);
+}
+
 float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::RationalTime playhead, float scale, float full_width, float track_height, float full_height, ImVec2 origin, bool draw_arrow)
 {
     float playhead_width = scale / playhead.rate();
@@ -745,6 +755,7 @@ float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::Ratio
     auto background_color = appTheme.colors[AppThemeCol_Background];
     auto playhead_fill_color = appTheme.colors[AppThemeCol_Playhead];
     auto playhead_line_color = appTheme.colors[AppThemeCol_PlayheadLine];
+    auto playhead_label_bg_color = ColorOverColor(playhead_fill_color, background_color);
 
     // Ask for this position in the timeline
     ImVec2 render_pos(
@@ -802,10 +813,10 @@ float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::Ratio
 
     bool draw_label = draw_arrow;  // link these
     if (draw_label) {
-        // for readability, put a black rectangle behind the area where the label will be
-        draw_list->AddRectFilled(ImVec2(label_pos.x - text_offset.x, label_pos.y - text_offset.x),
-                                 ImVec2(label_end.x + text_offset.x, label_end.y + text_offset.y),
-                                 background_color);
+        // for readability, put a rectangle behind the area where the label will be
+        ImVec2 label_rect_start = ImVec2(label_pos.x - text_offset.x, label_pos.y);
+        ImVec2 label_rect_end = ImVec2(label_end.x + text_offset.x, label_end.y);
+        draw_list->AddRectFilled(label_rect_start, label_rect_end, playhead_label_bg_color);
     }
 
     // playhead vertical bar is one frame thick, with hairline on left edge
