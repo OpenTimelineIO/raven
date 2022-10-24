@@ -664,11 +664,11 @@ void SelectObject(otio::SerializableObject* object, otio::SerializableObject* co
   }
 }
 
-void SeekPlayhead(float seconds)
+void SeekPlayhead(double seconds)
 {
-  float lower_limit = appState.playhead_limit.start_time().to_seconds();
-  float upper_limit = appState.playhead_limit.end_time_exclusive().to_seconds();
-  seconds = fmaxf(lower_limit, fminf(upper_limit, seconds));
+  double lower_limit = appState.playhead_limit.start_time().to_seconds();
+  double upper_limit = appState.playhead_limit.end_time_exclusive().to_seconds();
+  seconds = fmax(lower_limit, fmin(upper_limit, seconds));
   appState.playhead = otio::RationalTime::from_seconds(seconds, appState.playhead.rate());
   if (appState.snap_to_frame) {
     SnapPlayhead();

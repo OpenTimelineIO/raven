@@ -17,9 +17,9 @@ static int __tracks_rendered;
 static int __items_rendered;
 
 
-float TimeScalarForItem(otio::Item* item)
+double TimeScalarForItem(otio::Item* item)
 {
-    float time_scalar = 1.0;
+    double time_scalar = 1.0;
     for (const auto& effect : item->effects()) {
         if (const auto& timewarp = dynamic_cast<otio::LinearTimeWarp*>(effect.value)) {
             time_scalar *= timewarp->time_scalar();
@@ -597,15 +597,15 @@ void DrawTrack(otio::Track* track, int index, float scale, ImVec2 origin, float 
     __tracks_rendered++;
 }
 
-static bool _divisible(float t, float interval) {
-    float epsilon = interval / 1000000.0f;
-    float remainder = fmodf(t, interval);
-    return fabsf(remainder) < epsilon;
+static bool _divisible(double t, float interval) {
+    double epsilon = interval / 1000000.0f;
+    double remainder = fmod(t, interval);
+    return fabs(remainder) < epsilon;
 }
 
 void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::RationalTime end, float frame_rate, float time_scalar, float zoom_scale, float width, float height)
 {
-    float scale = zoom_scale / time_scalar;
+    double scale = zoom_scale / time_scalar;
 
     ImVec2 size(width, height);
     ImVec2 text_offset(7.0f, 5.0f);
@@ -633,9 +633,9 @@ void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::Ratio
 
     // draw every frame?
     // Note: "width" implies pixels, but "duration" implies time.
-    float single_frame_width = scale / frame_rate;
-    float tick_width = single_frame_width;
-    float min_tick_width = 15;
+    double single_frame_width = scale / frame_rate;
+    double tick_width = single_frame_width;
+    double min_tick_width = 15;
     if (tick_width < min_tick_width) {
         // every second?
         tick_width = scale;
@@ -659,15 +659,15 @@ void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::Ratio
     // assert(!_divisible(1.0/24.0, 3600));
 
     // tick marks - roughly every N pixels
-    float pixels_per_second = scale;
-    float seconds_per_tick = tick_width / pixels_per_second;
+    double pixels_per_second = scale;
+    double seconds_per_tick = tick_width / pixels_per_second;
     auto tick_duration = otio::RationalTime::from_seconds(seconds_per_tick, frame_rate);
     int tick_count = ceilf(width / tick_width);
-    float last_label_end_x = p0.x - text_offset.x*2;
+    double last_label_end_x = p0.x - text_offset.x*2;
     for (int tick_index=0; tick_index<tick_count; tick_index++) {
         auto tick_time = start + otio::RationalTime(tick_index * tick_duration.value(), tick_duration.rate());
 
-        float tick_x = tick_index * tick_width;
+        double tick_x = tick_index * tick_width;
         const ImVec2 tick_start = ImVec2(p0.x + tick_x, p0.y + height/2);
         const ImVec2 tick_end = ImVec2(tick_start.x, p1.y);
         if (seconds_per_tick >= 0.5) {
