@@ -55,6 +55,44 @@ void DrawNonEditableTextField(const char* label, const char* format, ...)
   ImGui::PopStyleColor();
 }
 
+bool DrawRationalTime(const char* label, otio::RationalTime *time, bool allow_negative=false)
+{
+  if (time == NULL) return false;
+  float vals[2];
+  vals[0] = time->value();
+  vals[1] = time->rate();
+  if (ImGui::DragFloat2(label, vals, 0.01, allow_negative ? -FLT_MAX : 0, FLT_MAX)) {
+    *time = otio::RationalTime(vals[0], vals[1]);
+    return true;
+  }
+  return false;
+}
+
+bool DrawTimeRange(const char* label, otio::TimeRange *range, bool allow_negative=false)
+{
+  if (range == NULL) return false;
+
+  otio::RationalTime start = range->start_time();
+  otio::RationalTime duration = range->duration();
+
+  bool changed = false;
+
+  char buf[100];
+  snprintf(buf, sizeof(buf), "%s Start", label);
+  if (DrawRationalTime(buf, &start, allow_negative)) {
+    changed = true;
+  }
+  snprintf(buf, sizeof(buf), "%s Duration", label);
+  if (DrawRationalTime(buf, &duration, false)) {  // never negative
+    changed = true;
+  }
+  
+  if (changed) {
+    *range = otio::TimeRange(start, duration);
+  }
+  return changed;
+}
+
 void DrawInspector()
 {
   auto selected_object = appState.selected_object;
@@ -70,7 +108,6 @@ void DrawInspector()
   // These temporary variables are used only for a moment to convert
   // between the datatypes that OTIO uses vs the one that ImGui widget uses.
   char tmp_str[1000];
-  int tmp_ints[4];
 
   // SerializableObjectWithMetadata
   if (const auto& obj = dynamic_cast<otio::SerializableObjectWithMetadata*>(selected_object)) {
@@ -85,42 +122,22 @@ void DrawInspector()
 
   // Timeline
   if (const auto& timeline = dynamic_cast<otio::Timeline*>(selected_object)) {
+    // Since global_start_time is optional, default to 0
+    // but take care not to *set* the value unless the user changes it.
     auto rate = timeline->global_start_time().value_or(playhead).rate();
-    tmp_ints[0] = timeline->global_start_time().value_or(otio::RationalTime(0, rate)).to_frames();
+    auto global_start_time = timeline->global_start_time().value_or(otio::RationalTime(0, rate));
     // don't allow negative duration - but 0 is okay
-    if (ImGui::DragInt("Global Start", tmp_ints, 1, 0, INT_MAX)) {
-      timeline->set_global_start_time(
-        otio::RationalTime::from_frames(tmp_ints[0], rate)
-      );
+    if (DrawRationalTime("Global Start", &global_start_time, true)) {
+      timeline->set_global_start_time(global_start_time);
+      DetectPlayheadLimits();
     }
   }
   
   // Item
   if (const auto& item = dynamic_cast<otio::Item*>(selected_object)) {
     auto trimmed_range = item->trimmed_range();
-    auto rate = trimmed_range.start_time().rate();
-    tmp_ints[0] = trimmed_range.start_time().to_frames();
-    tmp_ints[1] = trimmed_range.end_time_inclusive().to_frames();
-    if (ImGui::DragInt2("Range", tmp_ints, 1, 0, INT_MAX)) {
-      // don't allow negative duration - but 0 is okay
-      if (tmp_ints[1] < tmp_ints[0]) tmp_ints[1] = tmp_ints[0];
-      item->set_source_range(
-        otio::TimeRange::range_from_start_end_time_inclusive(
-          otio::RationalTime::from_frames(tmp_ints[0], rate),
-          otio::RationalTime::from_frames(tmp_ints[1], rate)
-        )
-      );
-    }
-    
-    tmp_ints[0] = trimmed_range.duration().to_frames();
-    // don't allow negative duration - but 0 is okay
-    if (ImGui::DragInt("Duration", tmp_ints, 1, 0, INT_MAX)) {
-      item->set_source_range(
-        otio::TimeRange(
-          trimmed_range.start_time(),
-          otio::RationalTime::from_frames(tmp_ints[0], rate)
-        )
-      );
+    if (DrawTimeRange("Trimmed Range", &trimmed_range, true)) {
+      item->set_source_range(trimmed_range);
     }
   }
 
@@ -131,14 +148,17 @@ void DrawInspector()
 
   // Transition
   if (const auto& transition = dynamic_cast<otio::Transition*>(selected_object)) {
-    ImGui::Text("In/Out Offset: %d / %d",
-        transition->in_offset().to_frames(),
-        transition->out_offset().to_frames()
-    );
+    auto in_offset = transition->in_offset();
+    if (DrawRationalTime("In Offset", &in_offset, false)) {
+      transition->set_in_offset(in_offset);
+    }
 
-    ImGui::Text("Duration: %d frames",
-        transition->duration().to_frames()
-    );
+    auto out_offset = transition->out_offset();
+    if (DrawRationalTime("Out Offset", &out_offset, false)) {
+      transition->set_out_offset(out_offset);
+    }
+
+    DrawNonEditableTextField("Duration", "%d frames", transition->duration().to_frames());
   }
 
   // Effect
@@ -182,36 +202,15 @@ void DrawInspector()
       }
     }
 
-    tmp_ints[0] = marker->marked_range().start_time().to_frames();
-    tmp_ints[1] = marker->marked_range().end_time_inclusive().to_frames();
-    if (ImGui::DragInt2("Marked Range", tmp_ints, 1, 0, INT_MAX)) {
-      // don't allow negative duration - but 0 is okay
-      if (tmp_ints[1] < tmp_ints[0]) tmp_ints[1] = tmp_ints[0];
-      marker->set_marked_range(
-        otio::TimeRange::range_from_start_end_time_inclusive(
-          otio::RationalTime::from_frames(tmp_ints[0], rate),
-          otio::RationalTime::from_frames(tmp_ints[1], rate)
-        )
-      );
-    }
-    
-    tmp_ints[0] = marker->marked_range().duration().to_frames();
-    // don't allow negative duration - but 0 is okay
-    if (ImGui::DragInt("Duration", tmp_ints, 1, 0, INT_MAX)) {
-      marker->set_marked_range(
-        otio::TimeRange(
-          marker->marked_range().start_time(),
-          otio::RationalTime::from_frames(tmp_ints[0], rate)
-        )
-      );
+    auto marked_range = marker->marked_range();
+    if (DrawTimeRange("Marked Range", &marked_range, false)) {
+      marker->set_marked_range(marked_range);
     }
   }
 
   // Track
   if (const auto& track = dynamic_cast<otio::Track*>(selected_object)) {
-    ImGui::Text("Kind: %s",
-        track->kind().c_str()
-    );
+    DrawNonEditableTextField("Kind", "%s", track->kind().c_str());
   }
 
   // SerializableObjectWithMetadata
