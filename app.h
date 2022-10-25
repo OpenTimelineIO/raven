@@ -127,5 +127,6 @@ ImU32 ImLerpColors(ImU32 col_a, ImU32 col_b, float t);
 void SelectObject(otio::SerializableObject* object, otio::SerializableObject* context=NULL);
 void SeekPlayhead(double seconds);
 void SnapPlayhead();
+void DetectPlayheadLimits();
 void FitZoomWholeTimeline();
 

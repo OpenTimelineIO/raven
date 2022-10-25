@@ -170,10 +170,7 @@ std::string otio_error_string(otio::ErrorStatus const& error_status)
 void LoadTimeline(otio::Timeline* timeline)
 {
   appState.timeline = timeline;
-  appState.playhead_limit = otio::TimeRange(
-    timeline->global_start_time().value_or(otio::RationalTime()),
-    timeline->duration()
-  );
+  DetectPlayheadLimits();
   appState.playhead = appState.playhead_limit.start_time();
   FitZoomWholeTimeline();
   SelectObject(timeline);
@@ -682,6 +679,15 @@ void SeekPlayhead(double seconds)
 void SnapPlayhead()
 {
   appState.playhead = otio::RationalTime::from_frames(appState.playhead.to_frames(), appState.playhead.rate());
+}
+
+void DetectPlayheadLimits()
+{
+  const auto timeline = appState.timeline;
+  appState.playhead_limit = otio::TimeRange(
+    timeline->global_start_time().value_or(otio::RationalTime()),
+    timeline->duration()
+  );
 }
 
 void FitZoomWholeTimeline()
