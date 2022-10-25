@@ -96,9 +96,14 @@ struct AppState
   float track_height = 30.0f;  // current track height (pixels)
   otio::RationalTime playhead;
   bool scroll_to_playhead = false;  // temporary flag, only true until next frame
-  bool snap_to_frame = true;  // user preference to snap the playhead to frames
   otio::TimeRange playhead_limit;  // min/max limit for moving the playhead, auto-calculated
   float zebra_factor = 0.1;  // opacity of the per-frame zebra stripes
+
+  bool snap_to_frames = true;  // user preference to snap the playhead, times, ranges, etc. to frames
+  bool display_timecode = true;
+  bool display_frames = false;
+  bool display_seconds = false;
+  bool display_rate = false;
 
   // Selection.
   otio::SerializableObject* selected_object;  // maybe NULL
@@ -120,6 +125,7 @@ extern ImFont *gIconFont;
 
 void Log(const char* format, ...);
 void Message(const char* format, ...);
+std::string Format(const char* format, ...);
 
 std::string otio_error_string(otio::ErrorStatus const& error_status);
 ImU32 ImLerpColors(ImU32 col_a, ImU32 col_b, float t);
@@ -129,4 +135,8 @@ void SeekPlayhead(double seconds);
 void SnapPlayhead();
 void DetectPlayheadLimits();
 void FitZoomWholeTimeline();
+std::string FormattedStringFromTime(otio::RationalTime time, bool allow_rate=true);
+std::string TimecodeStringFromTime(otio::RationalTime);
+std::string FramesStringFromTime(otio::RationalTime);
+std::string SecondsStringFromTime(otio::RationalTime);
 

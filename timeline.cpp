@@ -156,12 +156,12 @@ void DrawItem(otio::Item* item, float scale, ImVec2 origin, float height, std::m
             extra = "\nChildren: " + std::to_string(comp->children().size());
         }
         ImGui::SetTooltip(
-            "%s: %s\nRange: %d - %d\nDuration: %d frames%s",
+            "%s: %s\nRange: %s - %s\nDuration: %s%s",
             item->schema_name().c_str(),
             item->name().c_str(),
-            trimmed_range.start_time().to_frames(),
-            trimmed_range.end_time_inclusive().to_frames(),
-            duration.to_frames(),
+            FormattedStringFromTime(trimmed_range.start_time()).c_str(),
+            FormattedStringFromTime(trimmed_range.end_time_inclusive()).c_str(),
+            FormattedStringFromTime(duration).c_str(),
             extra.c_str()
         );
     }
@@ -235,12 +235,12 @@ void DrawTransition(otio::Transition* transition, float scale, ImVec2 origin, fl
 
     if (ImGui::IsItemHovered())   {
         ImGui::SetTooltip(
-            "%s: %s\nIn/Out Offset: %d / %d\nDuration: %d frames",
+            "%s: %s\nIn/Out Offset: %s / %s\nDuration: %s",
             transition->schema_name().c_str(),
             transition->name().c_str(),
-            transition->in_offset().to_frames(),
-            transition->out_offset().to_frames(),
-            duration.to_frames()
+            FormattedStringFromTime(transition->in_offset()).c_str(),
+            FormattedStringFromTime(transition->out_offset()).c_str(),
+            FormattedStringFromTime(duration).c_str()
         );
     }
     
@@ -436,13 +436,13 @@ void DrawMarkers(otio::Item* item, float scale, ImVec2 origin, float height, std
 
         if (ImGui::IsItemHovered())   {
             ImGui::SetTooltip(
-                "%s: %s\nColor: %s\nRange: %d - %d\nDuration: %d frames",
+                "%s: %s\nColor: %s\nRange: %s - %s\nDuration: %s",
                 marker->schema_name().c_str(),
                 marker->name().c_str(),
                 marker->color().c_str(),
-                range.start_time().to_frames(),
-                range.end_time_exclusive().to_frames(),
-                duration.to_frames()
+                FormattedStringFromTime(range.start_time()).c_str(),
+                FormattedStringFromTime(range.end_time_exclusive()).c_str(),
+                FormattedStringFromTime(duration).c_str()
             );
         }
         
@@ -544,14 +544,14 @@ void DrawTrackLabel(otio::Track* track, int index, float height)
     if (ImGui::IsItemHovered()) {
         auto trimmed_range = track->trimmed_range();
         ImGui::SetTooltip(
-            "%s: %s\n%s #%d\nRange: %d - %d\nDuration: %d frames\nChildren: %ld",
+            "%s: %s\n%s #%d\nRange: %s - %s\nDuration: %s\nChildren: %ld",
             track->schema_name().c_str(),
             track->name().c_str(),
             track->kind().c_str(),
             index,
-            trimmed_range.start_time().to_frames(),
-            trimmed_range.end_time_inclusive().to_frames(),
-            trimmed_range.duration().to_frames(),
+            FormattedStringFromTime(trimmed_range.start_time()).c_str(),
+            FormattedStringFromTime(trimmed_range.end_time_inclusive()).c_str(),
+            FormattedStringFromTime(trimmed_range.duration()).c_str(),
             track->children().size()
         );
     }
@@ -674,7 +674,7 @@ void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::Ratio
         // only draw a label when there's room for it
         if (tick_label_pos.x > last_label_end_x + text_offset.x) {
             char tick_label[100];
-            snprintf(tick_label, sizeof(tick_label), "%s", tick_time.to_timecode().c_str());
+            snprintf(tick_label, sizeof(tick_label), "%s", FormattedStringFromTime(tick_time).c_str());
             auto label_size = ImGui::CalcTextSize(tick_label);
             draw_list->AddText(tick_label_pos, tick_label_color, tick_label);
             // advance last_label_end_x so nothing will overlap with the one we just drew
@@ -799,7 +799,7 @@ float DrawPlayhead(otio::RationalTime start, otio::RationalTime end, otio::Ratio
     const ImVec2 playhead_line_start = p0;
     const ImVec2 playhead_line_end = ImVec2(p0.x, p1.y);
 
-    std::string label_str = appState.snap_to_frame ? playhead.to_timecode() : playhead.to_time_string();
+    std::string label_str = FormattedStringFromTime(playhead);
     auto label_color = appTheme.colors[AppThemeCol_Label];
     const ImVec2 label_size = ImGui::CalcTextSize(label_str.c_str());
     const ImVec2 label_pos = ImVec2(p1.x + text_offset.x, p0.y + text_offset.y);
@@ -850,14 +850,14 @@ bool DrawTransportControls(otio::Timeline* timeline)
     auto rate = duration.rate();
     if (appState.playhead.rate() != rate) {
         appState.playhead = appState.playhead.rescaled_to(rate);
-        if (appState.snap_to_frame) {
+        if (appState.snap_to_frames) {
             SnapPlayhead();
         }
     }
 
-    auto start_string = start.to_timecode();
-    auto playhead_string = appState.playhead.to_timecode();
-    auto end_string = end.to_timecode();
+    auto start_string = FormattedStringFromTime(start);
+    auto playhead_string = FormattedStringFromTime(appState.playhead);
+    auto end_string = FormattedStringFromTime(end);
     
     ImGui::PushID("##TransportControls");
     ImGui::BeginGroup();
@@ -1039,7 +1039,7 @@ void DrawTimeline(otio::Timeline* timeline)
     auto duration = appState.playhead_limit.duration();
     auto end = appState.playhead_limit.end_time_exclusive();
 
-    auto playhead_string = playhead.to_timecode();
+    auto playhead_string = FormattedStringFromTime(playhead);
   
     auto video_tracks = timeline->video_tracks();
     auto audio_tracks = timeline->audio_tracks();

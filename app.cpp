@@ -56,6 +56,17 @@ void Message(const char* format, ...)
   Log(appState.message);
 }
 
+// C forever <3
+std::string Format(const char* format, ...)
+{
+  char buf[1000]; // for this app, this will suffice.
+  va_list args;
+  va_start(args, format);
+  vsnprintf(buf, sizeof(buf), format, args);
+  va_end(args);
+  return std::string(buf);
+}
+
 
 // Files in the application fonts/ folder are supposed to be embedded
 // automatically (on iOS/Android/Emscripten), but that's not wired up.
@@ -425,6 +436,16 @@ void MainGui()
 
       ImGui::DragFloat("Zebra Factor", &appState.zebra_factor, 0.001, 0, 1);
 
+      ImGui::Checkbox("Snap to Frames", &appState.snap_to_frames);
+
+      ImGui::Text("Display Times:");
+      ImGui::Indent();
+      ImGui::Checkbox("Timecode", &appState.display_timecode);
+      ImGui::Checkbox("Frames", &appState.display_frames);
+      ImGui::Checkbox("Seconds", &appState.display_seconds);
+      ImGui::Checkbox("Rate", &appState.display_rate);
+      ImGui::Unindent();
+
       ImGui::ShowStyleEditor();
   }
   ImGui::End();
@@ -541,10 +562,13 @@ void DrawMenu()
 
     if (ImGui::BeginMenu("Edit"))
     {
-      if (ImGui::MenuItem("Delete", NULL, false, appState.selected_object != NULL))
+      if (ImGui::MenuItem("Snap to Frames", NULL, &appState.snap_to_frames))
       {
-        DeleteSelectedObject();
+        if (appState.snap_to_frames) {
+          SnapPlayhead();
+        }
       }
+      ImGui::Separator();
       if (ImGui::MenuItem("Add Marker"))
       {
         AddMarkerAtPlayhead();
@@ -557,26 +581,34 @@ void DrawMenu()
       {
         FlattenTrackDown();
       }
+      ImGui::Separator();
+      if (ImGui::MenuItem("Delete", NULL, false, appState.selected_object != NULL))
+      {
+        DeleteSelectedObject();
+      }
       ImGui::EndMenu();
     }
 
     if (ImGui::BeginMenu("View"))
     {
       bool showTimecodeOnClips = appState.track_height >= appState.default_track_height*2;
-      if (ImGui::MenuItem("Show Timecode on Clips", NULL, &showTimecodeOnClips))
+      if (ImGui::MenuItem("Show Time on Clips", NULL, &showTimecodeOnClips))
       {
         appState.track_height = showTimecodeOnClips ? appState.default_track_height*2 : appState.default_track_height;
       }
+      ImGui::Text("Display Times:");
+      ImGui::Indent();
+      ImGui::MenuItem("Timecode", NULL, &appState.display_timecode);
+      ImGui::MenuItem("Frames", NULL, &appState.display_frames);
+      ImGui::MenuItem("Seconds", NULL, &appState.display_seconds);
+      ImGui::MenuItem("Rate", NULL, &appState.display_rate);
+      ImGui::Unindent();
+      ImGui::Separator();
       if (ImGui::MenuItem("Fit to Window"))
       {
         FitZoomWholeTimeline();
       }
-      if (ImGui::MenuItem("Snap Playhead to Frames", NULL, &appState.snap_to_frame))
-      {
-        if (appState.snap_to_frame) {
-          SnapPlayhead();
-        }
-      }
+      ImGui::Separator();
       if (ImGui::MenuItem("Show Dear ImGui Metrics", NULL, &appState.show_metrics))
       {
       }
@@ -671,7 +703,7 @@ void SeekPlayhead(double seconds)
   double upper_limit = appState.playhead_limit.end_time_exclusive().to_seconds();
   seconds = fmax(lower_limit, fmin(upper_limit, seconds));
   appState.playhead = otio::RationalTime::from_seconds(seconds, appState.playhead.rate());
-  if (appState.snap_to_frame) {
+  if (appState.snap_to_frames) {
     SnapPlayhead();
   }
 }
@@ -693,5 +725,51 @@ void DetectPlayheadLimits()
 void FitZoomWholeTimeline()
 {
   appState.scale = appState.timeline_width / appState.timeline->duration().to_seconds();
+}
+
+std::string FormattedStringFromTime(otio::RationalTime time, bool allow_rate)
+{
+  std::string result;
+  if (appState.display_timecode) {
+    if (result != "") result += " ";
+    result += TimecodeStringFromTime(time);
+  }
+  if (appState.display_frames) {
+    if (result != "") result += " ";
+    result += FramesStringFromTime(time) + "f";
+  }
+  if (appState.display_seconds) {
+    if (result != "") result += " ";
+    result += SecondsStringFromTime(time) + "s";
+  }
+  if (allow_rate && appState.display_rate) {
+    if (result != "") result += " ";
+    result += "@" + Format("%g", time.rate());
+  }
+  return result;
+}
+
+std::string TimecodeStringFromTime(otio::RationalTime time)
+{
+  opentime::ErrorStatus error_status;
+  auto result = time.to_timecode(&error_status);
+  if (opentime::is_error(error_status)) {
+    // non-standard rates can't be turned into timecode
+    // so fall back to a time string, which is HH:MM:SS.xxx
+    // where xxx is a fraction instead of a :FF frame.
+    return time.to_time_string();
+  }else{
+    return result;
+  }
+}
+
+std::string FramesStringFromTime(otio::RationalTime time)
+{
+  return std::to_string(time.to_frames());
+}
+
+std::string SecondsStringFromTime(otio::RationalTime time)
+{
+  return Format("%.3f", time.to_seconds());
 }
 

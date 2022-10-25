@@ -58,14 +58,49 @@ void DrawNonEditableTextField(const char* label, const char* format, ...)
 bool DrawRationalTime(const char* label, otio::RationalTime *time, bool allow_negative=false)
 {
   if (time == NULL) return false;
+  auto formatted = FormattedStringFromTime(*time);
+  if (appState.snap_to_frames) {
+    int val = floor(time->value());  // snap with floor()
+    if (ImGui::DragInt(
+      label,
+      &val,
+      0.1,
+      allow_negative ? INT_MIN : 0, INT_MAX,
+      formatted.c_str()))
+    {
+      *time = otio::RationalTime(val, time->rate());
+      return true;
+    }
+  }else{
+    float val = time->value();
+    if (ImGui::DragFloat(
+      label,
+      &val,
+      0.01,
+      allow_negative ? -FLT_MAX : 0, FLT_MAX,
+      formatted.c_str()))
+    {
+      *time = otio::RationalTime(val, time->rate());
+      return true;
+    }
+  }
+  return false;
+  /*
   float vals[2];
   vals[0] = time->value();
   vals[1] = time->rate();
-  if (ImGui::DragFloat2(label, vals, 0.01, allow_negative ? -FLT_MAX : 0, FLT_MAX)) {
+  if (ImGui::DragFloat2(
+    label,
+    vals,
+    0.01,
+    allow_negative ? -FLT_MAX : 0, FLT_MAX,
+    FormattedStringFromTime(*time, false).c_str()))
+  {
     *time = otio::RationalTime(vals[0], vals[1]);
     return true;
   }
   return false;
+  */
 }
 
 bool DrawTimeRange(const char* label, otio::TimeRange *range, bool allow_negative=false)
@@ -77,15 +112,22 @@ bool DrawTimeRange(const char* label, otio::TimeRange *range, bool allow_negativ
 
   bool changed = false;
 
+  ImGui::Text("%s", label);
+  ImGui::Indent();
+
   char buf[100];
-  snprintf(buf, sizeof(buf), "%s Start", label);
+  snprintf(buf, sizeof(buf), "Start##%s", label);
   if (DrawRationalTime(buf, &start, allow_negative)) {
     changed = true;
   }
-  snprintf(buf, sizeof(buf), "%s Duration", label);
+  snprintf(buf, sizeof(buf), "Duration##%s", label);
   if (DrawRationalTime(buf, &duration, false)) {  // never negative
     changed = true;
   }
+  snprintf(buf, sizeof(buf), "End##%s", label);
+  DrawNonEditableTextField(buf, "%s", FormattedStringFromTime(range->end_time_inclusive()).c_str());
+  
+  ImGui::Unindent();
   
   if (changed) {
     *range = otio::TimeRange(start, duration);
@@ -158,7 +200,7 @@ void DrawInspector()
       transition->set_out_offset(out_offset);
     }
 
-    DrawNonEditableTextField("Duration", "%d frames", transition->duration().to_frames());
+    DrawNonEditableTextField("Duration", "%s", FormattedStringFromTime(transition->duration()).c_str());
   }
 
   // Effect
