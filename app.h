@@ -82,31 +82,35 @@ struct AppTheme
 // Struct that holds the application's state
 struct AppState
 {
+  // What file did we load?
   std::string file_path;
+  
+  // This holds the main timeline object.
+  // Pretty much everything drills into this one entry point.
   otio::SerializableObject::Retainer<otio::Timeline> timeline;
 
-  float timeline_width = 100.0f;
-  float scale = 100.0f;
-  float default_track_height = 30.0f;
-  float track_height = 30.0f;
+  // Timeline display settings
+  float timeline_width = 100.0f;  // automatically calculated (pixels)
+  float scale = 100.0f;  // zoom scale, measured in pixels per second
+  float default_track_height = 30.0f;  // (pixels)
+  float track_height = 30.0f;  // current track height (pixels)
   otio::RationalTime playhead;
-  bool scroll_to_playhead = false;
-  bool snap_to_frame = true;
-  otio::TimeRange playhead_limit;
-  uint32_t selection_start = 0;
-  uint32_t selection_length = 1;
+  bool scroll_to_playhead = false;  // temporary flag, only true until next frame
+  bool snap_to_frame = true;  // user preference to snap the playhead to frames
+  otio::TimeRange playhead_limit;  // min/max limit for moving the playhead, auto-calculated
+  float zebra_factor = 0.1;  // opacity of the per-frame zebra stripes
 
-  otio::SerializableObject* selected_object;
-  otio::SerializableObject* selected_context;
-  std::string selected_text;
-  char message[1024];
+  // Selection.
+  otio::SerializableObject* selected_object;  // maybe NULL
+  otio::SerializableObject* selected_context;  // often NULL, parent to the selected object for OTIO objects which don't track their parent
+  std::string selected_text;  // displayed in the JSON inspector
+  char message[1024];  // single-line message displayed in main window
 
+  // Toggles for Dear ImGui windows
   bool show_main_window = true;
   bool show_style_editor = false;
   bool show_demo_window = false;
   bool show_metrics = false;
-  
-  float zebra_factor = 0.1;
 };
 
 extern AppState appState;
