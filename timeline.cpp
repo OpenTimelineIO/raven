@@ -648,27 +648,36 @@ void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::Ratio
     double seconds_per_tick = tick_width / pixels_per_second;
     auto tick_duration = otio::RationalTime::from_seconds(seconds_per_tick, frame_rate);
     int tick_count = ceilf(width / tick_width);
+    // start_floor_time and tick_offset_x adjust the display for cases where
+    // the item's start_time is not on a whole frame boundary.
+    auto start_floor_time = otio::RationalTime(floor(start.value()), start.rate());
+    double tick_offset_x = (start - start_floor_time).to_seconds() * scale;
+    // last_label_end_x tracks the tail of the last label, so we can prevent overlap
     double last_label_end_x = p0.x - text_offset.x*2;
     for (int tick_index=0; tick_index<tick_count; tick_index++) {
         auto tick_time = start + otio::RationalTime(tick_index * tick_duration.value(), tick_duration.rate());
 
-        double tick_x = tick_index * tick_width;
+        double tick_x = tick_index * tick_width - tick_offset_x;
         const ImVec2 tick_start = ImVec2(p0.x + tick_x, p0.y + height/2);
         const ImVec2 tick_end = ImVec2(tick_start.x, p1.y);
         if (seconds_per_tick >= 0.5) {
+            // draw thin lines at each tick
             draw_list->AddLine(tick_start, tick_end, tick_color);
         }else{
+            // once individual frames are visible, draw dark/light stripes instead
             const ImVec2 zebra_start = ImVec2(p0.x + tick_x, p0.y);
             const ImVec2 zebra_end = ImVec2(tick_start.x + tick_width, p1.y);
             draw_list->AddRectFilled(zebra_start, zebra_end, (tick_index & 1) ? zebra_color_dark : zebra_color_light);
         }
         
         const ImVec2 tick_label_pos = ImVec2(p0.x + tick_x + text_offset.x, p0.y + text_offset.y);
+        // only draw a label when there's room for it
         if (tick_label_pos.x > last_label_end_x + text_offset.x) {
             char tick_label[100];
             snprintf(tick_label, sizeof(tick_label), "%s", tick_time.to_timecode().c_str());
             auto label_size = ImGui::CalcTextSize(tick_label);
             draw_list->AddText(tick_label_pos, tick_label_color, tick_label);
+            // advance last_label_end_x so nothing will overlap with the one we just drew
             last_label_end_x = tick_label_pos.x + label_size.x;
         }
     }
