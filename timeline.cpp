@@ -651,11 +651,12 @@ void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::Ratio
     // start_floor_time and tick_offset_x adjust the display for cases where
     // the item's start_time is not on a whole frame boundary.
     auto start_floor_time = otio::RationalTime(floor(start.value()), start.rate());
-    double tick_offset_x = (start - start_floor_time).to_seconds() * scale;
+    auto tick_offset = start - start_floor_time;
+    double tick_offset_x = tick_offset.to_seconds() * scale;
     // last_label_end_x tracks the tail of the last label, so we can prevent overlap
     double last_label_end_x = p0.x - text_offset.x*2;
     for (int tick_index=0; tick_index<tick_count; tick_index++) {
-        auto tick_time = start + otio::RationalTime(tick_index * tick_duration.value(), tick_duration.rate());
+        auto tick_time = start + otio::RationalTime(tick_index * tick_duration.value(), tick_duration.rate()) - tick_offset;
 
         double tick_x = tick_index * tick_width - tick_offset_x;
         const ImVec2 tick_start = ImVec2(p0.x + tick_x, p0.y + height/2);
@@ -665,9 +666,10 @@ void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::Ratio
             draw_list->AddLine(tick_start, tick_end, tick_color);
         }else{
             // once individual frames are visible, draw dark/light stripes instead
+            int frame = tick_time.to_frames();
             const ImVec2 zebra_start = ImVec2(p0.x + tick_x, p0.y);
             const ImVec2 zebra_end = ImVec2(tick_start.x + tick_width, p1.y);
-            draw_list->AddRectFilled(zebra_start, zebra_end, (tick_index & 1) ? zebra_color_dark : zebra_color_light);
+            draw_list->AddRectFilled(zebra_start, zebra_end, (frame & 1) ? zebra_color_dark : zebra_color_light);
         }
         
         const ImVec2 tick_label_pos = ImVec2(p0.x + tick_x + text_offset.x, p0.y + text_offset.y);
