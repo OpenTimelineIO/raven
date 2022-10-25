@@ -877,7 +877,9 @@ bool DrawTransportControls(otio::Timeline* timeline)
 
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100);
-    if (ImGui::SliderFloat("##Zoom", &appState.scale, 0.5f, 5000.0f, "Zoom", ImGuiSliderFlags_Logarithmic)) {
+    if (ImGui::SliderFloat("##Zoom", &appState.scale, 0.1f, 5000.0f, "Zoom", ImGuiSliderFlags_Logarithmic)) {
+        // never go to 0 or less
+        appState.scale = fmax(0.0001f, appState.scale);
         moved_playhead = true;
     }
   
