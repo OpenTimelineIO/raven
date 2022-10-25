@@ -597,12 +597,6 @@ void DrawTrack(otio::Track* track, int index, float scale, ImVec2 origin, float 
     __tracks_rendered++;
 }
 
-static bool _divisible(double t, float interval) {
-    double epsilon = interval / 1000000.0f;
-    double remainder = fmod(t, interval);
-    return fabs(remainder) < epsilon;
-}
-
 void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::RationalTime end, float frame_rate, float time_scalar, float zoom_scale, float width, float height)
 {
     double scale = zoom_scale / time_scalar;
@@ -648,15 +642,6 @@ void DrawTimecodeRuler(const void* ptr_id, otio::RationalTime start, otio::Ratio
             }
         }
     }
-
-    // assert(_divisible(1, 1));
-    // assert(_divisible(1000, 1));
-    // assert(_divisible(1000, 10));
-    // assert(_divisible(1000, 100));
-    // assert(!_divisible(1001, 10));
-    // assert(!_divisible(999, 10));
-    // assert(!_divisible(1.0/24.0, 1));
-    // assert(!_divisible(1.0/24.0, 3600));
 
     // tick marks - roughly every N pixels
     double pixels_per_second = scale;
