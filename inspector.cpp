@@ -1,19 +1,17 @@
 // Inspector
 
+#include "inspector.h"
 #include "app.h"
 #include "widgets.h"
-#include "inspector.h"
 
 #include <opentimelineio/clip.h>
-#include <opentimelineio/transition.h>
-#include <opentimelineio/marker.h>
-#include <opentimelineio/track.h>
 #include <opentimelineio/effect.h>
 #include <opentimelineio/linearTimeWarp.h>
+#include <opentimelineio/marker.h>
+#include <opentimelineio/track.h>
+#include <opentimelineio/transition.h>
 
-
-void DrawJSONInspector()
-{
+void DrawJSONInspector() {
   // Wrapping the text view in a child window lets us
   // control how much space is left below it for other buttons.
   ImVec2 contentSize = ImGui::GetContentRegionAvail();
@@ -23,10 +21,12 @@ void DrawJSONInspector()
   char buf[10000];
   if (appState.selected_text == "") {
     snprintf(buf, sizeof(buf), "Nothing selected.");
-  }else{
+  } else {
     snprintf(buf, sizeof(buf), "%s", appState.selected_text.c_str());
   }
-  bool modified = ImGui::InputTextMultiline("JSON Inspector", buf, sizeof(buf), ImVec2(-FLT_MIN, -FLT_MIN), ImGuiInputTextFlags_ReadOnly);
+  bool modified = ImGui::InputTextMultiline("JSON Inspector", buf, sizeof(buf),
+                                            ImVec2(-FLT_MIN, -FLT_MIN),
+                                            ImGuiInputTextFlags_ReadOnly);
   if (modified) {
     // Message("Edited");
   }
@@ -40,8 +40,7 @@ void DrawJSONInspector()
   // }
 }
 
-void DrawNonEditableTextField(const char* label, const char* format, ...)
-{
+void DrawNonEditableTextField(const char *label, const char *format, ...) {
   char tmp_str[1000];
 
   va_list args;
@@ -50,36 +49,29 @@ void DrawNonEditableTextField(const char* label, const char* format, ...)
   va_end(args);
 
   // Adjust style so the user can see that it is not editable
-  ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetStyleColorVec4(ImGuiCol_TableHeaderBg));
-  ImGui::InputText(label, tmp_str, sizeof(tmp_str), ImGuiInputTextFlags_ReadOnly);
+  ImGui::PushStyleColor(ImGuiCol_FrameBg,
+                        ImGui::GetStyleColorVec4(ImGuiCol_TableHeaderBg));
+  ImGui::InputText(label, tmp_str, sizeof(tmp_str),
+                   ImGuiInputTextFlags_ReadOnly);
   ImGui::PopStyleColor();
 }
 
-bool DrawRationalTime(const char* label, otio::RationalTime *time, bool allow_negative=false)
-{
-  if (time == NULL) return false;
+bool DrawRationalTime(const char *label, otio::RationalTime *time,
+                      bool allow_negative = false) {
+  if (time == NULL)
+    return false;
   auto formatted = FormattedStringFromTime(*time);
   if (appState.snap_to_frames) {
-    int val = floor(time->value());  // snap with floor()
-    if (ImGui::DragInt(
-      label,
-      &val,
-      0.1,
-      allow_negative ? INT_MIN : 0, INT_MAX,
-      formatted.c_str()))
-    {
+    int val = floor(time->value()); // snap with floor()
+    if (ImGui::DragInt(label, &val, 0.1, allow_negative ? INT_MIN : 0, INT_MAX,
+                       formatted.c_str())) {
       *time = otio::RationalTime(val, time->rate());
       return true;
     }
-  }else{
+  } else {
     float val = time->value();
-    if (ImGui::DragFloat(
-      label,
-      &val,
-      0.01,
-      allow_negative ? -FLT_MAX : 0, FLT_MAX,
-      formatted.c_str()))
-    {
+    if (ImGui::DragFloat(label, &val, 0.01, allow_negative ? -FLT_MAX : 0,
+                         FLT_MAX, formatted.c_str())) {
       *time = otio::RationalTime(val, time->rate());
       return true;
     }
@@ -103,9 +95,10 @@ bool DrawRationalTime(const char* label, otio::RationalTime *time, bool allow_ne
   */
 }
 
-bool DrawTimeRange(const char* label, otio::TimeRange *range, bool allow_negative=false)
-{
-  if (range == NULL) return false;
+bool DrawTimeRange(const char *label, otio::TimeRange *range,
+                   bool allow_negative = false) {
+  if (range == NULL)
+    return false;
 
   otio::RationalTime start = range->start_time();
   otio::RationalTime duration = range->duration();
@@ -121,25 +114,25 @@ bool DrawTimeRange(const char* label, otio::TimeRange *range, bool allow_negativ
     changed = true;
   }
   snprintf(buf, sizeof(buf), "Duration##%s", label);
-  if (DrawRationalTime(buf, &duration, false)) {  // never negative
+  if (DrawRationalTime(buf, &duration, false)) { // never negative
     changed = true;
   }
   snprintf(buf, sizeof(buf), "End##%s", label);
-  DrawNonEditableTextField(buf, "%s", FormattedStringFromTime(range->end_time_inclusive()).c_str());
-  
+  DrawNonEditableTextField(
+      buf, "%s", FormattedStringFromTime(range->end_time_inclusive()).c_str());
+
   ImGui::Unindent();
-  
+
   if (changed) {
     *range = otio::TimeRange(start, duration);
   }
   return changed;
 }
 
-void DrawInspector()
-{
+void DrawInspector() {
   auto selected_object = appState.selected_object;
   // auto selected_context = appState.selected_context;
-    
+
   auto playhead = appState.playhead;
 
   if (!selected_object) {
@@ -152,31 +145,35 @@ void DrawInspector()
   char tmp_str[1000];
 
   // SerializableObjectWithMetadata
-  if (const auto& obj = dynamic_cast<otio::SerializableObjectWithMetadata*>(selected_object)) {
+  if (const auto &obj = dynamic_cast<otio::SerializableObjectWithMetadata *>(
+          selected_object)) {
     snprintf(tmp_str, sizeof(tmp_str), "%s", obj->name().c_str());
     if (ImGui::InputText("Name", tmp_str, sizeof(tmp_str))) {
       obj->set_name(tmp_str);
     }
   }
-  
+
   // SerializableObject (everything)
-  DrawNonEditableTextField("Schema", "%s.%d", selected_object->schema_name().c_str(), selected_object->schema_version());
+  DrawNonEditableTextField("Schema", "%s.%d",
+                           selected_object->schema_name().c_str(),
+                           selected_object->schema_version());
 
   // Timeline
-  if (const auto& timeline = dynamic_cast<otio::Timeline*>(selected_object)) {
+  if (const auto &timeline = dynamic_cast<otio::Timeline *>(selected_object)) {
     // Since global_start_time is optional, default to 0
     // but take care not to *set* the value unless the user changes it.
     auto rate = timeline->global_start_time().value_or(playhead).rate();
-    auto global_start_time = timeline->global_start_time().value_or(otio::RationalTime(0, rate));
+    auto global_start_time =
+        timeline->global_start_time().value_or(otio::RationalTime(0, rate));
     // don't allow negative duration - but 0 is okay
     if (DrawRationalTime("Global Start", &global_start_time, true)) {
       timeline->set_global_start_time(global_start_time);
       DetectPlayheadLimits();
     }
   }
-  
+
   // Item
-  if (const auto& item = dynamic_cast<otio::Item*>(selected_object)) {
+  if (const auto &item = dynamic_cast<otio::Item *>(selected_object)) {
     auto trimmed_range = item->trimmed_range();
     if (DrawTimeRange("Trimmed Range", &trimmed_range, true)) {
       item->set_source_range(trimmed_range);
@@ -184,12 +181,13 @@ void DrawInspector()
   }
 
   // Composition
-  if (const auto& comp = dynamic_cast<otio::Composition*>(selected_object)) {
+  if (const auto &comp = dynamic_cast<otio::Composition *>(selected_object)) {
     DrawNonEditableTextField("Children", "%ld", comp->children().size());
   }
 
   // Transition
-  if (const auto& transition = dynamic_cast<otio::Transition*>(selected_object)) {
+  if (const auto &transition =
+          dynamic_cast<otio::Transition *>(selected_object)) {
     auto in_offset = transition->in_offset();
     if (DrawRationalTime("In Offset", &in_offset, false)) {
       transition->set_in_offset(in_offset);
@@ -200,13 +198,15 @@ void DrawInspector()
       transition->set_out_offset(out_offset);
     }
 
-    DrawNonEditableTextField("Duration", "%s", FormattedStringFromTime(transition->duration()).c_str());
+    DrawNonEditableTextField(
+        "Duration", "%s",
+        FormattedStringFromTime(transition->duration()).c_str());
   }
 
   // Effect
-  if (const auto& effect = dynamic_cast<otio::Effect*>(selected_object)) {
+  if (const auto &effect = dynamic_cast<otio::Effect *>(selected_object)) {
     ImGui::Text("Effect Name: %s", effect->effect_name().c_str());
-    if (const auto& timewarp = dynamic_cast<otio::LinearTimeWarp*>(effect)) {
+    if (const auto &timewarp = dynamic_cast<otio::LinearTimeWarp *>(effect)) {
       float val = timewarp->time_scalar();
       if (ImGui::DragFloat("Time Scale", &val, 0.01, -FLT_MAX, FLT_MAX)) {
         timewarp->set_time_scalar(val);
@@ -215,24 +215,14 @@ void DrawInspector()
   }
 
   // Marker
-  if (const auto& marker = dynamic_cast<otio::Marker*>(selected_object)) {
+  if (const auto &marker = dynamic_cast<otio::Marker *>(selected_object)) {
     auto rate = marker->marked_range().start_time().rate();
-  
-    const char* colors[] = {
-      "PINK",
-      "RED",
-      "ORANGE",
-      "YELLOW",
-      "GREEN",
-      "CYAN",
-      "BLUE",
-      "PURPLE",
-      "MAGENTA",
-      "BLACK",
-      "WHITE"
-    };
+
+    const char *colors[] = {"PINK",    "RED",   "ORANGE", "YELLOW",
+                            "GREEN",   "CYAN",  "BLUE",   "PURPLE",
+                            "MAGENTA", "BLACK", "WHITE"};
     int current_index = -1;
-    for (int i=0; i<IM_ARRAYSIZE(colors); i++) {
+    for (int i = 0; i < IM_ARRAYSIZE(colors); i++) {
       if (marker->color() == colors[i]) {
         current_index = i;
         break;
@@ -251,15 +241,15 @@ void DrawInspector()
   }
 
   // Track
-  if (const auto& track = dynamic_cast<otio::Track*>(selected_object)) {
+  if (const auto &track = dynamic_cast<otio::Track *>(selected_object)) {
     DrawNonEditableTextField("Kind", "%s", track->kind().c_str());
   }
 
   // SerializableObjectWithMetadata
-  if (const auto& obj = dynamic_cast<otio::SerializableObjectWithMetadata*>(selected_object)) {
-    auto& metadata = obj->metadata();
-    
+  if (const auto &obj = dynamic_cast<otio::SerializableObjectWithMetadata *>(
+          selected_object)) {
+    auto &metadata = obj->metadata();
+
     DrawNonEditableTextField("Metadata Keys", "%ld", metadata.size());
   }
 }
-
