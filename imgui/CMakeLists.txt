@@ -19,6 +19,9 @@ target_sources(IMGUI
     # add-ons
     imguihelper.cpp
     imgui_plot.cpp
+    ../libs/implot/implot.cpp
+    ../libs/implot/implot_demo.cpp
+    ../libs/implot/implot_items.cpp
 
     # backends
     imgui_impl_glfw.cpp
@@ -29,6 +32,7 @@ target_include_directories(IMGUI
   SYSTEM PUBLIC .
   PUBLIC ../libs/gl3w
   PUBLIC ../libs/glfw/include/
+  PUBLIC ../libs/implot/
 )
 target_link_libraries(IMGUI OpenGL::GL ${CMAKE_DL_LIBS})
 target_compile_definitions(IMGUI PUBLIC -DIMGUI_IMPL_OPENGL_LOADER_GL3W)

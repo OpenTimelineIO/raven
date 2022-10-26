@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "imgui.h"
+#include "implot.h"
 
 #include "imgui_plot.h"
 #include "imguihelper.h"
@@ -494,6 +495,10 @@ void MainGui() {
   if (appState.show_demo_window) {
     ImGui::ShowDemoWindow();
   }
+
+  if (appState.show_implot_demo_window) {
+    ImPlot::ShowDemoWindow();
+  }
 }
 
 void SaveTheme() {
@@ -616,12 +621,18 @@ void DrawMenu() {
         FitZoomWholeTimeline();
       }
       ImGui::Separator();
-      if (ImGui::MenuItem("Show Dear ImGui Metrics", NULL,
+      ImGui::Text("Dear ImGui:");
+      ImGui::Indent();
+      if (ImGui::MenuItem("Metrics", NULL,
                           &appState.show_metrics)) {
       }
-      if (ImGui::MenuItem("Show Dear ImGui Demo", NULL,
+      if (ImGui::MenuItem("ImGui Demos", NULL,
                           &appState.show_demo_window)) {
       }
+      if (ImGui::MenuItem("ImPlot Demos", NULL,
+                          &appState.show_implot_demo_window)) {
+      }
+      ImGui::Unindent();
       ImGui::EndMenu();
     }
     ImGui::EndMenuBar();

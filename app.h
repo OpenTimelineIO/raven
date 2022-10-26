@@ -116,6 +116,7 @@ struct AppState {
   bool show_style_editor = false;
   bool show_demo_window = false;
   bool show_metrics = false;
+  bool show_implot_demo_window = false;
 };
 
 extern AppState appState;
