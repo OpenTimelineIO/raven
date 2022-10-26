@@ -318,31 +318,34 @@ void DrawLinearTimeWarp(otio::LinearTimeWarp *timewarp, otio::Item *item) {
   ImPlotPoint *start = &control_points[0];
   ImPlotPoint *end = &control_points[1];
 
-  float radius = 4;
+  const float line_width = 2;
+  const float knot_radius = 4;
+  const ImColor line_color = appTheme.colors[AppThemeCol_Item];
+  const ImColor knot_color = appTheme.colors[AppThemeCol_ItemSelected];
 
   ImPlotDragToolFlags flags =
 //    ImPlotDragToolFlags_NoFit |
+    ImPlotDragToolFlags_NoInputs |
     ImPlotDragToolFlags_None;
   ImPlotAxisFlags ax_flags =
 //      ImPlotAxisFlags_NoTickLabels |
 //      ImPlotAxisFlags_NoTickMarks |
       ImPlotAxisFlags_None;
   if (ImPlot::BeginPlot("##LinearTimeWarp", ImVec2(-1,0), ImPlotFlags_CanvasOnly)) {
-    ImPlot::SetupAxes(0, 0, ax_flags, ax_flags);
-    ImPlot::SetupAxesLimits(0, 1, 0, 1);
+    ImPlot::SetupAxes("Output", "Media", ax_flags, ax_flags);
 
-    ImPlot::SetNextLineStyle(ImVec4(0,0.9f,0,1), 2);
-    ImPlot::PlotLine("##bez", &start->x, &start->y, 2, 0, 0, sizeof(ImPlotPoint));
+    ImPlot::SetNextLineStyle(line_color, line_width);
+    ImPlot::PlotLine("##Line", &start->x, &start->y, 2, 0, 0, sizeof(ImPlotPoint));
 
     // start handle
-    ImPlot::SetNextLineStyle(ImVec4(1,0.5f,1,1));
-    if (ImPlot::DragPoint(0, &start->x, &start->y, ImVec4(0,0.9f,0,1), radius, flags)) {
+    ImPlot::SetNextLineStyle(knot_color);
+    if (ImPlot::DragPoint(0, &start->x, &start->y, ImVec4(0,0.9f,0,1), knot_radius, flags)) {
       ;
     }
 
     // end handle
-    ImPlot::SetNextLineStyle(ImVec4(0,0.5f,1,1));
-    if (ImPlot::DragPoint(3, &end->x, &end->y, ImVec4(0,0.9f,0,1), radius, flags)) {
+    ImPlot::SetNextLineStyle(knot_color);
+    if (ImPlot::DragPoint(3, &end->x, &end->y, ImVec4(0,0.9f,0,1), knot_radius, flags)) {
       ;
     }
 
