@@ -12,6 +12,8 @@
 #include <opentimelineio/transition.h>
 #include <opentimelineio/anyDictionary.h>
 
+#include <implot.h>
+
 void DrawJSONInspector() {
   // Wrapping the text view in a child window lets us
   // control how much space is left below it for other buttons.
@@ -295,9 +297,62 @@ DrawMetadataTable(otio::AnyDictionary &metadata)
     }
 }
 
+void DrawLinearTimeWarp(otio::LinearTimeWarp *timewarp, otio::Item *item) {
+  auto item_range = item->trimmed_range();
+  auto time_scalar = timewarp->time_scalar();
+  auto media_start = item_range.start_time();
+  auto media_duration =
+    otio::RationalTime(item_range.duration().value() * time_scalar,
+                       item_range.duration().rate());
+  auto media_range = otio::TimeRange(media_start, media_duration);
+
+  // x = output in clip/item time
+  // y = input in media time
+
+  ImPlotPoint control_points[2] {
+    ImPlotPoint(0,
+                media_range.start_time().to_seconds()),
+    ImPlotPoint(item_range.duration().to_seconds(),
+                media_range.end_time_exclusive().to_seconds())
+  };
+  ImPlotPoint *start = &control_points[0];
+  ImPlotPoint *end = &control_points[1];
+
+  float radius = 4;
+
+  ImPlotDragToolFlags flags =
+//    ImPlotDragToolFlags_NoFit |
+    ImPlotDragToolFlags_None;
+  ImPlotAxisFlags ax_flags =
+//      ImPlotAxisFlags_NoTickLabels |
+//      ImPlotAxisFlags_NoTickMarks |
+      ImPlotAxisFlags_None;
+  if (ImPlot::BeginPlot("##LinearTimeWarp", ImVec2(-1,0), ImPlotFlags_CanvasOnly)) {
+    ImPlot::SetupAxes(0, 0, ax_flags, ax_flags);
+    ImPlot::SetupAxesLimits(0, 1, 0, 1);
+
+    ImPlot::SetNextLineStyle(ImVec4(0,0.9f,0,1), 2);
+    ImPlot::PlotLine("##bez", &start->x, &start->y, 2, 0, 0, sizeof(ImPlotPoint));
+
+    // start handle
+    ImPlot::SetNextLineStyle(ImVec4(1,0.5f,1,1));
+    if (ImPlot::DragPoint(0, &start->x, &start->y, ImVec4(0,0.9f,0,1), radius, flags)) {
+      ;
+    }
+
+    // end handle
+    ImPlot::SetNextLineStyle(ImVec4(0,0.5f,1,1));
+    if (ImPlot::DragPoint(3, &end->x, &end->y, ImVec4(0,0.9f,0,1), radius, flags)) {
+      ;
+    }
+
+    ImPlot::EndPlot();
+  }
+}
+
 void DrawInspector() {
   auto selected_object = appState.selected_object;
-  // auto selected_context = appState.selected_context;
+   auto selected_context = appState.selected_context;
 
   auto playhead = appState.playhead;
 
@@ -376,6 +431,9 @@ void DrawInspector() {
       float val = timewarp->time_scalar();
       if (ImGui::DragFloat("Time Scale", &val, 0.01, -FLT_MAX, FLT_MAX)) {
         timewarp->set_time_scalar(val);
+      }
+      if (const auto &item = dynamic_cast<otio::Item *>(selected_context)) {
+        DrawLinearTimeWarp(timewarp, item);
       }
     }
   }
