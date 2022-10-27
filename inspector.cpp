@@ -10,6 +10,7 @@
 #include <opentimelineio/marker.h>
 #include <opentimelineio/track.h>
 #include <opentimelineio/transition.h>
+#include <opentimelineio/anyDictionary.h>
 
 void DrawJSONInspector() {
   // Wrapping the text view in a child window lets us
@@ -127,6 +128,171 @@ bool DrawTimeRange(const char *label, otio::TimeRange *range,
     *range = otio::TimeRange(start, duration);
   }
   return changed;
+}
+
+void
+DrawMetadataSubtree(std::string key, otio::AnyDictionary &metadata);
+
+void
+DrawMetadataArray(std::string key, otio::AnyVector &vector);
+
+void
+DrawMetadataRow(std::string key, otio::any& value)
+{
+    std::type_info const& type = value.type();
+
+    if (type == typeid(otio::AnyDictionary))
+    {
+        auto dict = otio::any_cast<otio::AnyDictionary>(value);
+        DrawMetadataSubtree(key, dict);
+        return;
+    }
+
+    if (type == typeid(otio::AnyVector))
+    {
+        auto vector = otio::any_cast<otio::AnyVector>(value);
+        DrawMetadataArray(key, vector);
+        return;
+    }
+
+    std::string type_name = "<Unknown>";
+    std::string string_val = "<Unknown>";
+
+    if (type == typeid(std::string))
+    {
+        type_name = "string";
+        string_val = otio::any_cast<std::string>(value);
+    }
+    if (type == typeid(bool))
+    {
+        type_name = "bool";
+        string_val = otio::any_cast<bool>(value) ? "true" : "false";
+    }
+    if (type == typeid(int64_t))
+    {
+        type_name = "int64_t";
+        string_val = std::to_string(otio::any_cast<int64_t>(value));
+    }
+    if (type == typeid(double))
+    {
+        type_name = "double";
+        string_val = std::to_string(otio::any_cast<double>(value));
+    }
+    if (type == typeid(otio::RationalTime))
+    {
+        type_name = "otio::RationalTime";
+        auto time = otio::any_cast<otio::RationalTime>(value);
+        string_val = FormattedStringFromTime(time);
+    }
+
+    // TODO: Handle these types also?
+    // TimeRange
+    // TimeTransform
+    // void
+    // char const *
+    // Imath::V2d
+    // Imath::Box2d
+    // SerializableObject::Retainer
+
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    ImGui::TreeNodeEx(key.c_str(),
+                      ImGuiTreeNodeFlags_Leaf |
+                      //ImGuiTreeNodeFlags_Bullet |
+                      ImGuiTreeNodeFlags_NoTreePushOnOpen |
+                      ImGuiTreeNodeFlags_SpanFullWidth |
+                      0);
+
+    ImGui::TableNextColumn();
+    ImGui::TextUnformatted(string_val.c_str());
+
+    ImGui::TableNextColumn();
+    ImGui::TextUnformatted(type_name.c_str());
+}
+
+void
+DrawMetadataRows(otio::AnyDictionary &metadata)
+{
+    for (auto& pair: metadata) {
+        const auto& key = pair.first;
+        auto& val = pair.second;
+
+        DrawMetadataRow(key, val);
+    }
+}
+
+void
+DrawMetadataSubtree(std::string key,
+                    otio::AnyDictionary &metadata)
+{
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    bool open = ImGui::TreeNodeEx(key.c_str(),
+                                  ImGuiTreeNodeFlags_DefaultOpen |
+                                  ImGuiTreeNodeFlags_SpanFullWidth);
+
+    ImGui::TableNextColumn();
+    ImGui::TextDisabled("");
+
+    ImGui::TableNextColumn();
+    ImGui::TextDisabled("");
+
+    if (open)
+    {
+        DrawMetadataRows(metadata);
+
+        ImGui::TreePop();
+    }
+}
+
+void
+DrawMetadataArray(std::string key,
+                  otio::AnyVector &vector)
+{
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    bool open = ImGui::TreeNodeEx(key.c_str(),
+                                  ImGuiTreeNodeFlags_DefaultOpen |
+                                  ImGuiTreeNodeFlags_SpanFullWidth);
+
+    ImGui::TableNextColumn();
+    ImGui::TextDisabled("");
+
+    ImGui::TableNextColumn();
+    ImGui::TextDisabled("");
+
+    if (open)
+    {
+        for (int i=0; i<vector.size(); i++)
+        {
+            DrawMetadataRow(Format("[%d]", i), vector[i]);
+        }
+
+        ImGui::TreePop();
+    }
+}
+void
+DrawMetadataTable(otio::AnyDictionary &metadata)
+{
+    static ImGuiTableFlags flags =
+        ImGuiTableFlags_BordersV |
+        ImGuiTableFlags_BordersOuterH |
+        ImGuiTableFlags_Resizable |
+        ImGuiTableFlags_RowBg |
+        ImGuiTableFlags_NoBordersInBody |
+        ImGuiTableFlags_Hideable;
+
+    if (ImGui::BeginTable("Metadata", 3, flags))
+    {
+        ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_NoHide);
+        ImGui::TableSetupColumn("Value");
+        ImGui::TableSetupColumn("Type");
+        ImGui::TableHeadersRow();
+
+        DrawMetadataRows(metadata);
+
+        ImGui::EndTable();
+    }
 }
 
 void DrawInspector() {
@@ -247,9 +413,12 @@ void DrawInspector() {
 
   // SerializableObjectWithMetadata
   if (const auto &obj = dynamic_cast<otio::SerializableObjectWithMetadata *>(
-          selected_object)) {
-    auto &metadata = obj->metadata();
+          selected_object))
+  {
+      auto &metadata = obj->metadata();
 
-    DrawNonEditableTextField("Metadata Keys", "%ld", metadata.size());
+      ImGui::TextUnformatted("Metadata:");
+
+      DrawMetadataTable(metadata);
   }
 }
