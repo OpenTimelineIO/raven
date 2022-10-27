@@ -4,6 +4,8 @@ An experimental re-write of OpenTimelineIO's `otioview` timeline viewer applicat
 
 ![screenshot](screenshot.png)
 
+![demo](demo.gif)
+
 ## Building
 
 	% mkdir build
