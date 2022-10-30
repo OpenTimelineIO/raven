@@ -13,6 +13,12 @@ include(glfw.cmake)
 
 target_sources(raven
   PUBLIC
+    app.h
+    editing.h
+    inspector.h
+    timeline.h
+    widgets.h
+
     main_glfw.cpp
     app.cpp
     editing.cpp
@@ -26,6 +32,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/libs/nativefiledialog/src/include
 )
 
+set(OTIO_SHARED_LIBS OFF)
 add_subdirectory("libs/opentimelineio")
 include_directories(
   ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src

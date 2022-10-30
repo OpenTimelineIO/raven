@@ -1,5 +1,7 @@
 cmake_policy(SET CMP0076 NEW)
 
+find_package(OpenGL REQUIRED)
+
 add_library(IMGUI STATIC)
 
 set_property(TARGET IMGUI PROPERTY CXX_STANDARD 11)
@@ -27,6 +29,6 @@ target_include_directories(IMGUI
   PUBLIC ../libs/gl3w
   PUBLIC ../libs/glfw/include/
 )
-
+target_link_libraries(IMGUI OpenGL::GL ${CMAKE_DL_LIBS})
 target_compile_definitions(IMGUI PUBLIC -DIMGUI_IMPL_OPENGL_LOADER_GL3W)
 

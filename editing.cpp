@@ -200,7 +200,7 @@ void FlattenTrackDown() {
   tracks.push_back(track_below);
   tracks.push_back(selected_track);
   auto flat_track = otio::flatten_stack(tracks, &error_status);
-  if (!flat_track or is_error(error_status)) {
+  if (!flat_track || is_error(error_status)) {
     Message("Cannot flatten: %s.", otio_error_string(error_status).c_str());
     return;
   }
