@@ -1,3 +1,4 @@
+cmake_policy(SET CMP0072 NEW)
 cmake_policy(SET CMP0076 NEW)
 
 find_package(OpenGL REQUIRED)

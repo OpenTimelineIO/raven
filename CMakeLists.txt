@@ -8,7 +8,6 @@ set_property(TARGET raven PROPERTY CXX_STANDARD 14)
 
 add_subdirectory("imgui")
 
-find_package(glfw3)
 include(glfw.cmake)
 
 target_sources(raven
