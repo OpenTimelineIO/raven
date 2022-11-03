@@ -1,6 +1,6 @@
 cmake_policy(SET CMP0076 NEW)
 
-if(UNIX)
+if(UNIX AND NOT APPLE)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 endif()
