@@ -323,29 +323,42 @@ void DrawLinearTimeWarp(otio::LinearTimeWarp *timewarp, otio::Item *item) {
   const ImColor line_color = appTheme.colors[AppThemeCol_Item];
   const ImColor knot_color = appTheme.colors[AppThemeCol_ItemSelected];
 
-  ImPlotDragToolFlags flags =
-//    ImPlotDragToolFlags_NoFit |
+    ImPlotFlags plot_flags =
+    ImPlotFlags_NoTitle |
+    ImPlotFlags_NoLegend |
+    ImPlotFlags_NoInputs |
+    ImPlotFlags_NoMenus |
+    ImPlotFlags_NoBoxSelect |
+    ImPlotFlags_NoChild |
+    ImPlotFlags_NoFrame |
+    ImPlotFlags_Equal |
+    ImPlotFlags_None;
+  ImPlotDragToolFlags drag_flags =
     ImPlotDragToolFlags_NoInputs |
     ImPlotDragToolFlags_None;
   ImPlotAxisFlags ax_flags =
-//      ImPlotAxisFlags_NoTickLabels |
-//      ImPlotAxisFlags_NoTickMarks |
+    ImPlotAxisFlags_Lock |
       ImPlotAxisFlags_None;
-  if (ImPlot::BeginPlot("##LinearTimeWarp", ImVec2(-1,0), ImPlotFlags_CanvasOnly)) {
+  if (ImPlot::BeginPlot("##LinearTimeWarp", ImVec2(-1,0), plot_flags)) {
     ImPlot::SetupAxes("Output", "Media", ax_flags, ax_flags);
+    ImPlot::SetupAxesLimits(fmin(start->x, end->x),
+                            fmax(start->x, end->x),
+                            fmin(start->y, end->y),
+                            fmax(start->y, end->y),
+                            ImGuiCond_Always);
 
     ImPlot::SetNextLineStyle(line_color, line_width);
     ImPlot::PlotLine("##Line", &start->x, &start->y, 2, 0, 0, sizeof(ImPlotPoint));
 
     // start handle
     ImPlot::SetNextLineStyle(knot_color);
-    if (ImPlot::DragPoint(0, &start->x, &start->y, ImVec4(0,0.9f,0,1), knot_radius, flags)) {
+    if (ImPlot::DragPoint(0, &start->x, &start->y, ImVec4(0,0.9f,0,1), knot_radius, drag_flags)) {
       ;
     }
 
     // end handle
     ImPlot::SetNextLineStyle(knot_color);
-    if (ImPlot::DragPoint(3, &end->x, &end->y, ImVec4(0,0.9f,0,1), knot_radius, flags)) {
+    if (ImPlot::DragPoint(3, &end->x, &end->y, ImVec4(0,0.9f,0,1), knot_radius, drag_flags)) {
       ;
     }
 
