@@ -27,6 +27,31 @@ double TimeScalarForItem(otio::Item *item) {
   return time_scalar;
 }
 
+//otio::RationalTime TopLevelTime(otio::RationalTime time, otio::Item* context) {
+//  return context->transformed_time(time, appState.timeline->tracks());
+//}
+//
+//otio::TimeRange TopLevelTimeRange(otio::TimeRange range, otio::Item* context) {
+//  return context->transformed_time_range(range, appState.timeline->tracks());
+//}
+
+// Transform this range map from the context item's coodinate space
+// into the top-level timeline's coordinate space. This compensates for
+// any source_range offsets in intermediate levels of nesting in the
+// composition.
+void TopLevelTimeRangeMap(std::map<otio::Composable*,
+                          otio::TimeRange> &range_map, otio::Item* context) {
+    auto zero = otio::RationalTime();
+    auto top = appState.timeline->tracks();
+    auto offset = context->transformed_time(zero, top);
+
+    for (auto &pair : range_map) {
+        auto &range = pair.second;
+        range = otio::TimeRange(range.start_time() + offset,
+                                range.duration());
+    }
+}
+
 void DrawItem(otio::Item *item, float scale, ImVec2 origin, float height,
               std::map<otio::Composable *, otio::TimeRange> &range_map) {
   auto duration = item->duration();
@@ -587,6 +612,7 @@ void DrawTrack(otio::Track *track, int index, float scale, ImVec2 origin,
             otio_error_string(error_status).c_str());
     assert(false);
   }
+  TopLevelTimeRangeMap(range_map, track);
 
   for (const auto &child : track->children()) {
     if (const auto &item = dynamic_cast<otio::Item *>(child.value)) {
