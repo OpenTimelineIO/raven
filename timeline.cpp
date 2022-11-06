@@ -32,6 +32,7 @@ void DrawItem(otio::Item *item, float scale, ImVec2 origin, float height,
   auto duration = item->duration();
   auto trimmed_range = item->trimmed_range();
   float width = duration.to_seconds() * scale;
+  if (width < 1) return;
 
   const ImVec2 text_offset(5.0f, 5.0f);
   float font_height = ImGui::GetTextLineHeight();
