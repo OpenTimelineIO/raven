@@ -395,6 +395,10 @@ void DrawInspector() {
   // between the datatypes that OTIO uses vs the one that ImGui widget uses.
   char tmp_str[1000];
 
+  // If the selected Item has effects, lets show them in-line
+  // so the user doesn't have to click on each one separately
+  std::vector<otio::SerializableObject::Retainer<otio::Effect>> effects;
+
   // SerializableObjectWithMetadata
   if (const auto &obj = dynamic_cast<otio::SerializableObjectWithMetadata *>(
           selected_object)) {
@@ -429,6 +433,8 @@ void DrawInspector() {
     if (DrawTimeRange("Trimmed Range", &trimmed_range, true)) {
       item->set_source_range(trimmed_range);
     }
+    // Grab the effects list so we can display it later
+    effects = item->effects();
   }
 
   // Composition
@@ -454,15 +460,23 @@ void DrawInspector() {
         FormattedStringFromTime(transition->duration()).c_str());
   }
 
-  // Effect
+  // Effects - either 1 selected, or a list of effects
+  auto effect_context = selected_context;
   if (const auto &effect = dynamic_cast<otio::Effect *>(selected_object)) {
+    // Just one
+    effects.push_back(effect);
+  }else{
+    // A list of effects inside this object
+    effect_context = selected_object;
+  }
+  for (const auto effect : effects) {
     ImGui::Text("Effect Name: %s", effect->effect_name().c_str());
-    if (const auto &timewarp = dynamic_cast<otio::LinearTimeWarp *>(effect)) {
+    if (const auto &timewarp = dynamic_cast<otio::LinearTimeWarp *>(effect.value)) {
       float val = timewarp->time_scalar();
       if (ImGui::DragFloat("Time Scale", &val, 0.01, -FLT_MAX, FLT_MAX)) {
         timewarp->set_time_scalar(val);
       }
-      if (const auto &item = dynamic_cast<otio::Item *>(selected_context)) {
+      if (const auto &item = dynamic_cast<otio::Item *>(effect_context)) {
         DrawLinearTimeWarp(timewarp, item);
       }
     }
