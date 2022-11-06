@@ -24,6 +24,14 @@ You might need to init/update submodules:
 
 See `.github/workflows/build.yaml` for more details.
 
+## Example files
+
+The `examples` folder contains some example `.otio` files for testing.
+
+The El Fuente and Meridian [examples provided by Netflix](https://opencontent.netflix.com/) (under the
+Creative Commons Attribution 4.0 International Public License) were [converted to OTIO, along with several
+other examples here](https://github.com/darbyjohnston/otio-oc-examples).
+
 ## Thanks
 
 Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui) and [OpenTimelineIO](https://opentimeline.io)

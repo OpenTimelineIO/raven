@@ -1,0 +1,425 @@
+{
+    "OTIO_SCHEMA": "Timeline.1", 
+    "metadata": {},
+    "name": "test",
+    "tracks": {
+        "OTIO_SCHEMA": "Stack.1", 
+        "children": [
+            {
+                "OTIO_SCHEMA": "Track.1", 
+                "children": [
+                    {
+                        "OTIO_SCHEMA": "Clip.1",
+                        "media_reference": {
+                            "OTIO_SCHEMA": "ExternalReference.1",
+                            "available_range": {
+                                "OTIO_SCHEMA": "TimeRange.1",
+                                "duration": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 254
+                                },
+                                "start_time": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 0
+                                }
+                            },
+                            "target_url": "Netflix_BoxingPractice_4096x2160_60fps_10bit_420.y4m"
+                        },
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 204
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 0
+                            }
+                        },
+                        "name": "BoxingPractice"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Transition.1",
+                        "name": "Dissolve",
+                        "transition_type": "SMPTE_Dissolve",
+                        "in_offset": {
+                          "OTIO_SCHEMA": "RationalTime.1",
+                          "rate": 60,
+                          "value": 50
+                        },
+                        "out_offset": {
+                          "OTIO_SCHEMA": "RationalTime.1",
+                          "rate": 60,
+                          "value": 50
+                        }
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.1",
+                        "media_reference": {
+                            "OTIO_SCHEMA": "ExternalReference.1",
+                            "available_range": {
+                                "OTIO_SCHEMA": "TimeRange.1",
+                                "duration": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 300
+                                },
+                                "start_time": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 0
+                                }
+                            },
+                            "target_url": "Netflix_FoodMarket2_4096x2160_60fps_10bit_420.y4m"
+                        },
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 200
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 50
+                            }
+                        },
+                        "name": "FoodMarket2"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Transition.1",
+                        "name": "Dissolve",
+                        "transition_type": "SMPTE_Dissolve",
+                        "in_offset": {
+                          "OTIO_SCHEMA": "RationalTime.1",
+                          "rate": 60,
+                          "value": 50
+                        },
+                        "out_offset": {
+                          "OTIO_SCHEMA": "RationalTime.1",
+                          "rate": 60,
+                          "value": 50
+                        }
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.1",
+                        "media_reference": {
+                            "OTIO_SCHEMA": "ExternalReference.1",
+                            "available_range": {
+                                "OTIO_SCHEMA": "TimeRange.1",
+                                "duration": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 300
+                                },
+                                "start_time": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 0
+                                }
+                            },
+                            "target_url": "Netflix_Narrator_4096x2160_60fps_10bit_420.y4m"
+                        },
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 200
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 50
+                            }
+                        },
+                        "name": "Narrator"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Transition.1",
+                        "name": "Dissolve",
+                        "transition_type": "SMPTE_Dissolve",
+                        "in_offset": {
+                          "OTIO_SCHEMA": "RationalTime.1",
+                          "rate": 60,
+                          "value": 50
+                        },
+                        "out_offset": {
+                          "OTIO_SCHEMA": "RationalTime.1",
+                          "rate": 60,
+                          "value": 50
+                        }
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.1",
+                        "media_reference": {
+                            "OTIO_SCHEMA": "ExternalReference.1",
+                            "available_range": {
+                                "OTIO_SCHEMA": "TimeRange.1",
+                                "duration": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 282
+                                },
+                                "start_time": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 0
+                                }
+                            },
+                            "target_url": "Netflix_RitualDanceShot_4096x2160_60fps_10bit_420.y4m"
+                        },
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 182
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 50
+                            }
+                        },
+                        "name": "RitualDanceShot"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Transition.1",
+                        "name": "Dissolve",
+                        "transition_type": "SMPTE_Dissolve",
+                        "in_offset": {
+                          "OTIO_SCHEMA": "RationalTime.1",
+                          "rate": 60,
+                          "value": 50
+                        },
+                        "out_offset": {
+                          "OTIO_SCHEMA": "RationalTime.1",
+                          "rate": 60,
+                          "value": 50
+                        }
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.1",
+                        "media_reference": {
+                            "OTIO_SCHEMA": "ExternalReference.1",
+                            "available_range": {
+                                "OTIO_SCHEMA": "TimeRange.1",
+                                "duration": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 294
+                                },
+                                "start_time": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 0
+                                }
+                            },
+                            "target_url": "Netflix_Tango_4096x2160_60fps_10bit_420.y4m"
+                        },
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 244
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 50
+                            }
+                        },
+                        "name": "Tango"
+                    }
+                ],
+                "kind": "Video", 
+                "name": "Sequence"
+            },
+            {
+                "OTIO_SCHEMA": "Track.1", 
+                "children": [
+                    {
+                        "OTIO_SCHEMA": "Clip.1",
+                        "media_reference": {
+                            "OTIO_SCHEMA": "ExternalReference.1",
+                            "available_range": {
+                                "OTIO_SCHEMA": "TimeRange.1",
+                                "duration": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 1
+                                },
+                                "start_time": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 0
+                                }
+                            },
+                            "target_url": "images/ElFuente_Overlay_BoxingPractice.png"
+                        },
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 204
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 0
+                            }
+                        },
+                        "name": "Overlay"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.1",
+                        "media_reference": {
+                            "OTIO_SCHEMA": "ExternalReference.1",
+                            "available_range": {
+                                "OTIO_SCHEMA": "TimeRange.1",
+                                "duration": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 1
+                                },
+                                "start_time": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 0
+                                }
+                            },
+                            "target_url": "images/ElFuente_Overlay_FoodMarket.png"
+                        },
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 200
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 0
+                            }
+                        },
+                        "name": "Overlay"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.1",
+                        "media_reference": {
+                            "OTIO_SCHEMA": "ExternalReference.1",
+                            "available_range": {
+                                "OTIO_SCHEMA": "TimeRange.1",
+                                "duration": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 1
+                                },
+                                "start_time": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 0
+                                }
+                            },
+                            "target_url": "images/ElFuente_Overlay_Narrator.png"
+                        },
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 200
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 0
+                            }
+                        },
+                        "name": "Overlay"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.1",
+                        "media_reference": {
+                            "OTIO_SCHEMA": "ExternalReference.1",
+                            "available_range": {
+                                "OTIO_SCHEMA": "TimeRange.1",
+                                "duration": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 1
+                                },
+                                "start_time": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 0
+                                }
+                            },
+                            "target_url": "images/ElFuente_Overlay_RitualDance.png"
+                        },
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 182
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 0
+                            }
+                        },
+                        "name": "Overlay"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.1",
+                        "media_reference": {
+                            "OTIO_SCHEMA": "ExternalReference.1",
+                            "available_range": {
+                                "OTIO_SCHEMA": "TimeRange.1",
+                                "duration": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 1
+                                },
+                                "start_time": {
+                                    "OTIO_SCHEMA": "RationalTime.1",
+                                    "rate": 60,
+                                    "value": 0
+                                }
+                            },
+                            "target_url": "images/ElFuente_Overlay_Tango.png"
+                        },
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 244
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 60,
+                                "value": 0
+                            }
+                        },
+                        "name": "Overlay"
+                    }
+                ],
+                "kind": "Video", 
+                "name": "Sequence"
+            }
+        ], 
+        "name": "NestedScope"
+    }
+}
