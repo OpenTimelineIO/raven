@@ -928,7 +928,8 @@ bool DrawTransportControls(otio::Timeline *timeline) {
 
   ImGui::SameLine();
   if (ImGui::Button("Fit")) {
-    FitZoomWholeTimeline();
+      DetectPlayheadLimits();
+      FitZoomWholeTimeline();
   }
 
   ImGui::EndGroup();
