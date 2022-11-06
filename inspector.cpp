@@ -306,6 +306,15 @@ void DrawLinearTimeWarp(otio::LinearTimeWarp *timewarp, otio::Item *item) {
                        item_range.duration().rate());
   auto media_range = otio::TimeRange(media_start, media_duration);
 
+  // Special case for reverse timewarp
+  // TODO: Test to see if this works the way real NLEs handle reverse
+  // TODO: Specifically at -0.25 do you get the first 25% of media or the last?
+  if (time_scalar < 0.0f) {
+    // Reminder: media_duration is already negative
+    media_range = otio::TimeRange(media_start - media_duration,
+                                  media_duration);
+  }
+
   // x = output in clip/item time
   // y = input in media time
 
@@ -317,6 +326,11 @@ void DrawLinearTimeWarp(otio::LinearTimeWarp *timewarp, otio::Item *item) {
   };
   ImPlotPoint *start = &control_points[0];
   ImPlotPoint *end = &control_points[1];
+
+    // Helpful when debugging this code...
+//    ImGui::Text("Start: %f, %f", start->x, start->y);
+//    ImGui::Text("End: %f, %f", end->x, end->y);
+//    ImGui::Text("Duration: %f", media_range.duration().to_seconds());
 
   const float line_width = 2;
   const float knot_radius = 4;
