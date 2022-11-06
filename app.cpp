@@ -615,6 +615,21 @@ void DrawMenu() {
       ImGui::MenuItem("Frames", NULL, &appState.display_frames);
       ImGui::MenuItem("Seconds", NULL, &appState.display_seconds);
       ImGui::MenuItem("Rate", NULL, &appState.display_rate);
+        if (ImGui::BeginMenu("Drop Frame Timecode")) {
+            bool checked = appState.drop_frame_mode == opentime::InferFromRate;
+            if (ImGui::MenuItem("Infer from Rate", NULL, &checked)) {
+                if (checked) appState.drop_frame_mode = opentime::InferFromRate;
+            }
+            checked = appState.drop_frame_mode == opentime::ForceNo;
+            if (ImGui::MenuItem("Never", NULL, &checked)) {
+                if (checked) appState.drop_frame_mode = opentime::ForceNo;
+            }
+            checked = appState.drop_frame_mode == opentime::ForceYes;
+            if (ImGui::MenuItem("Always", NULL, &checked)) {
+                if (checked) appState.drop_frame_mode = opentime::ForceYes;
+            }
+            ImGui::EndMenu();
+        }
       ImGui::Unindent();
       ImGui::Separator();
       if (ImGui::MenuItem("Fit to Window")) {
@@ -775,7 +790,9 @@ std::string FormattedStringFromTime(otio::RationalTime time, bool allow_rate) {
 
 std::string TimecodeStringFromTime(otio::RationalTime time) {
   opentime::ErrorStatus error_status;
-  auto result = time.to_timecode(&error_status);
+  auto result = time.to_timecode(time.rate(),
+                                 appState.drop_frame_mode,
+                                 &error_status);
   if (opentime::is_error(error_status)) {
     // non-standard rates can't be turned into timecode
     // so fall back to a time string, which is HH:MM:SS.xxx

@@ -102,6 +102,7 @@ struct AppState {
   bool display_frames = false;
   bool display_seconds = false;
   bool display_rate = false;
+  opentime::IsDropFrameRate drop_frame_mode = opentime::InferFromRate;
 
   // Selection.
   otio::SerializableObject *selected_object; // maybe NULL
