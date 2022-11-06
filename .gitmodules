@@ -7,3 +7,6 @@
 [submodule "libs/implot"]
 	path = libs/implot
 	url = https://github.com/epezent/implot
+[submodule "libs/glfw"]
+	path = libs/glfw
+	url = https://github.com/glfw/glfw
