@@ -113,6 +113,13 @@ void DrawItem(otio::Item *item, float scale, ImVec2 origin, float height,
 
   ImVec2 p0 = ImGui::GetItemRectMin();
   ImVec2 p1 = ImGui::GetItemRectMax();
+    if (!ImGui::IsRectVisible(p0,p1)) {
+        ImGui::EndGroup();
+        ImGui::PopID();
+        ImGui::SetCursorPos(old_pos);
+        return;
+    }
+
   ImGui::SetItemAllowOverlap();
 
   // Dragging...
@@ -236,6 +243,12 @@ void DrawTransition(otio::Transition *transition, float scale, ImVec2 origin,
 
   ImVec2 p0 = ImGui::GetItemRectMin();
   ImVec2 p1 = ImGui::GetItemRectMax();
+    if (!ImGui::IsRectVisible(p0,p1)) {
+        ImGui::EndGroup();
+        ImGui::PopID();
+        ImGui::SetCursorPos(old_pos);
+        return;
+    }
   // ImGui::SetItemAllowOverlap();
 
   if (ImGui::IsItemHovered()) {
@@ -326,6 +339,12 @@ void DrawEffects(otio::Item *item, float scale, ImVec2 origin, float row_height,
 
   ImVec2 p0 = ImGui::GetItemRectMin();
   ImVec2 p1 = ImGui::GetItemRectMax();
+    if (!ImGui::IsRectVisible(p0,p1)) {
+        ImGui::EndGroup();
+        ImGui::PopID();
+        ImGui::SetCursorPos(old_pos);
+        return;
+    }
   // ImGui::SetItemAllowOverlap();
 
   if (ImGui::IsItemHovered()) {
@@ -453,6 +472,12 @@ void DrawMarkers(otio::Item *item, float scale, ImVec2 origin, float height,
 
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
+      if (!ImGui::IsRectVisible(p0,p1)) {
+          ImGui::EndGroup();
+          ImGui::PopID();
+          ImGui::SetCursorPos(old_pos);
+          continue;;
+      }
     // ImGui::SetItemAllowOverlap();
 
     if (ImGui::IsItemHovered()) {
@@ -656,6 +681,12 @@ void DrawTimecodeRuler(const void *ptr_id, otio::RationalTime start,
   const ImVec2 p0 = ImGui::GetItemRectMin();
   const ImVec2 p1 = ImGui::GetItemRectMax();
   ImGui::SetItemAllowOverlap();
+    if (!ImGui::IsRectVisible(p0,p1)) {
+        ImGui::EndGroup();
+        ImGui::PopID();
+        ImGui::SetCursorPos(old_pos);
+        return;
+    }
 
   ImDrawList *draw_list = ImGui::GetWindowDrawList();
 
@@ -712,6 +743,9 @@ void DrawTimecodeRuler(const void *ptr_id, otio::RationalTime start,
     double tick_x = tick_index * tick_width - tick_offset_x;
     const ImVec2 tick_start = ImVec2(p0.x + tick_x, p0.y + height / 2);
     const ImVec2 tick_end = ImVec2(tick_start.x, p1.y);
+
+    if (!ImGui::IsRectVisible(tick_start,tick_end)) continue;
+
     if (seconds_per_tick >= 0.5) {
       // draw thin lines at each tick
       draw_list->AddLine(tick_start, tick_end, tick_color);
