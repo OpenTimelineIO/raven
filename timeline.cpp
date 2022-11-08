@@ -727,22 +727,24 @@ void DrawTimecodeRuler(const void *ptr_id,
   // tick marks - roughly every N pixels
   double pixels_per_second = scale;
   double seconds_per_tick = tick_width / pixels_per_second;
-  auto tick_duration =
-      otio::RationalTime::from_seconds(seconds_per_tick, frame_rate);
-  int tick_count = ceilf(width / tick_width);
+  // ticks must use frame_rate, and must have an integer value
+  // so that the tick labels align to the human expectation of "frames"
+  int tick_duration_in_frames = ceil(seconds_per_tick / frame_rate);
+  int tick_count = ceil(width / tick_width);
   // start_floor_time and tick_offset_x adjust the display for cases where
   // the item's start_time is not on a whole frame boundary.
   auto start_floor_time =
-      otio::RationalTime(floor(start.value()), start.rate());
-  auto tick_offset = start - start_floor_time;
+      otio::RationalTime(floor(start.value()),
+                         start.rate());
+  auto tick_offset = (start - start_floor_time).rescaled_to(frame_rate);
   double tick_offset_x = tick_offset.to_seconds() * scale;
   // last_label_end_x tracks the tail of the last label, so we can prevent
   // overlap
   double last_label_end_x = p0.x - text_offset.x * 2;
   for (int tick_index = 0; tick_index < tick_count; tick_index++) {
-    auto tick_time = start +
-                     otio::RationalTime(tick_index * tick_duration.value(),
-                                        tick_duration.rate()) -
+    auto tick_time = start.rescaled_to(frame_rate) +
+                     otio::RationalTime(tick_index * tick_duration_in_frames,
+                                        frame_rate) -
                      tick_offset;
 
     double tick_x = tick_index * tick_width - tick_offset_x;
