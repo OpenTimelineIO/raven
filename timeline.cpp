@@ -747,13 +747,15 @@ void DrawTimecodeRuler(const void *ptr_id,
 
     double tick_x = tick_index * tick_width - tick_offset_x;
     const ImVec2 tick_start = ImVec2(p0.x + tick_x, p0.y + height / 2);
-    const ImVec2 tick_end = ImVec2(tick_start.x, p1.y);
+    const ImVec2 tick_end = ImVec2(tick_start.x + tick_width, p1.y);
 
     if (!ImGui::IsRectVisible(tick_start,tick_end)) continue;
 
     if (seconds_per_tick >= 0.5) {
       // draw thin lines at each tick
-      draw_list->AddLine(tick_start, tick_end, tick_color);
+      draw_list->AddLine(tick_start,
+                         ImVec2(tick_start.x, tick_end.y),
+                         tick_color);
     } else {
       // once individual frames are visible, draw dark/light stripes instead
       int frame = tick_time.to_frames();
