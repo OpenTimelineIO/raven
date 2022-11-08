@@ -183,9 +183,10 @@ void DrawItem(otio::Item *item, float scale, ImVec2 origin, float height,
     auto end = start + otio::RationalTime(duration.value() * time_scalar,
                                           duration.rate());
     auto rate = start.rate();
-    ImGui::SetCursorPos(ImVec2(render_pos.x, render_pos.y + height / 2));
+    float ruler_y_offset = font_height + text_offset.y;
+    ImGui::SetCursorPos(ImVec2(render_pos.x, render_pos.y + ruler_y_offset));
     DrawTimecodeRuler(item + 1, start, end, rate, time_scalar, scale, width,
-                      height / 2);
+                      height - ruler_y_offset);
   }
 
   if (ImGui::IsItemHovered()) {
@@ -664,9 +665,13 @@ void DrawTrack(otio::Track *track, int index, float scale, ImVec2 origin,
   __tracks_rendered++;
 }
 
-void DrawTimecodeRuler(const void *ptr_id, otio::RationalTime start,
-                       otio::RationalTime end, float frame_rate,
-                       float time_scalar, float zoom_scale, float width,
+void DrawTimecodeRuler(const void *ptr_id,
+                       otio::RationalTime start,
+                       otio::RationalTime end,
+                       float frame_rate,
+                       float time_scalar,
+                       float zoom_scale,
+                       float width,
                        float height) {
   double scale = zoom_scale / time_scalar;
 
@@ -763,11 +768,9 @@ void DrawTimecodeRuler(const void *ptr_id, otio::RationalTime start,
         ImVec2(p0.x + tick_x + text_offset.x, p0.y + text_offset.y);
     // only draw a label when there's room for it
     if (tick_label_pos.x > last_label_end_x + text_offset.x) {
-      char tick_label[100];
-      snprintf(tick_label, sizeof(tick_label), "%s",
-               FormattedStringFromTime(tick_time).c_str());
-      auto label_size = ImGui::CalcTextSize(tick_label);
-      draw_list->AddText(tick_label_pos, tick_label_color, tick_label);
+      std::string tick_label = FormattedStringFromTime(tick_time);
+      auto label_size = ImGui::CalcTextSize(tick_label.c_str());
+      draw_list->AddText(tick_label_pos, tick_label_color, tick_label.c_str());
       // advance last_label_end_x so nothing will overlap with the one we just
       // drew
       last_label_end_x = tick_label_pos.x + label_size.x;

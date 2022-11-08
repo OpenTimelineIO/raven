@@ -767,23 +767,23 @@ std::string FormattedStringFromTime(otio::RationalTime time, bool allow_rate) {
   std::string result;
   if (appState.display_timecode) {
     if (result != "")
-      result += " ";
+      result += "\n";
     result += TimecodeStringFromTime(time);
   }
   if (appState.display_frames) {
     if (result != "")
-      result += " ";
+        result += "\n";
     result += FramesStringFromTime(time) + "f";
   }
   if (appState.display_seconds) {
     if (result != "")
-      result += " ";
+        result += "\n";
     result += SecondsStringFromTime(time) + "s";
   }
   if (allow_rate && appState.display_rate) {
     if (result != "")
-      result += " ";
-    result += "@" + Format("%g", time.rate());
+        result += "\n";
+    result += "@" + Format("%.3f", time.rate());
   }
   return result;
 }
@@ -808,5 +808,5 @@ std::string FramesStringFromTime(otio::RationalTime time) {
 }
 
 std::string SecondsStringFromTime(otio::RationalTime time) {
-  return Format("%.3f", time.to_seconds());
+  return Format("%.5f", time.to_seconds());
 }
