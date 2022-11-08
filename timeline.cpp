@@ -1136,10 +1136,10 @@ void DrawTrackSplitter(const char *str_id, float splitter_size) {
   float sz2 = 0;
   float width = ImGui::GetContentRegionAvailWidth();
   float sz1_min = -(appState.track_height - 25.0f) * num_tracks_above;
-  if (Splitter(str_id, false, splitter_size, &sz1, &sz2, sz1_min, -100, width,
+  if (Splitter(str_id, false, splitter_size, &sz1, &sz2, sz1_min, -200, width,
                0)) {
     appState.track_height = fminf(
-        100.0f, fmaxf(25.0f, appState.track_height + (sz1 / num_tracks_above)));
+        200.0f, fmaxf(25.0f, appState.track_height + (sz1 / num_tracks_above)));
   }
   ImGui::Dummy(ImVec2(splitter_size, splitter_size));
 }
@@ -1226,7 +1226,7 @@ void DrawTimeline(otio::Timeline *timeline) {
     // now shift the origin down below the timecode track
     origin.y += appState.track_height;
 
-    int index = video_tracks.size();
+    int index = (int)video_tracks.size();
     for (auto i = video_tracks.rbegin(); i != video_tracks.rend(); ++i)
     // for (const auto& video_track : video_tracks)
     {
