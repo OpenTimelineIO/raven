@@ -901,30 +901,35 @@ float DrawPlayhead(otio::RationalTime start, otio::RationalTime end,
   const ImVec2 playhead_line_start = p0;
   const ImVec2 playhead_line_end = ImVec2(p0.x, p1.y);
 
+  const float arrow_height = fmin(track_height / 2, 20);
+  const ImVec2 arrow_size(arrow_height, arrow_height);
+
   std::string label_str = FormattedStringFromTime(playhead);
   auto label_color = appTheme.colors[AppThemeCol_Label];
   const ImVec2 label_size = ImGui::CalcTextSize(label_str.c_str());
-  const ImVec2 label_pos = ImVec2(p1.x + text_offset.x, p0.y + text_offset.y);
+  const ImVec2 label_pos = ImVec2(p0.x + arrow_size.x/2 + text_offset.x,
+                                  p0.y + text_offset.y);
   const ImVec2 label_end =
       ImVec2(label_pos.x + label_size.x, label_pos.y + label_size.y);
+
+  // playhead vertical bar is one frame thick
+  draw_list->AddRectFilled(p0, p1, playhead_fill_color);
 
   bool draw_label = draw_arrow; // link these
   if (draw_label) {
     // for readability, put a rectangle behind the area where the label will be
-    ImVec2 label_rect_start = ImVec2(label_pos.x - text_offset.x, label_pos.y);
+    ImVec2 label_rect_start = ImVec2(p0.x, label_pos.y);
     ImVec2 label_rect_end = ImVec2(label_end.x + text_offset.x, label_end.y);
     draw_list->AddRectFilled(label_rect_start, label_rect_end,
                              playhead_label_bg_color);
   }
 
-  // playhead vertical bar is one frame thick, with hairline on left edge
-  draw_list->AddRectFilled(p0, p1, playhead_fill_color);
+  // with hairline on left edge
   draw_list->AddLine(playhead_line_start, playhead_line_end,
                      playhead_line_color);
 
   // playhead arrow and label
   if (draw_arrow) {
-    const ImVec2 arrow_size(track_height / 2, track_height / 2);
     draw_list->AddTriangleFilled(ImVec2(p0.x - arrow_size.x / 2, p0.y),
                                  ImVec2(p0.x + arrow_size.x / 2, p0.y),
                                  ImVec2(p0.x, p0.y + arrow_size.y),
