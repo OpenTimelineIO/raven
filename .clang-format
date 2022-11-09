@@ -1,0 +1,15 @@
+---
+IndentWidth: 4
+BasedOnStyle: Webkit
+TabWidth: 4
+BreakBeforeBraces: Attach
+AllowShortIfStatementsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Always
+AllowShortLoopsOnASingleLine: true
+ColumnLimit: 0
+# PackConstructorInitializers: CurrentLine
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+AllowAllConstructorInitializersOnNextLine: false
+
+---
+
