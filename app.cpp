@@ -757,7 +757,7 @@ void DrawToolbar(ImVec2 button_size) {
 #ifdef SHOW_FPS
     // skip to the far right edge
     ImGui::SameLine();
-    ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - 250, 5));
+    ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x; - 250, 5));
 
     int fps = rint(1.0f / ImGui::GetIO().DeltaTime);
     ImGui::PushStyleColor(
