@@ -69,6 +69,8 @@ std::string Format(const char* format, ...) {
 // automatically (on iOS/Android/Emscripten), but that's not wired up.
 bool LoadFonts(const std::string& resourcePath) {
     ImGuiIO& io = ImGui::GetIO();
+    ImFontConfig config;
+    config.MergeMode = true;
 
     // TODO: Use ImGuiFontStudio to bundle these fonts into the executable?
 #ifdef EMSCRIPTEN
@@ -80,7 +82,7 @@ bool LoadFonts(const std::string& resourcePath) {
     gTechFont = io.Fonts->AddFontFromFileTTF(path.c_str(), 20.0f);
     static const ImWchar icon_fa_ranges[] = { 0xF000, 0xF18B, 0 };
     path = resourcePath + "fontawesome-webfont.ttf";
-    gIconFont = io.Fonts->AddFontFromFileTTF(path.c_str(), 16.0f, NULL, icon_fa_ranges);
+    gIconFont = io.Fonts->AddFontFromFileTTF(path.c_str(), 16.0f, &config, icon_fa_ranges);
 #endif
 
     return gTechFont != nullptr && gIconFont != nullptr;
@@ -709,17 +711,17 @@ void DrawMenu() {
 void DrawToolbar(ImVec2 button_size) {
     // ImGuiStyle& style = ImGui::GetStyle();
 
-    if (IconButton("\uF014##Delete", button_size)) {
+    if (IconButton("\xef\x80\x94##Delete", button_size)) {
         DeleteSelectedObject();
     }
 
     ImGui::SameLine();
-    if (IconButton("\uF02B##Mark", button_size)) {
+    if (IconButton("\xef\x80\xab##Mark", button_size)) {
         AddMarkerAtPlayhead();
     }
 
     ImGui::SameLine();
-    if (IconButton("\uF03C +Track", ImVec2(0, button_size.y))) {
+    if (IconButton("\xef\x80\xbc +Track", ImVec2(0, button_size.y))) {
         AddTrack();
     }
 
@@ -733,7 +735,7 @@ void DrawToolbar(ImVec2 button_size) {
         ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
     ImGui::PushFont(gIconFont);
     ImGui::SameLine();
-    ImGui::Text("\uF05A"); // (i) icon
+    ImGui::Text("\xef\x81\x9a"); // (i) icon
     ImGui::PopFont();
     ImGui::PopStyleColor();
     ImGui::SameLine();
@@ -765,7 +767,7 @@ void DrawToolbar(ImVec2 button_size) {
         ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
     ImGui::PushFont(gIconFont);
     ImGui::SameLine();
-    ImGui::Text("\uF0E4"); // dashboard meter icon
+    ImGui::Text("\xef\x83\xa4"); // dashboard meter icon
     ImGui::PopFont();
     ImGui::PopStyleColor();
     ImGui::SameLine();
