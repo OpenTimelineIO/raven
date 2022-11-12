@@ -22,6 +22,8 @@ target_sources(raven
     inspector.cpp
     timeline.cpp
     widgets.cpp
+
+    fonts/embedded_font.inc
 )
 
 add_subdirectory("libs")
@@ -43,6 +45,13 @@ set(GLFW_BUILD_DOCS OFF)
 set(BUILD_SHARED_LIBS OFF)
 add_subdirectory("libs/glfw")
 
+#add_custom_command(
+#    OUTPUT "${PROJECT_SOURCE_DIR}/embedded_font.inc"
+#    COMMAND binary_to_compressed_c -base85 "${PROJECT_SOURCE_DIR}/fonts/mononoki-Regular Nerd Font Complete.ttf" MononokiFont > ${PROJECT_SOURCE_DIR}/embedded_font.inc
+#    COMMENT "Embedding font..."
+#    MAIN_DEPENDENCY "fonts/mononoki-Regular Nerd Font Complete.ttf"
+#    VERBATIM)
+
 target_compile_definitions(raven
     PRIVATE BUILT_RESOURCE_PATH=${PROJECT_SOURCE_DIR})
 
@@ -60,12 +69,6 @@ if (APPLE)
   target_link_libraries(raven ${COCOA_LIBRARY})
 endif (APPLE)
 
-install(FILES
-    "raven_rsrc/ShareTechMono-Regular.ttf"
-    "raven_rsrc/fontawesome-webfont.ttf"
-    DESTINATION bin/raven_rsrc)
-
 install(TARGETS raven
     BUNDLE DESTINATION bin
     RUNTIME DESTINATION bin)
-

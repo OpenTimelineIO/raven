@@ -16,6 +16,8 @@
 
 #include "nfd.h"
 
+#include "fonts/embedded_font.inc"
+
 #include <chrono>
 #include <iostream>
 
@@ -33,8 +35,7 @@ const char* app_name = "Raven";
 AppState appState;
 AppTheme appTheme;
 
-ImFont* gTechFont = nullptr;
-ImFont* gIconFont = nullptr;
+ImFont* gFont = nullptr;
 
 // Log a message to the terminal
 void Log(const char* format, ...) {
@@ -65,27 +66,46 @@ std::string Format(const char* format, ...) {
     return std::string(buf);
 }
 
-// Files in the application fonts/ folder are supposed to be embedded
-// automatically (on iOS/Android/Emscripten), but that's not wired up.
-bool LoadFonts(const std::string& resourcePath) {
+void LoadFonts() {
     ImGuiIO& io = ImGui::GetIO();
+
+    gFont = io.Fonts->AddFontFromMemoryCompressedBase85TTF(
+        MononokiFont_compressed_data_base85,
+        16.0f);
+
+    static const ImWchar icon_glyph_ranges[] = {
+        // 0x0000, 0x00FF, // ASCII
+        0xe5fa, 0xe631, // Seti-UI + Custom
+        0xe700, 0xe7c5, // Devicons
+        0xf000, 0xf2e0, // Font Awesome
+        0xe200, 0xe2a9, // Font Awesome Extension
+        0xf500, 0xfd46, // Material Design Icons
+        0xe300, 0xe3eb, // Weather
+        0xf400, 0xf4a9, // Octicons (1)
+        0x2665, 0x2665, // Octicons (2)
+        0x26A1, 0x26A1, // Octicons (3)
+        0xe0a0, 0xe0a2, // Powerline Symbols (1)
+        0xe0b0, 0xe0b3, // Powerline Symbols (2)
+        0xe0a3, 0xe0a3, // Powerline Extra Symbols (1)
+        0xe0b4, 0xe0c8, // Powerline Extra Symbols (2)
+        0xe0ca, 0xe0ca, // Powerline Extra Symbols (3)
+        0xe0cc, 0xe0d4, // Powerline Extra Symbols (4)
+        0x23fb, 0x23fe, //2b58 // IEC Power Symbols
+        0xf300, 0xf32d, // Font Logos
+        0xe000, 0xe00a, // Pomicons
+        0xea60, 0xebeb, // Codicons
+        0
+    };
+
     ImFontConfig config;
     config.MergeMode = true;
-
-    // TODO: Use ImGuiFontStudio to bundle these fonts into the executable?
-#ifdef EMSCRIPTEN
-    Log("Skipping font loading on EMSCRIPTEN platform.");
-    gTechFont = io.Fonts->AddFontDefault();
-    gIconFont = gTechFont;
-#else
-    std::string path = resourcePath + "ShareTechMono-Regular.ttf";
-    gTechFont = io.Fonts->AddFontFromFileTTF(path.c_str(), 20.0f);
-    static const ImWchar icon_fa_ranges[] = { 0xF000, 0xF18B, 0 };
-    path = resourcePath + "fontawesome-webfont.ttf";
-    gIconFont = io.Fonts->AddFontFromFileTTF(path.c_str(), 16.0f, &config, icon_fa_ranges);
-#endif
-
-    return gTechFont != nullptr && gIconFont != nullptr;
+    config.GlyphOffset.x = -1.5f;
+    config.GlyphOffset.y = -1.0f;
+    io.Fonts->AddFontFromMemoryCompressedBase85TTF(
+        MononokiFont_compressed_data_base85,
+        16.0f,
+        &config,
+        icon_glyph_ranges);
 }
 
 void ApplyAppStyle() {
@@ -277,27 +297,7 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
 
     ApplyAppStyle();
 
-    std::string resourcePath = argv[0];
-    auto slashPos = resourcePath.rfind('/');
-    if (slashPos == std::string::npos) {
-        slashPos = resourcePath.rfind('\\');
-    }
-    if (slashPos != std::string::npos) {
-        resourcePath = resourcePath.substr(0, slashPos + 1);
-        resourcePath += "raven_rsrc/";
-    }
-
-    // note, the intention is to intern the fonts within the application,
-    // so this pattern, and the terrifying fallback of looking into the
-    // source code itself, won't last long.
-    if (!LoadFonts(resourcePath)) {
-// why two macros? because preprocessor, hahaha
-#define STRINGIFY(x) #x
-#define TO_STRING(x) STRINGIFY(x)
-        resourcePath = TO_STRING(BUILT_RESOURCE_PATH);
-        resourcePath += "/raven_rsrc/";
-        LoadFonts(resourcePath);
-    }
+    LoadFonts();
 
     if (argc > 1) {
         LoadFile(argv[1]);
@@ -311,9 +311,7 @@ void MainCleanup() { }
 
 // Make a button using the fancy icon font
 bool IconButton(const char* label, const ImVec2 size = ImVec2(0, 0)) {
-    ImGui::PushFont(gIconFont);
     bool result = ImGui::Button(label, size);
-    ImGui::PopFont();
     return result;
 }
 
@@ -733,10 +731,8 @@ void DrawToolbar(ImVec2 button_size) {
     ImGui::PushStyleColor(
         ImGuiCol_Text,
         ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-    ImGui::PushFont(gIconFont);
     ImGui::SameLine();
     ImGui::Text("\xef\x81\x9a"); // (i) icon
-    ImGui::PopFont();
     ImGui::PopStyleColor();
     ImGui::SameLine();
     ImGui::Text("%s", appState.message);
@@ -765,10 +761,8 @@ void DrawToolbar(ImVec2 button_size) {
     ImGui::PushStyleColor(
         ImGuiCol_Text,
         ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-    ImGui::PushFont(gIconFont);
     ImGui::SameLine();
     ImGui::Text("\xef\x83\xa4"); // dashboard meter icon
-    ImGui::PopFont();
     ImGui::PopStyleColor();
     ImGui::SameLine();
     ImGui::Text("Frame: %d @ %3d fps", ImGui::GetFrameCount(), fps);

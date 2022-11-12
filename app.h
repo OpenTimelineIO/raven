@@ -124,8 +124,7 @@ struct AppState {
 
 extern AppState appState;
 extern AppTheme appTheme;
-extern ImFont* gTechFont;
-extern ImFont* gIconFont;
+extern ImFont* gFont;
 
 void Log(const char* format, ...);
 void Message(const char* format, ...);
