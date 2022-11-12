@@ -569,7 +569,7 @@ void DrawMarkers(
 }
 
 void DrawObjectLabel(otio::SerializableObjectWithMetadata* object, float height) {
-    float width = ImGui::GetContentRegionAvailWidth();
+    float width = ImGui::GetContentRegionAvail().x;
 
     ImGui::BeginGroup();
     ImGui::AlignTextToFramePadding();
@@ -618,7 +618,7 @@ void DrawObjectLabel(otio::SerializableObjectWithMetadata* object, float height)
 }
 
 void DrawTrackLabel(otio::Track* track, int index, float height) {
-    float width = ImGui::GetContentRegionAvailWidth();
+    float width = ImGui::GetContentRegionAvail().x;
 
     ImGui::BeginGroup();
     ImGui::AlignTextToFramePadding();
@@ -864,7 +864,7 @@ bool DrawTimecodeTrack(
     bool interactive = true) {
     bool moved_playhead = false;
 
-    float width = ImGui::GetContentRegionAvailWidth();
+    float width = ImGui::GetContentRegionAvail().x;
     ImVec2 size(fmaxf(full_width, width), track_height);
 
     auto old_pos = ImGui::GetCursorPos();
@@ -1229,7 +1229,7 @@ void DrawTrackSplitter(const char* str_id, float splitter_size) {
     int num_tracks_above = ImGui::TableGetRowIndex();
     float sz1 = 0;
     float sz2 = 0;
-    float width = ImGui::GetContentRegionAvailWidth();
+    float width = ImGui::GetContentRegionAvail().x;
     float sz1_min = -(appState.track_height - 25.0f) * num_tracks_above;
     if (Splitter(
             str_id,
