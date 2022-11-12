@@ -8,8 +8,6 @@ set_property(TARGET raven PROPERTY CXX_STANDARD 14)
 
 add_subdirectory("imgui")
 
-include(glfw.cmake)
-
 target_sources(raven
   PUBLIC
     app.h
@@ -39,7 +37,13 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src/deps/optional-lite/include
 )
 
-target_compile_definitions(raven 
+set(GLFW_BUILD_EXAMPLES OFF)
+set(GLFW_BUILD_TESTS OFF)
+set(GLFW_BUILD_DOCS OFF)
+set(BUILD_SHARED_LIBS OFF)
+add_subdirectory("libs/glfw")
+
+target_compile_definitions(raven
     PRIVATE BUILT_RESOURCE_PATH=${PROJECT_SOURCE_DIR})
 
 target_link_libraries(raven
