@@ -13,13 +13,12 @@ jobs:
     - uses: actions/checkout@v1
       with:
         fetch-depth: 1
+        submodules: recursive
 
     - name: Install Dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y libglfw3-dev gcc-multilib g++-multilib libfreetype6-dev
-        git submodule init
-        git submodule update
 
     - name: Build
       run: |
@@ -52,12 +51,8 @@ jobs:
     - uses: actions/checkout@v1
       with:
         fetch-depth: 1
-
-    - name: Install Dependencies
-      run: |
-        git submodule init
-        git submodule update
-
+        submodules: recursive
+        
     - name: Build
       run: |
         mkdir build
@@ -89,6 +84,7 @@ jobs:
     - uses: actions/checkout@v1
       with:
         fetch-depth: 1
+        submodules: recursive
 
     - name: Install Dependencies
       run: |
@@ -97,8 +93,6 @@ jobs:
         emsdk-master/emsdk update
         emsdk-master/emsdk install latest
         emsdk-master/emsdk activate latest
-        git submodule init
-        git submodule update
 
     - name: Build
       run: |
