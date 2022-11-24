@@ -3,6 +3,8 @@ cmake_policy(SET CMP0076 NEW)
 
 project(raven VERSION 1.0)
 
+set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+
 add_executable(raven)
 set_property(TARGET raven PROPERTY CXX_STANDARD 14)
 

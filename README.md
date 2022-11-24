@@ -57,8 +57,7 @@ Raven was made possible by these excellent libraries:
 - Fully standalone executable:
 - Cross-platform build + GitHub Actions
   - Mac
-    - Basic build workflow is working
-    - Needs universal build (currently only x86_64)
+    - App bundle. [Try this](https://stackoverflow.com/questions/53560288/how-to-create-a-macos-app-bundle-with-cmake).
   - Linux
     - CI is building, does it actually run?
   - Windows
