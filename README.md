@@ -6,13 +6,21 @@ An experimental re-write of OpenTimelineIO's `otioview` timeline viewer applicat
 
 ![demo](demo.gif)
 
-## Building
+## Building (macOS, Windows, Linux)
 
 	% mkdir build
 	% cd build
 	% cmake ..
 	% cmake --build .
 	% ./raven ../example.otio
+
+## Building (WASM via Emscripten)
+
+	% mkdir build-web
+	% cd build-web
+	% emcmake cmake ..
+	% cmake --build .
+	% emrun ./raven.html
 
 ## Toubleshooting
 
