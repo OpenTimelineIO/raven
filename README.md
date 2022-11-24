@@ -32,6 +32,7 @@ a reference for which HTTP headers are needed to host the WASM build.
 If you have trouble building, these hints might help...
 
 You might need to init/update submodules:
+
   % git submodule init
   % git submodule update
 
@@ -56,19 +57,23 @@ Raven was made possible by these excellent libraries:
 
 ## Help Wanted
 
-- Fully standalone executable:
-- Cross-platform build + GitHub Actions
+- Fully standalone cross-platform build:
   - Mac
-    - App bundle. [Try this](https://stackoverflow.com/questions/53560288/how-to-create-a-macos-app-bundle-with-cmake).
+    - [App bundle](https://stackoverflow.com/questions/53560288/how-to-create-a-macos-app-bundle-with-cmake)
+    - Code signing?
   - Linux
     - CI is building, does it actually run?
   - Windows
     - Needs CI setup
-    - Needs file open/save dialog
-      - Maybe [this could work](https://stackoverflow.com/questions/69935188/open-a-file-in-emscripten-using-browser-file-selector-dialogue)?
+    - Which Dear ImGui backend gives best results?
   - Emscripten
-    - Where can we host this (needs specific HTTP headers. See `serve.py`)
-- Mac build has Retina high DPI scaling issues
+    - Where can we host this? (needs specific HTTP headers. See `serve.py`)
+    - Needs file open/save dialog
+      - Maybe [this could work](https://stackoverflow.com/questions/69935188/open-a-file-in-emscripten-using-browser-file-selector-dialogue) in app.cpp's `OpenFileDialog()` and `SaveFileDialog()`?
+    - Avoid continuous rendering
+      - Is there an equivalent to `ImGui_ImplGlfw_WaitForEvent()` that works with SDL2 + Emscripten?
+  - Easily downloadable pre-built binaries
+- Retina [high DPI scaling issues](https://github.com/jminor/raven/issues/5)
   - When dragging the window from one display to another, it doesn't adapt to different DPI correctly
   - When resizing the window, sometimes the window drifts or offsets strangely - worse when an external monitor is plugged into my laptop.
   - Does the same thing happen on Linux or Windows?
@@ -76,19 +81,19 @@ Raven was made possible by these excellent libraries:
   - WIP: Trying glfw + Metal backend
 - JSON Inspector:
   - Syntax highlighting
-    - Maybe this one? https://github.com/BalazsJako/ImGuiColorTextEdit
+    - Maybe [this one](https://github.com/BalazsJako/ImGuiColorTextEdit)?
   - This comment in imgui.h sounds helpful
     - // - If you want to use InputText() with std::string or any custom dynamic string type, see misc/cpp/imgui_stdlib.h and comments in imgui_demo.cpp.
   - Edit JSON to replace selected object?
     - This would let you explore & understand how changes affect the composition
-- Multiple selection, copy, paste, undo, redo?
-- Various operations from `otiotool`?
+- Multiple selection, copy, paste, undo, redo
+- Various operations from `otiotool`
 
 ## To Do
 
 - Double-click to expand/collapse nested compositions
 - Double-click a Clip to expand/collapse it's media reference
-- Show time-warped playhead inside media reference or nested composition
+- Show time-warped ruler inside media reference or nested composition
 - Performance optimization
   - avoid rendering tracks outside the scroll region
   - avoid rendering items smaller than a tiny sliver
@@ -100,7 +105,7 @@ Raven was made possible by these excellent libraries:
   - Look at ImGui document-based demo code for reference.
   - Might be fine to just open multiple instances of the app.
 - Inspector:
-  - Show summarized timing information (ala otiotool --inspect)
+  - Show summarized timing information (ala `otiotool --inspect`)
   - Range slider could be useful:
     - https://github.com/ocornut/imgui/issues/76#issuecomment-288304286
   - Per-schema inspector GUI
