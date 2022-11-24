@@ -12,7 +12,9 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
+#ifndef EMSCRIPTEN
 #include "nfd.h"
+#endif
 
 #include "fonts/embedded_font.inc"
 
@@ -560,6 +562,9 @@ void SaveTheme() {
 }
 
 std::string OpenFileDialog() {
+#ifdef EMSCRIPTEN
+    return "";
+#else
     nfdchar_t* outPath = NULL;
     nfdresult_t result = NFD_OpenDialog("otio", NULL, &outPath);
     if (result == NFD_OKAY) {
@@ -572,9 +577,13 @@ std::string OpenFileDialog() {
         Message("Error: %s\n", NFD_GetError());
     }
     return "";
+#endif
 }
 
 std::string SaveFileDialog() {
+#ifdef EMSCRIPTEN
+    return "";
+#else
     nfdchar_t* outPath = NULL;
     nfdresult_t result = NFD_SaveDialog("otio", NULL, &outPath);
     if (result == NFD_OKAY) {
@@ -587,6 +596,7 @@ std::string SaveFileDialog() {
         Message("Error: %s\n", NFD_GetError());
     }
     return "";
+#endif
 }
 
 void DrawMenu() {

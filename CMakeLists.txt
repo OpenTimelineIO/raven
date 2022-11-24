@@ -59,11 +59,13 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src/deps/optional-lite/include
 )
 
-set(GLFW_BUILD_EXAMPLES OFF)
-set(GLFW_BUILD_TESTS OFF)
-set(GLFW_BUILD_DOCS OFF)
-set(BUILD_SHARED_LIBS OFF)
-add_subdirectory("libs/glfw")
+if(NOT EMSCRIPTEN)
+  set(GLFW_BUILD_EXAMPLES OFF)
+  set(GLFW_BUILD_TESTS OFF)
+  set(GLFW_BUILD_DOCS OFF)
+  set(BUILD_SHARED_LIBS OFF)
+  add_subdirectory("libs/glfw")
+endif()
 
 #add_custom_command(
 #    OUTPUT "${PROJECT_SOURCE_DIR}/embedded_font.inc"
@@ -75,22 +77,28 @@ add_subdirectory("libs/glfw")
 target_compile_definitions(raven
     PRIVATE BUILT_RESOURCE_PATH=${PROJECT_SOURCE_DIR})
 
-target_link_libraries(raven
+target_link_libraries(raven PUBLIC
     OTIO::opentimelineio
     IMGUI
-    glfw
-    nativefiledialog
 )
+if(NOT EMSCRIPTEN)
+  target_link_libraries(raven PUBLIC
+      glfw
+      nativefiledialog
+  )
+endif()
 
 if (APPLE)
   find_library(COREFOUNDATION_LIBRARY CoreFoundation)
-  target_link_libraries(raven ${COREFOUNDATION_LIBRARY})
   find_library(METAL_LIBRARY Metal)
-  target_link_libraries(raven ${METAL_LIBRARY})
   find_library(METALKIT_LIBRARY MetalKit)
-  target_link_libraries(raven ${METALKIT_LIBRARY})
   find_library(QUARTZCORE_LIBRARY QuartzCore)
-  target_link_libraries(raven ${QUARTZCORE_LIBRARY})
+  target_link_libraries(raven PUBLIC
+    ${COREFOUNDATION_LIBRARY}
+    ${METAL_LIBRARY}
+    ${METALKIT_LIBRARY}
+    ${QUARTZCORE_LIBRARY}
+  )
 endif (APPLE)
 
 install(TARGETS raven

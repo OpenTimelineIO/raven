@@ -54,7 +54,7 @@ int main(int argc, char** argv)
     int initial_width = 1280;
     int initial_height = 768;
     g_Window = SDL_CreateWindow(
-        "Dear ImGui Emscripten example",
+        "Raven",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         initial_width,
