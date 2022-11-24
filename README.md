@@ -21,6 +21,9 @@ An experimental re-write of OpenTimelineIO's `otioview` timeline viewer applicat
 	% emcmake cmake ..
 	% cmake --build .
 	% emrun ./raven.html
+	
+See also: `serve.py` as an alternative to `emrun`, and as
+a reference for which HTTP headers are needed to host the WASM build.
 
 ## Toubleshooting
 
@@ -42,7 +45,12 @@ other examples here](https://github.com/darbyjohnston/otio-oc-examples).
 
 ## Thanks
 
-Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui) and [OpenTimelineIO](https://opentimeline.io)
+Raven was made possible by these excellent libraries:
+- [OpenTimelineIO](https://opentimeline.io)
+- [Dear ImGui](https://github.com/ocornut/imgui)
+- [ImPlot](https://github.com/epezent/implot)
+- [glfw](https://github.com/glfw/glfw)
+- [nativefiledialog](https://github.com/mlabbe/nativefiledialog)
 
 ## Help Wanted
 
