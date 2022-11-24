@@ -6,8 +6,6 @@
 
 #include "imgui.h"
 #include "imgui_internal.h"
-#include "imgui_plot.h"
-#include "imguihelper.h"
 
 #include <opentimelineio/timeline.h>
 namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;

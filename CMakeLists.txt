@@ -6,8 +6,6 @@ project(raven VERSION 1.0)
 add_executable(raven)
 set_property(TARGET raven PROPERTY CXX_STANDARD 14)
 
-add_subdirectory("imgui")
-
 target_sources(raven
   PUBLIC
     app.h
@@ -27,6 +25,7 @@ target_sources(raven
 )
 
 add_subdirectory("libs")
+
 include_directories(
   ${PROJECT_SOURCE_DIR}/libs/nativefiledialog/src/include
 )
