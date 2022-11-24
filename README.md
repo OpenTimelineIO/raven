@@ -55,23 +55,24 @@ Raven was made possible by these excellent libraries:
 ## Help Wanted
 
 - Fully standalone executable:
-  - Embed fonts into executable
-  - Link *static* dependencies:
-    - OpenTimelineIO
-    - glfw3
 - Cross-platform build + GitHub Actions
   - Mac
     - Basic build workflow is working
     - Needs universal build (currently only x86_64)
-    - Needs to package fonts & libraries (or embed/static as mentioned above)
   - Linux
+    - CI is building, does it actually run?
   - Windows
+    - Needs CI setup
+    - Needs file open/save dialog
+      - Maybe [this could work](https://stackoverflow.com/questions/69935188/open-a-file-in-emscripten-using-browser-file-selector-dialogue)?
   - Emscripten
+    - Where can we host this (needs specific HTTP headers. See `serve.py`)
 - Mac build has Retina high DPI scaling issues
   - When dragging the window from one display to another, it doesn't adapt to different DPI correctly
   - When resizing the window, sometimes the window drifts or offsets strangely - worse when an external monitor is plugged into my laptop.
   - Does the same thing happen on Linux or Windows?
   - Maybe switch to native macOS Dear ImGui backend?
+  - WIP: Trying glfw + Metal backend
 - JSON Inspector:
   - Syntax highlighting
     - Maybe this one? https://github.com/BalazsJako/ImGuiColorTextEdit
@@ -80,6 +81,7 @@ Raven was made possible by these excellent libraries:
   - Edit JSON to replace selected object?
     - This would let you explore & understand how changes affect the composition
 - Multiple selection, copy, paste, undo, redo?
+- Various operations from `otiotool`?
 
 ## To Do
 
@@ -101,30 +103,21 @@ Raven was made possible by these excellent libraries:
   - Range slider could be useful:
     - https://github.com/ocornut/imgui/issues/76#issuecomment-288304286
   - Per-schema inspector GUI
-    - SerializableObjectWithMetadata (or any child):
-      - name (done)
-      - metadata (done)
     - Items:
       - enable/disable
     - Clips:
-      - adjust source_range (done)
+      - show media_reference
       - adjust available_range of media reference
     - Transitions:
-      - adjust in/out offsets (done)
-    - Gaps:
-      - adjust duration (done)
+      - nicer GUI for adjusting in/out offsets
+      - avoid extending beyond range of adjacent Items
+      - avoid overlap with adjacent Transitions
     - Markers:
-      - adjust marked range (done)
-      - color (done)
-      - name (done)
-      - comment - OTIO doesn't have this?
+      - color picker
     - Compositions:
-      - adjust source_range (WIP)
-    - Effects:
-      - name
-      - effect_type
+      - show source_range limits in the timeline 
     - LinearTimeWarp:
-      - time_scale (done)
+      - time_scale graph could be nicer
     - UnknownSchema:
       - Can we show properties via SerializableObject's introspection?
 
