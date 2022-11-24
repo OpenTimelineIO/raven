@@ -1,7 +1,7 @@
 cmake_policy(SET CMP0076 NEW)
 cmake_policy(SET CMP0072 NEW)
 
-if(UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
 endif()
@@ -63,7 +63,15 @@ if(APPLE)
       # backends
       ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
       ${IMGUI_DIR}/backends/imgui_impl_metal.mm
-      gl3w/GL/gl3w.c
+      #gl3w/GL/gl3w.c
+  )
+elseif(EMSCRIPTEN)
+  target_sources(IMGUI
+    PRIVATE
+      # backends
+      ${IMGUI_DIR}/backends/imgui_impl_sdl.cpp
+      ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+      #gl3w/GL/gl3w.c
   )
 else()
   target_sources(IMGUI
@@ -73,6 +81,8 @@ else()
       ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
       gl3w/GL/gl3w.c
   )
+  target_link_libraries(IMGUI OpenGL::GL ${CMAKE_DL_LIBS})
+  target_compile_definitions(IMGUI PUBLIC -DIMGUI_IMPL_OPENGL_LOADER_GL3W)
 endif()
 
 target_include_directories(IMGUI
@@ -83,8 +93,4 @@ target_include_directories(IMGUI
   PUBLIC glfw/include
   PUBLIC ${IMPLOT_DIR}
 )
-
-target_link_libraries(IMGUI OpenGL::GL ${CMAKE_DL_LIBS})
-
-target_compile_definitions(IMGUI PUBLIC -DIMGUI_IMPL_OPENGL_LOADER_GL3W)
 
