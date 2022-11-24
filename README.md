@@ -2,6 +2,8 @@
 
 An experimental re-write of OpenTimelineIO's `otioview` timeline viewer application.
 
+[![build](https://github.com/jminor/raven/actions/workflows/build.yaml/badge.svg)](https://github.com/jminor/raven/actions/workflows/build.yaml)
+
 ![screenshot](screenshot.png)
 
 ![demo](demo.gif)
