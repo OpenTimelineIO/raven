@@ -107,18 +107,23 @@ int main(int argc, char** argv)
     {
         @autoreleasepool
         {
-            glfwHideWindow(window); // hide the native main window
-            
-            // Poll and handle events (inputs, window resize, etc.)
-            // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-            // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
-            // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
-            // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+            // This application doesn't do any animation, so instead
+            // of rendering all the time, we block waiting for events.
+            // The POWER_SAVING toggle is meant to be used with this
+            // fork of Dear ImGui: https://github.com/ocornut/imgui/pull/4076
+            // which would provide both the power savings, and support for
+            // animation, if we ever need/want to add animation to the app.
+            // See also: https://github.com/ocornut/imgui/pull/5599
 #ifdef POWER_SAVING
             ImGui_ImplGlfw_WaitForEvent();
 #else
             glfwWaitEvents();
 #endif
+            // Poll and handle events (inputs, window resize, etc.)
+            // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+            // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
+            // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
+            // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
             glfwPollEvents();
 
             int width, height;
@@ -132,7 +137,7 @@ int main(int argc, char** argv)
             renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
             renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
             id <MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-            [renderEncoder pushDebugGroup:@"ImGui demo"];
+            [renderEncoder pushDebugGroup:@"ImGui"];
 
             // Start the Dear ImGui frame
             ImGui_ImplMetal_NewFrame(renderPassDescriptor);

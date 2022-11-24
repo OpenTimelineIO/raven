@@ -340,43 +340,41 @@ void AppUpdate() { }
 void MainGui() {
     AppUpdate();
 
-    ImGuiIO& io = ImGui::GetIO();
-    ImVec2 displaySize = io.DisplaySize;
-    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
-        ImGui::SetNextWindowSize(displaySize, ImGuiCond_FirstUseEver);
-    } else {
-        ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(displaySize);
-    }
-
-    const char* window_id = "###MainWindow";
     char window_title[1024];
     auto filename = appState.file_path.substr(appState.file_path.find_last_of("/\\") + 1);
     if (filename != "") {
         snprintf(
             window_title,
             sizeof(window_title),
-            "%s - %s%s",
+            "%s - %s",
             app_name,
-            filename.c_str(),
-            window_id);
+            filename.c_str());
     } else {
         snprintf(
             window_title,
             sizeof(window_title),
-            "%s%s",
-            app_name,
-            window_id);
+            "%s",
+            app_name);
     }
 
     // Avoid double window padding since we have a dockspace window
     // which fills our whole main window.
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
+    // The main window occupies the whole main viewport
+    // Only the extra/auxillary windows, like the inspector(s) are dockable.
+    auto viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->Pos);
+    ImGui::SetNextWindowSize(viewport->Size);
+    ImGui::GetPlatformIO().Platform_SetWindowTitle(viewport, window_title);
+
     ImGui::Begin(
-        window_title,
+        "###MainWindow",
         &appState.show_main_window,
-        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar | 0);
+        ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_MenuBar |
+        ImGuiWindowFlags_NoDocking);
 
     ImGui::PopStyleVar();
 
@@ -433,15 +431,15 @@ void MainGui() {
         ImGuiID dock_id_side = ImGui::DockBuilderSplitNode(
             dock_main_id,
             ImGuiDir_Right,
-            0.30f,
+            0.50f,
             NULL,
             &dock_main_id);
-        ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(
-            dock_main_id,
-            ImGuiDir_Down,
-            0.20f,
-            NULL,
-            &dock_main_id);
+        // ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(
+        //     dock_main_id,
+        //     ImGuiDir_Down,
+        //     0.20f,
+        //     NULL,
+        //     &dock_main_id);
 
         // ImGui::DockBuilderDockWindow("Log", dock_id_bottom);
         ImGui::DockBuilderDockWindow("Timeline", dock_main_id);
