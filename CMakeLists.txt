@@ -14,7 +14,6 @@ target_sources(raven
     timeline.h
     widgets.h
 
-    main_glfw.cpp
     app.cpp
     editing.cpp
     inspector.cpp
@@ -23,6 +22,12 @@ target_sources(raven
 
     fonts/embedded_font.inc
 )
+
+if(APPLE)
+  target_sources(raven PUBLIC main_macos.mm)
+else()
+  target_sources(raven PUBLIC main_glfw.cpp)
+endif()
 
 add_subdirectory("libs")
 
@@ -64,8 +69,12 @@ target_link_libraries(raven
 if (APPLE)
   find_library(COREFOUNDATION_LIBRARY CoreFoundation)
   target_link_libraries(raven ${COREFOUNDATION_LIBRARY})
-  find_library(COCOA_LIBRARY Cocoa)
-  target_link_libraries(raven ${COCOA_LIBRARY})
+  find_library(METAL_LIBRARY Metal)
+  target_link_libraries(raven ${METAL_LIBRARY})
+  find_library(METALKIT_LIBRARY MetalKit)
+  target_link_libraries(raven ${METALKIT_LIBRARY})
+  find_library(QUARTZCORE_LIBRARY QuartzCore)
+  target_link_libraries(raven ${QUARTZCORE_LIBRARY})
 endif (APPLE)
 
 install(TARGETS raven

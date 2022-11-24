@@ -55,12 +55,25 @@ target_sources(IMGUI
     ${IMPLOT_DIR}/implot.cpp
     ${IMPLOT_DIR}/implot_demo.cpp
     ${IMPLOT_DIR}/implot_items.cpp
-
-    # backends
-    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
-    ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-    gl3w/GL/gl3w.c
 )
+
+if(APPLE)
+  target_sources(IMGUI
+    PRIVATE
+      # backends
+      ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+      ${IMGUI_DIR}/backends/imgui_impl_metal.mm
+      gl3w/GL/gl3w.c
+  )
+else()
+  target_sources(IMGUI
+    PRIVATE
+      # backends
+      ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+      ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+      gl3w/GL/gl3w.c
+  )
+endif()
 
 target_include_directories(IMGUI
   SYSTEM
