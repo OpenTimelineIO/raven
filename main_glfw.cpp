@@ -6,8 +6,9 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "implot.h"
 #include <stdio.h>
+
+#include "main.h"
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
@@ -51,10 +52,6 @@ static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
-
-void MainInit(int argc, char** argv, int initial_width, int initial_height);
-void MainGui();
-void MainCleanup();
 
 int main(int argc, char** argv)
 {
