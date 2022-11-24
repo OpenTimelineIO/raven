@@ -1098,6 +1098,7 @@ bool DrawTransportControls(otio::Timeline* timeline) {
     ImGui::EndGroup();
     ImGui::PopID();
 
+#ifdef PAN_ZOOMER
     //-------------------------------------------------------------------------
     // pan zoomer
 
@@ -1221,7 +1222,8 @@ bool DrawTransportControls(otio::Timeline* timeline) {
         ImGui::GetCursorPosY() + 2 * ImGui::GetTextLineHeightWithSpacing());
 
     //-------------------------------------------------------------------------
-
+#endif
+    
     return moved_playhead;
 }
 
