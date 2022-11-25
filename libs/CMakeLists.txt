@@ -29,11 +29,9 @@ if(NOT EMSCRIPTEN)
   target_sources(nativefiledialog PRIVATE ${SOURCES})
   target_include_directories(nativefiledialog PRIVATE ${INCLUDE_DIRS})
   target_link_libraries(nativefiledialog PRIVATE ${LIBRARIES})
-  
-  # target_compile_definitions(nativefiledialog PUBLIC -DIMGUI_IMPL_OPENGL_LOADER_GL3W)
 endif()
 
-#####################################
+####################################
 
 add_library(IMGUI STATIC)
 
@@ -94,4 +92,11 @@ target_include_directories(IMGUI
   PUBLIC glfw/include
   PUBLIC ${IMPLOT_DIR}
 )
+
+####################################
+
+add_executable(binary_to_compressed_c
+    ${IMGUI_DIR}/misc/fonts/binary_to_compressed_c.cpp
+)
+set_property(TARGET binary_to_compressed_c PROPERTY CXX_STANDARD 14)
 
