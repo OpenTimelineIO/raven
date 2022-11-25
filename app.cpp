@@ -366,8 +366,10 @@ void MainGui() {
     auto viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
+#ifndef EMSCRIPTEN
     ImGui::GetPlatformIO().Platform_SetWindowTitle(viewport, window_title);
-
+#endif
+    
     ImGui::Begin(
         "###MainWindow",
         &appState.show_main_window,
