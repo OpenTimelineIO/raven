@@ -422,26 +422,16 @@ void MainGui() {
         ImGui::DockBuilderAddNode(
             dockspace_id,
             ImGuiDockNodeFlags_DockSpace); // Add empty node
-        // ImGui::DockBuilderSetNodeSize(dockspace_id, ImVec2(100, 100)); // doesn't
-        // seem to matter?
+        ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
 
-        ImGuiID dock_main_id = dockspace_id; // This variable will track the document node, however we
-            // are not using it here as we aren't docking anything
-            // into it.
+        ImGuiID dock_main_id = dockspace_id;
         ImGuiID dock_id_side = ImGui::DockBuilderSplitNode(
             dock_main_id,
             ImGuiDir_Right,
-            0.50f,
+            0.25f,
             NULL,
             &dock_main_id);
-        // ImGuiID dock_id_bottom = ImGui::DockBuilderSplitNode(
-        //     dock_main_id,
-        //     ImGuiDir_Down,
-        //     0.20f,
-        //     NULL,
-        //     &dock_main_id);
 
-        // ImGui::DockBuilderDockWindow("Log", dock_id_bottom);
         ImGui::DockBuilderDockWindow("Timeline", dock_main_id);
         ImGui::DockBuilderDockWindow("Inspector", dock_id_side);
         ImGui::DockBuilderDockWindow("JSON", dock_id_side);
