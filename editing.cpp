@@ -126,6 +126,10 @@ void AddTrack(std::string kind) {
         }
     }
 
+    if (kind == "") {
+        kind = otio::Track::Kind::video;
+    }
+
     if (stack) {
         otio::SerializableObject::Retainer<otio::Track> new_track = new otio::Track("", nonstd::nullopt, kind);
 
