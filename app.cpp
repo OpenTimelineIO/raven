@@ -356,6 +356,8 @@ void MainGui() {
             "%s",
             app_name);
     }
+    char window_id[1024];
+    snprintf(window_id, sizeof(window_id), "%s###MainWindow", window_title);
 
     // Avoid double window padding since we have a dockspace window
     // which fills our whole main window.
@@ -369,12 +371,22 @@ void MainGui() {
 #ifndef EMSCRIPTEN
     ImGui::GetPlatformIO().Platform_SetWindowTitle(viewport, window_title);
 #endif
-    
+
     ImGui::Begin(
-        "###MainWindow",
+        window_id,
+#ifndef EMSCRIPTEN
         &appState.show_main_window,
+#else
+        NULL,
+#endif
         ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoResize |
+#ifndef EMSCRIPTEN
+        // With Emscripten, we show the Dear ImGui titlebar,
+        // but on desktop, the outer platform window has a titlebar already
         ImGuiWindowFlags_NoTitleBar |
+#endif
         ImGuiWindowFlags_MenuBar |
         ImGuiWindowFlags_NoDocking);
 
@@ -609,10 +621,14 @@ void DrawMenu() {
                 appState.timeline = NULL;
                 SelectObject(NULL);
             }
+#ifndef EMSCRIPTEN
+            // You can't exit(0) from a web page
+            // but you can on Desktop platforms.
             if (ImGui::MenuItem("Exit", "Alt+F4")) {
                 MainCleanup();
                 exit(0);
             }
+#endif
             ImGui::EndMenu();
         }
 
