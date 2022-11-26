@@ -95,8 +95,11 @@ target_include_directories(IMGUI
 
 ####################################
 
-add_executable(binary_to_compressed_c
-    ${IMGUI_DIR}/misc/fonts/binary_to_compressed_c.cpp
-)
-set_property(TARGET binary_to_compressed_c PROPERTY CXX_STANDARD 14)
-
+if(NOT EMSCRIPTEN)
+  # TODO: Figure out how to tell CMake to build binary_to_compressed_c
+  # for the native platform, not cross-compile to WASM/JS with emscripten...
+  add_executable(binary_to_compressed_c
+      ${IMGUI_DIR}/misc/fonts/binary_to_compressed_c.cpp
+  )
+  set_property(TARGET binary_to_compressed_c PROPERTY CXX_STANDARD 14)
+endif()
