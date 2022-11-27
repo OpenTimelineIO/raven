@@ -13,3 +13,6 @@
 [submodule "libs/imgui"]
 	path = libs/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "libs/ImGuiColorTextEdit"]
+	path = libs/ImGuiColorTextEdit
+	url = https://github.com/jminor/ImGuiColorTextEdit.git

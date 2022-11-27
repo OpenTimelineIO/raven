@@ -35,10 +35,11 @@ endif()
 
 add_library(IMGUI STATIC)
 
-set_property(TARGET IMGUI PROPERTY CXX_STANDARD 11)
+set_property(TARGET IMGUI PROPERTY CXX_STANDARD 14)
 
 set(IMGUI_DIR imgui)
 set(IMPLOT_DIR implot)
+set(TEXTEDIT_DIR ImGuiColorTextEdit)
 
 target_sources(IMGUI
   PRIVATE
@@ -53,6 +54,12 @@ target_sources(IMGUI
     ${IMPLOT_DIR}/implot.cpp
     ${IMPLOT_DIR}/implot_demo.cpp
     ${IMPLOT_DIR}/implot_items.cpp
+    ${TEXTEDIT_DIR}/TextEditor.cpp
+
+  PUBLIC
+    ${IMGUI_DIR}/imgui.h
+    ${IMPLOT_DIR}/implot.h
+    ${TEXTEDIT_DIR}/TextEditor.h
 )
 
 if(APPLE)
@@ -91,6 +98,7 @@ target_include_directories(IMGUI
   PUBLIC gl3w
   PUBLIC glfw/include
   PUBLIC ${IMPLOT_DIR}
+  PUBLIC ${TEXTEDIT_DIR}
 )
 
 ####################################

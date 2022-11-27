@@ -13,37 +13,62 @@
 #include <opentimelineio/transition.h>
 
 #include <implot.h>
+#include <TextEditor.h>
+
+const TextEditor::LanguageDefinition& OTIOLanguageDef()
+{
+    static bool inited = false;
+    static TextEditor::LanguageDefinition langDef;
+    if (!inited)
+    {
+        static const char* const keywords[] = {
+            "true", "false", "null"
+        };
+
+        for (auto& k : keywords)
+            langDef.mKeywords.insert(k);
+
+        static const char* const identifiers[] = {
+            "\"OTIO_SCHEMA\""
+        };
+        for (auto& k : identifiers)
+        {
+            TextEditor::Identifier id;
+            id.mDeclaration = "OpenTimelineIO Schema";
+            langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
+        }
+
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, TextEditor::PaletteIndex>("\\\"OTIO_SCHEMA\\\"", TextEditor::PaletteIndex::Identifier));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, TextEditor::PaletteIndex>("\\\"(\\\\.|[^\\\"])*\\\"", TextEditor::PaletteIndex::String));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, TextEditor::PaletteIndex>("[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?", TextEditor::PaletteIndex::Number));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, TextEditor::PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", TextEditor::PaletteIndex::Identifier));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, TextEditor::PaletteIndex>("[\\[\\]\\{\\}\\,\\:]", TextEditor::PaletteIndex::Punctuation));
+
+        langDef.mCommentStart = "/*";
+        langDef.mCommentEnd = "*/";
+        langDef.mSingleLineComment = "//";
+
+        langDef.mCaseSensitive = true;
+        langDef.mAutoIndentation = true;
+
+        langDef.mName = "JSON";
+
+        inited = true;
+    }
+    return langDef;
+}
+
+TextEditor jsonEditor;
+TextEditor::LanguageDefinition otioLangDef = OTIOLanguageDef();
+
+void UpdateJSONInspector() {
+    jsonEditor.SetReadOnly(true);
+    jsonEditor.SetLanguageDefinition(otioLangDef);
+    jsonEditor.SetText(appState.selected_text);
+}
 
 void DrawJSONInspector() {
-    // Wrapping the text view in a child window lets us
-    // control how much space is left below it for other buttons.
-    ImVec2 contentSize = ImGui::GetContentRegionAvail();
-    // contentSize.y -= ImGui::GetTextLineHeightWithSpacing() + 7;
-    ImGui::BeginChild("##JSONInspectorContainer", contentSize);
-
-    char buf[10000];
-    if (appState.selected_text == "") {
-        snprintf(buf, sizeof(buf), "Nothing selected.");
-    } else {
-        snprintf(buf, sizeof(buf), "%s", appState.selected_text.c_str());
-    }
-    bool modified = ImGui::InputTextMultiline(
-        "JSON Inspector",
-        buf,
-        sizeof(buf),
-        ImVec2(-FLT_MIN, -FLT_MIN),
-        ImGuiInputTextFlags_ReadOnly);
-    if (modified) {
-        // Message("Edited");
-    }
-
-    ImGui::EndChild();
-
-    // if (ImGui::Button("Apply")) {
-    // }
-    // ImGui::SameLine();
-    // if (ImGui::Button("Revert")) {
-    // }
+    jsonEditor.Render("JSON");
 }
 
 void DrawNonEditableTextField(const char* label, const char* format, ...) {

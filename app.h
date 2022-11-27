@@ -142,3 +142,4 @@ std::string FormattedStringFromTime(otio::RationalTime time, bool allow_rate = t
 std::string TimecodeStringFromTime(otio::RationalTime);
 std::string FramesStringFromTime(otio::RationalTime);
 std::string SecondsStringFromTime(otio::RationalTime);
+void UpdateJSONInspector();

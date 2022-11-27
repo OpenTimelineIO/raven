@@ -798,6 +798,7 @@ void SelectObject(
             appState.selected_text = otio_error_string(error_status);
         }
     }
+    UpdateJSONInspector();
 }
 
 void SeekPlayhead(double seconds) {
