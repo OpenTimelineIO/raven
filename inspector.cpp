@@ -202,26 +202,39 @@ void DrawMetadataRow(std::string key, otio::any& value) {
     std::string type_name = "<Unknown>";
     std::string string_val = "<Unknown>";
 
+    otio::SerializableObject *selectable = nullptr;
+
     if (type == typeid(std::string)) {
         type_name = "string";
         string_val = otio::any_cast<std::string>(value);
     }
-    if (type == typeid(bool)) {
+    else if (type == typeid(bool)) {
         type_name = "bool";
         string_val = otio::any_cast<bool>(value) ? "true" : "false";
     }
-    if (type == typeid(int64_t)) {
+    else if (type == typeid(int64_t)) {
         type_name = "int64_t";
         string_val = std::to_string(otio::any_cast<int64_t>(value));
     }
-    if (type == typeid(double)) {
+    else if (type == typeid(double)) {
         type_name = "double";
         string_val = std::to_string(otio::any_cast<double>(value));
     }
-    if (type == typeid(otio::RationalTime)) {
+    else if (type == typeid(otio::RationalTime)) {
         type_name = "otio::RationalTime";
         auto time = otio::any_cast<otio::RationalTime>(value);
         string_val = FormattedStringFromTime(time);
+    }
+    else if (type == typeid(otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata>)) {
+        auto obj = otio::any_cast<otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata>>(value);
+        type_name = Format("%s.%d", obj->schema_name().c_str(), obj->schema_version());
+        string_val = obj->name();
+        selectable = &*obj;
+    }
+    else if (type == typeid(otio::SerializableObject::Retainer<otio::SerializableObject>)) {
+        auto obj = otio::any_cast<otio::SerializableObject::Retainer<otio::SerializableObject>>(value);
+        type_name = Format("%s.%d", obj->schema_name().c_str(), obj->schema_version());
+        selectable = &*obj;
     }
 
     // TODO: Handle these types also?
@@ -243,7 +256,15 @@ void DrawMetadataRow(std::string key, otio::any& value) {
             | ImGuiTreeNodeFlags_SpanFullWidth | 0);
 
     ImGui::TableNextColumn();
-    ImGui::TextUnformatted(string_val.c_str());
+    if (selectable != nullptr) {
+        ImGui::PushID(selectable);
+        if (ImGui::Button(string_val.c_str())) {
+            SelectObject(selectable);
+        }
+        ImGui::PopID();
+    }else{
+        ImGui::TextUnformatted(string_val.c_str());
+    }
 
     ImGui::TableNextColumn();
     ImGui::TextUnformatted(type_name.c_str());
