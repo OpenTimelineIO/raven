@@ -449,6 +449,7 @@ void MainGui() {
         ImGui::DockBuilderDockWindow("Timeline", dock_main_id);
         ImGui::DockBuilderDockWindow("Inspector", dock_id_side);
         ImGui::DockBuilderDockWindow("JSON", dock_id_side);
+        ImGui::DockBuilderDockWindow("Markers", dock_id_side);
         ImGui::DockBuilderDockWindow("Settings", dock_id_side);
         ImGui::DockBuilderFinish(dockspace_id);
     }
@@ -497,6 +498,13 @@ void MainGui() {
     visible = ImGui::Begin("JSON", NULL, window_flags);
     if (visible) {
         DrawJSONInspector();
+    }
+    ImGui::End();
+
+    ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
+    visible = ImGui::Begin("Markers", NULL, window_flags);
+    if (visible) {
+        DrawMarkersInspector();
     }
     ImGui::End();
 

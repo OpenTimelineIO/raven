@@ -4,6 +4,8 @@
 #include "app.h"
 #include "widgets.h"
 
+ImU32 MarkerColor(std::string color);
+
 #include <opentimelineio/anyDictionary.h>
 #include <opentimelineio/clip.h>
 #include <opentimelineio/effect.h>
@@ -440,7 +442,7 @@ void DrawInspector() {
         return;
     }
 
-    // These temporary variables are used only for a moment to convert
+    // This temporary variable is used only for a moment to convert
     // between the datatypes that OTIO uses vs the one that ImGui widget uses.
     char tmp_str[1000];
 
@@ -551,6 +553,10 @@ void DrawInspector() {
                 marker->set_color(colors[current_index]);
             }
         }
+        ImGui::SameLine();
+        ImGui::PushStyleColor(ImGuiCol_Text, MarkerColor(marker->color()));
+        ImGui::TextUnformatted("\xef\x80\xab");
+        ImGui::PopStyleColor();
 
         auto marked_range = marker->marked_range();
         if (DrawTimeRange("Marked Range", &marked_range, false)) {
@@ -572,4 +578,105 @@ void DrawInspector() {
 
         DrawMetadataTable(metadata);
     }
+}
+
+void DrawMarkersInspector() {
+    // This temporary variable is used only for a moment to convert
+    // between the datatypes that OTIO uses vs the one that ImGui widget uses.
+    char tmp_str[1000];
+
+    typedef std::pair<otio::SerializableObject::Retainer<otio::Marker>, otio::SerializableObject::Retainer<otio::Item>> marker_parent_pair;
+    std::vector<marker_parent_pair> pairs;
+
+    auto root = appState.timeline->tracks();
+    auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
+
+    for (const auto& marker : root->markers()) {
+        pairs.push_back(marker_parent_pair(marker, root));
+    }
+
+    for (const auto& child :
+         appState.timeline->tracks()->children_if())
+    {
+        if (const auto& item = dynamic_cast<otio::Item*>(&*child))
+        {
+            for (const auto& marker : item->markers()) {
+                pairs.push_back(marker_parent_pair(marker, item));
+            }
+        }
+    }
+
+    auto selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
+
+    if (ImGui::BeginTable("Markers",
+                          5,
+//                          ImGuiTableFlags_Sortable |
+                          ImGuiTableFlags_NoSavedSettings |
+                          ImGuiTableFlags_Resizable |
+                          ImGuiTableFlags_Reorderable |
+                          ImGuiTableFlags_Hideable))
+    {
+        ImGui::TableSetupColumn("Local Time", ImGuiTableColumnFlags_DefaultHide | ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Global Time", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_DefaultHide | ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Item", ImGuiTableColumnFlags_WidthStretch);
+
+        ImGui::TableHeadersRow();
+
+        for (const auto& pair : pairs)
+        {
+            auto marker = pair.first;
+            auto parent = pair.second;
+
+            ImGui::PushID(&marker);
+            ImGui::TableNextRow();
+
+            // Local Time
+            ImGui::TableNextColumn();
+
+            auto range = marker->marked_range();
+            ImGui::TextUnformatted(TimecodeStringFromTime(range.start_time()).c_str());
+
+            // Global Time
+            ImGui::TableNextColumn();
+
+            auto global_time = parent->transformed_time(range.start_time(), root) + global_start;
+
+            auto is_selected =
+                (appState.selected_object == marker) ||
+                (appState.selected_object == parent);
+            if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
+                                  is_selected,
+                                  selectable_flags)) {
+                appState.playhead = global_time;
+                SelectObject(marker, parent);
+                appState.scroll_to_playhead = true;
+            }
+
+            // Duration
+            ImGui::TableNextColumn();
+
+            auto duration = range.duration();
+            ImGui::TextUnformatted(TimecodeStringFromTime(duration).c_str());
+
+            // Color + Name
+            ImGui::TableNextColumn();
+
+            ImGui::PushStyleColor(ImGuiCol_Text, MarkerColor(marker->color()));
+            ImGui::TextUnformatted("\xef\x80\xab");
+            ImGui::PopStyleColor();
+            ImGui::SameLine();
+
+            ImGui::TextUnformatted(marker->name().c_str());
+
+            // Item
+            ImGui::TableNextColumn();
+
+            ImGui::TextUnformatted(parent->name().c_str());
+
+            ImGui::PopID();
+        }
+    }
+    ImGui::EndTable();
 }
