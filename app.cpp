@@ -524,7 +524,7 @@ void MainGui() {
         ImGui::Checkbox("Rate", &appState.display_rate);
         ImGui::Unindent();
 
-        ImGui::ShowStyleEditor();
+//        ImGui::ShowStyleEditor();
     }
     ImGui::End();
 
