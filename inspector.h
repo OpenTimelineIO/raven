@@ -2,3 +2,4 @@
 
 void DrawInspector();
 void DrawJSONInspector();
+void DrawMarkersInspector();
