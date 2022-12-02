@@ -75,7 +75,8 @@ void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) 
     }
 
     otio::ErrorStatus error_status;
-    auto time = timeline->tracks()->transformed_time(playhead, item, &error_status);
+    auto global_start = timeline->global_start_time().value_or(otio::RationalTime());
+    auto time = timeline->tracks()->transformed_time(playhead - global_start, item, &error_status);
     if (otio::is_error(error_status)) {
         Message(
             "Error transforming time: %s",
