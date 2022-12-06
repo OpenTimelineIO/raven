@@ -15,6 +15,9 @@ static ID3D11Device*            g_pd3dDevice = NULL;
 static ID3D11DeviceContext*     g_pd3dDeviceContext = NULL;
 static IDXGISwapChain*          g_pSwapChain = NULL;
 static ID3D11RenderTargetView*  g_mainRenderTargetView = NULL;
+static LPVOID                   g_messageFiber = NULL;
+static LPVOID                   g_mainFiber = NULL;
+static bool                     g_done = false;
 
 // Forward declarations of helper functions
 bool CreateDeviceD3D(HWND hWnd);
@@ -23,6 +26,22 @@ void CreateRenderTarget();
 void CleanupRenderTarget();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+void CALLBACK MessageFiberProc(LPVOID lpFiberParameter)
+{
+    for (;;)
+    {
+        MSG msg;
+        while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+        {
+            ::TranslateMessage(&msg);
+            ::DispatchMessage(&msg);
+            if (msg.message == WM_QUIT)
+                g_done = true;
+        }
+        SwitchToFiber(g_mainFiber);
+    }
+}
+
 // Main code
 int main(int argc, char** argv)
 {
@@ -30,6 +49,22 @@ int main(int argc, char** argv)
     int initial_height = 800;
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
+
+    // Handle message processing in a fiber, aka coroutine.
+    // This allows pausing execution of the message loop during a resize/move.
+    // This is done by using timer which fires after 1msec on window resize/move event.
+    // After timer fires, the control returns to main code. After frame
+    // is drawn, control is then returned back to message loop.
+    // This based on a technique proposed by mmozeiko for glfw
+    // https://github.com/glfw/glfw/pull/1426
+    g_mainFiber = ConvertThreadToFiber(NULL);
+    if (!g_mainFiber)
+        return 1;
+
+    g_messageFiber = CreateFiber(0, &MessageFiberProc, NULL);
+    if (!g_messageFiber)
+        return 1;
+
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, L"Raven", NULL };
     ::RegisterClassExW(&wc);
     HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Raven", WS_OVERLAPPEDWINDOW, 100, 100, initial_width, initial_height, NULL, NULL, wc.hInstance, NULL);
@@ -98,22 +133,13 @@ int main(int argc, char** argv)
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
-    // Main loop
-    bool done = false;
-    while (!done)
+    while (!g_done)
     {
         // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
-        MSG msg;
-        while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
-        {
-            ::TranslateMessage(&msg);
-            ::DispatchMessage(&msg);
-            if (msg.message == WM_QUIT)
-                done = true;
-        }
-        if (done)
+        SwitchToFiber(g_messageFiber);
+
+        if (g_done)
             break;
 
         // Start the Dear ImGui frame
@@ -150,6 +176,9 @@ int main(int argc, char** argv)
     CleanupDeviceD3D();
     ::DestroyWindow(hwnd);
     ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
+
+    DeleteFiber(g_messageFiber);
+    ConvertFiberToThread();
 
     return 0;
 }
@@ -249,6 +278,21 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             const RECT* suggested_rect = (RECT*)lParam;
             ::SetWindowPos(hWnd, NULL, suggested_rect->left, suggested_rect->top, suggested_rect->right - suggested_rect->left, suggested_rect->bottom - suggested_rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
         }
+        break;
+    case WM_ENTERSIZEMOVE:
+    case WM_ENTERMENULOOP:
+        SetTimer(hWnd, 1, 1, NULL);
+        break;
+    case WM_EXITSIZEMOVE:
+    case WM_EXITMENULOOP:
+        KillTimer(hWnd, 1);
+        break;
+    case WM_TIMER:
+        // During a window resize/move PeekMessage is essentially blocked, but
+        // event timers still trigger. Using a event timer we can switch
+        // back to the main fiber allowing gui to draw a frame. After a frame is drawn
+        // execution is yielded back to the message fiber.
+        SwitchToFiber(g_mainFiber);
         break;
     }
     return ::DefWindowProc(hWnd, msg, wParam, lParam);
