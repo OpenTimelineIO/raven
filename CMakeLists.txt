@@ -27,6 +27,9 @@ target_sources(raven
 
 if(APPLE)
   target_sources(raven PUBLIC main_macos.mm)
+elseif(WIN32)
+  target_sources(raven PUBLIC main_win32.cpp)
+  target_compile_definitions(raven PRIVATE -DUNICODE -D_UNICODE)
 elseif(EMSCRIPTEN)
   target_sources(raven PUBLIC main_emscripten.cpp)
   set(LIBS ${CMAKE_DL_LIBS} SDL2)
@@ -53,7 +56,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src/deps/optional-lite/include
 )
 
-if(NOT EMSCRIPTEN)
+if(NOT EMSCRIPTEN AND NOT WIN32)
   set(GLFW_BUILD_EXAMPLES OFF)
   set(GLFW_BUILD_TESTS OFF)
   set(GLFW_BUILD_DOCS OFF)
@@ -77,12 +80,6 @@ target_link_libraries(raven PUBLIC
     OTIO::opentimelineio
     IMGUI
 )
-if(NOT EMSCRIPTEN)
-  target_link_libraries(raven PUBLIC
-      glfw
-      nativefiledialog
-  )
-endif()
 
 if (APPLE)
   find_library(COREFOUNDATION_LIBRARY CoreFoundation)
@@ -90,12 +87,26 @@ if (APPLE)
   find_library(METALKIT_LIBRARY MetalKit)
   find_library(QUARTZCORE_LIBRARY QuartzCore)
   target_link_libraries(raven PUBLIC
+    glfw
+    nativefiledialog
     ${COREFOUNDATION_LIBRARY}
     ${METAL_LIBRARY}
     ${METALKIT_LIBRARY}
     ${QUARTZCORE_LIBRARY}
   )
-endif (APPLE)
+elseif(WIN32)
+  target_link_libraries(raven PUBLIC
+    nativefiledialog
+    d3d11.lib
+    d3dcompiler.lib
+    dwmapi.lib
+  )
+elseif(NOT EMSCRIPTEN)
+  target_link_libraries(raven PUBLIC
+    glfw
+    nativefiledialog
+  )
+endif()
 
 install(TARGETS raven
     BUNDLE DESTINATION bin

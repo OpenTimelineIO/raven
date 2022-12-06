@@ -70,6 +70,13 @@ if(APPLE)
       ${IMGUI_DIR}/backends/imgui_impl_metal.mm
       #gl3w/GL/gl3w.c
   )
+elseif(WIN32)
+  target_sources(IMGUI
+  PRIVATE
+    # backends
+    ${IMGUI_DIR}/backends/imgui_impl_win32.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_dx11.cpp
+)
 elseif(EMSCRIPTEN)
   target_sources(IMGUI
     PRIVATE
