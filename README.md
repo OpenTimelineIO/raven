@@ -63,9 +63,6 @@ Raven was made possible by these excellent libraries:
     - Code signing?
   - Linux
     - CI is building, does it actually run?
-  - Windows
-    - Needs CI setup
-    - Which Dear ImGui backend gives best results?
   - Emscripten
     - Where can we host this? (needs specific HTTP headers. See `serve.py`)
     - Needs file open/save dialog
@@ -73,15 +70,10 @@ Raven was made possible by these excellent libraries:
     - Avoid continuous rendering
       - Is there an equivalent to `ImGui_ImplGlfw_WaitForEvent()` that works with SDL2 + Emscripten?
   - Easily downloadable pre-built binaries
-- Retina [high DPI scaling issues](https://github.com/jminor/raven/issues/5)
-  - When dragging the window from one display to another, it doesn't adapt to different DPI correctly
-  - When resizing the window, sometimes the window drifts or offsets strangely - worse when an external monitor is plugged into my laptop.
-  - Does the same thing happen on Linux or Windows?
-  - Maybe switch to native macOS Dear ImGui backend?
-  - WIP: Trying glfw + Metal backend
 - JSON Inspector:
   - Edit JSON to replace selected object?
     - This would let you explore & understand how changes affect the composition
+  - When loading a very large OTIO, the JSON inspector can double the load time
 - Multiple selection, copy, paste, undo, redo
 - Various operations from `otiotool`
 
@@ -91,9 +83,10 @@ Raven was made possible by these excellent libraries:
 - Double-click a Clip to expand/collapse it's media reference
 - Show time-warped ruler inside media reference or nested composition
 - Performance optimization
-  - avoid rendering tracks outside the scroll region
-  - avoid rendering items smaller than a tiny sliver
+  - Avoid rendering tracks outside the scroll region
+  - Avoid rendering items smaller than a tiny sliver
   - Experiment with drawing the timeline without using a Dear ImGui table
+    - Results so far: aligning multiple scroll regions causes 1-frame lag which is ugly
 - Arrow keys to navigate by selection
   - This sort of works already via ImGui's navigation system, but it is too easy to get stuck on a marker, or to walk out of the timeline.
   - Can this be rectified by turning off keyboard navigation on the widgets outside the timeline?
@@ -108,8 +101,9 @@ Raven was made possible by these excellent libraries:
     - Items:
       - enable/disable
     - Clips:
-      - show media_reference
+      - show media_reference(s)
       - adjust available_range of media reference
+      - edit target_url
     - Transitions:
       - nicer GUI for adjusting in/out offsets
       - avoid extending beyond range of adjacent Items
@@ -117,9 +111,10 @@ Raven was made possible by these excellent libraries:
     - Markers:
       - color picker
     - Compositions:
-      - show source_range limits in the timeline 
+      - show source_range limits in the timeline
     - LinearTimeWarp:
       - time_scale graph could be nicer
+    - FreezeFrame:
     - UnknownSchema:
       - Can we show properties via SerializableObject's introspection?
 
