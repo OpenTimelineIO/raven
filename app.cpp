@@ -106,6 +106,8 @@ void LoadFonts() {
         16.0f,
         &config,
         icon_glyph_ranges);
+
+    io.Fonts->Build();
 }
 
 void ApplyAppStyle() {
