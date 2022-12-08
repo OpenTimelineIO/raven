@@ -52,7 +52,7 @@ jobs:
       with:
         fetch-depth: 1
         submodules: recursive
-        
+
     - name: Build
       run: |
         mkdir build
@@ -116,3 +116,37 @@ jobs:
       with:
         name: raven-web.zip
         path: build-web/raven-web.zip
+  Windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+        submodules: recursive
+
+    - name: Build
+      run: |
+        mkdir build_win64
+        cd build_win64
+        cmake ..
+        cmake --build . --config Debug -j
+        cmake --build . --config Release -j
+
+    - name: Check Product
+      shell: bash
+      run: |
+        cd build_win64
+        pwd
+        ls -l
+        ls -l ./Debug/
+        ls -l ./Release/
+        file ./Debug/raven.exe
+        file ./Release/raven.exe
+
+    - name: Archive Product
+      uses: actions/upload-artifact@v3
+      with:
+        name: raven-windows-x64.zip
+        path: |
+          build_win64/Release/*
+          build_win64/Debug/*
