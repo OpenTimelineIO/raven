@@ -23,7 +23,7 @@ An experimental re-write of OpenTimelineIO's `otioview` timeline viewer applicat
 	% emcmake cmake ..
 	% cmake --build .
 	% emrun ./raven.html
-	
+
 See also: `serve.py` as an alternative to `emrun`, and as
 a reference for which HTTP headers are needed to host the WASM build.
 
@@ -32,9 +32,10 @@ a reference for which HTTP headers are needed to host the WASM build.
 If you have trouble building, these hints might help...
 
 You might need to init/update submodules:
-
-  % git submodule init
-  % git submodule update
+```
+% git submodule init
+% git submodule update
+```
 
 See `.github/workflows/build.yaml` for more details.
 
@@ -49,11 +50,12 @@ other examples here](https://github.com/darbyjohnston/otio-oc-examples).
 ## Thanks
 
 Raven was made possible by these excellent libraries:
-- [OpenTimelineIO](https://opentimeline.io)
-- [Dear ImGui](https://github.com/ocornut/imgui)
-- [ImPlot](https://github.com/epezent/implot)
-- [glfw](https://github.com/glfw/glfw)
-- [nativefiledialog](https://github.com/mlabbe/nativefiledialog)
+- [OpenTimelineIO](https://opentimeline.io) ([Apache 2.0](https://github.com/AcademySoftwareFoundation/OpenTimelineIO/blob/main/LICENSE.txt))
+- [Dear ImGui](https://github.com/ocornut/imgui) ([MIT](https://github.com/ocornut/imgui/blob/master/LICENSE.txt))
+- [ImPlot](https://github.com/epezent/implot) ([MIT](https://github.com/epezent/implot/blob/master/LICENSE))
+- [ImGuiColorTextEdit](https://github.com/santaclose/ImGuiColorTextEdit) ([MIT](https://github.com/santaclose/ImGuiColorTextEdit/blob/master/LICENSE))
+- [glfw](https://github.com/glfw/glfw) ([Zlib](https://github.com/glfw/glfw/blob/master/LICENSE.md))
+- [nativefiledialog](https://github.com/mlabbe/nativefiledialog) ([Zlib](https://github.com/mlabbe/nativefiledialog/blob/master/LICENSE))
 
 ## Help Wanted
 
