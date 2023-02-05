@@ -12,7 +12,9 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
-#ifndef EMSCRIPTEN
+#ifdef EMSCRIPTEN
+#include "emscripten_browser_file.h"
+#else
 #include "nfd.h"
 #endif
 
@@ -241,6 +243,30 @@ void LoadTimeline(otio::Timeline* timeline) {
     SelectObject(timeline);
 }
 
+void LoadString(std::string string) {
+    auto start = std::chrono::high_resolution_clock::now();
+
+    otio::ErrorStatus error_status;
+    auto timeline = dynamic_cast<otio::Timeline*>(
+        otio::Timeline::from_json_string(string, &error_status));
+    if (!timeline || otio::is_error(error_status)) {
+        Message(
+            "Error loading: %s",
+            otio_error_string(error_status).c_str());
+        return;
+    }
+
+    LoadTimeline(timeline);
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = (end - start);
+    double elapsed_seconds = elapsed.count();
+    Message(
+        "Loaded \"%s\" in %.3f seconds",
+        timeline->name().c_str(),
+        elapsed_seconds);
+}
+
 void LoadFile(std::string path) {
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -266,6 +292,34 @@ void LoadFile(std::string path) {
         "Loaded \"%s\" in %.3f seconds",
         timeline->name().c_str(),
         elapsed_seconds);
+}
+
+std::string SaveString() {
+    auto timeline = appState.timeline;
+    if (!timeline)
+        return "";
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    otio::ErrorStatus error_status;
+    auto string = timeline->to_json_string(&error_status);
+    if (otio::is_error(error_status)) {
+        Message(
+            "Error saving: %s",
+            otio_error_string(error_status).c_str());
+        return "";
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = (end - start);
+    double elapsed_seconds = elapsed.count();
+    Message(
+        "Saved \"%s\" in %.3f seconds to %d bytes",
+        timeline->name().c_str(),
+        elapsed_seconds,
+        (int)string.size());
+
+    return string;
 }
 
 void SaveFile(std::string path) {
@@ -573,41 +627,53 @@ void SaveTheme() {
     fclose(file);
 }
 
-std::string OpenFileDialog() {
 #ifdef EMSCRIPTEN
-    return "";
+void handle_upload_file(std::string const &filename, std::string const &mime_type, std::string_view buffer, void* callback_data) {
+    Log("Loading \"%s\" (%s) %d bytes...", filename.c_str(), mime_type.c_str(), (int)buffer.size());
+    LoadString(std::string(buffer));
+    appState.file_path = filename;
+}
+#endif
+
+void OpenFileDialog() {
+#ifdef EMSCRIPTEN
+    Log("Uploading...");
+    emscripten_browser_file::upload(".otio,.jpg", handle_upload_file);
+    Log("Uploading?");
 #else
     nfdchar_t* outPath = NULL;
     nfdresult_t result = NFD_OpenDialog("otio", NULL, &outPath);
     if (result == NFD_OKAY) {
         auto result = std::string(outPath);
         free(outPath);
-        return result;
+        LoadFile(result);
     } else if (result == NFD_CANCEL) {
-        return "";
+        // ignore
     } else {
         Message("Error: %s\n", NFD_GetError());
     }
-    return "";
 #endif
 }
 
-std::string SaveFileDialog() {
+void SaveFileDialog() {
 #ifdef EMSCRIPTEN
-    return "";
+    std::string filename{"timeline.otio"};
+    std::string mime_type{"application/text/plain"};
+    std::string data = SaveString();
+    Log("Saving: %s", data.c_str());
+    emscripten_browser_file::download(filename, mime_type, data);
 #else
     nfdchar_t* outPath = NULL;
     nfdresult_t result = NFD_SaveDialog("otio", NULL, &outPath);
     if (result == NFD_OKAY) {
         auto result = std::string(outPath);
         free(outPath);
-        return result;
+        SaveFile(result);
     } else if (result == NFD_CANCEL) {
-        return "";
+        // ignore
     } else {
         Message("Error: %s\n", NFD_GetError());
     }
-    return "";
 #endif
 }
 
@@ -615,14 +681,10 @@ void DrawMenu() {
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open...")) {
-                auto path = OpenFileDialog();
-                if (path != "")
-                    LoadFile(path);
+                OpenFileDialog();
             }
             if (ImGui::MenuItem("Save As...")) {
-                auto path = SaveFileDialog();
-                if (path != "")
-                    SaveFile(path);
+                SaveFileDialog();
             }
             if (ImGui::MenuItem("Revert")) {
                 LoadFile(appState.file_path);
