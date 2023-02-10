@@ -16,3 +16,6 @@
 [submodule "libs/ImGuiColorTextEdit"]
 	path = libs/ImGuiColorTextEdit
 	url = https://github.com/jminor/ImGuiColorTextEdit.git
+[submodule "libs/dr_libs"]
+	path = libs/dr_libs
+	url = https://github.com/mackron/dr_libs.git

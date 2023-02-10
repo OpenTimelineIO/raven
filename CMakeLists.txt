@@ -34,7 +34,7 @@ elseif(EMSCRIPTEN)
   target_sources(raven PUBLIC main_emscripten.cpp)
   set(LIBS ${CMAKE_DL_LIBS} SDL2)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_SDL=2 -s DISABLE_EXCEPTION_CATCHING=1")
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s WASM=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -s NO_FILESYSTEM=1 -s USE_PTHREADS=1 -s ALLOW_MEMORY_GROWTH=1 -Wl,--shared-memory,--no-check-features --shell-file ${CMAKE_CURRENT_LIST_DIR}/shell_minimal.html")  
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s WASM=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1 -s NO_FILESYSTEM=1 -s USE_PTHREADS=1 -s ALLOW_MEMORY_GROWTH=1 -Wl,--shared-memory,--no-check-features --shell-file ${CMAKE_CURRENT_LIST_DIR}/shell_minimal.html")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIMGUI_DISABLE_FILE_FUNCTIONS")
   set_target_properties(raven PROPERTIES SUFFIX .html)
   target_link_libraries(raven PUBLIC ${LIBS})
@@ -46,6 +46,7 @@ add_subdirectory("libs")
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/libs/nativefiledialog/src/include
+  ${PROJECT_SOURCE_DIR}/libs/dr_libs
 )
 
 set(OTIO_SHARED_LIBS OFF)
@@ -78,6 +79,7 @@ target_compile_definitions(raven
 
 target_link_libraries(raven PUBLIC
     OTIO::opentimelineio
+    DR_LIBS
     IMGUI
 )
 

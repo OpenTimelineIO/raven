@@ -10,9 +10,9 @@ endif()
 
 if(NOT EMSCRIPTEN)
   add_library(nativefiledialog STATIC)
-  
+
   set_property(TARGET nativefiledialog PROPERTY CXX_STANDARD 11)
-  
+
   set(SOURCES nativefiledialog/src/nfd_common.c)
   set(INCLUDE_DIRS nativefiledialog/src nativefiledialog/src/include)
   set(LIBRARIES)
@@ -25,11 +25,26 @@ if(NOT EMSCRIPTEN)
       list(APPEND INCLUDE_DIRS ${GTK3_INCLUDE_DIRS})
       list(APPEND LIBRARIES ${GTK3_LIBRARIES})
   endif()
-  
+
   target_sources(nativefiledialog PRIVATE ${SOURCES})
   target_include_directories(nativefiledialog PRIVATE ${INCLUDE_DIRS})
   target_link_libraries(nativefiledialog PRIVATE ${LIBRARIES})
 endif()
+
+####################################
+
+add_library(DR_LIBS STATIC)
+set_property(TARGET DR_LIBS PROPERTY CXX_STANDARD 14)
+
+set(DR_LIBS_DIR dr_libs)
+
+target_sources(DR_LIBS
+  PRIVATE
+    dr_libs.c
+
+  PUBLIC
+    ${DR_LIBS_DIR}/dr_wav.h
+)
 
 ####################################
 
