@@ -11,6 +11,11 @@
 #include <opentimelineio/linearTimeWarp.h>
 #include <opentimelineio/marker.h>
 #include <opentimelineio/transition.h>
+#include <opentimelineio/externalReference.h>
+
+#include "dr_wav.h"
+#include <filesystem>
+#include <stdlib.h>
 
 // counters to measure visibility-check performance optimization
 static int __tracks_rendered;
@@ -52,6 +57,45 @@ void TopLevelTimeRangeMap(
     }
 }
 
+#include <algorithm>
+#include <cctype>
+#include <string>
+
+inline bool ends_with(std::string const & value, std::string const & ending)
+{
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
+typedef struct waveform {
+    drwav wav;
+    size_t num_samples;
+    float* sample_data;
+} waveform;
+
+std::map<std::string,waveform*> waveform_cache;
+
+waveform* fetch_waveform(std::string path) {
+
+    if (waveform_cache.find(path) == waveform_cache.end()) {
+        waveform *w = (waveform *)malloc(sizeof(waveform));
+
+        if (!drwav_init_file(&w->wav, path.c_str(), NULL)) {
+            fprintf(stderr, "ERROR: Problem loading '%s'\n", path.c_str());
+            free(w);
+            return nullptr;
+        }
+
+        w->sample_data = (float *)malloc(w->wav.totalPCMFrameCount * w->wav.channels * sizeof(float));
+        w->num_samples = drwav_read_pcm_frames_f32(&w->wav, w->wav.totalPCMFrameCount, w->sample_data);
+
+        waveform_cache[path] = w;
+        fprintf(stderr, "Loaded %zu samples from '%s'\n", w->num_samples, path.c_str());
+    }
+
+    return waveform_cache[path];
+}
+
 void DrawItem(
     otio::Item* item,
     float scale,
@@ -72,6 +116,8 @@ void DrawItem(
     // is there enough vertical *and* horizontal space for time ranges?
     bool show_time_range = (height > font_height * 2 + text_offset.y * 2)
         && (width > font_width * 15);
+    bool show_waveform = false;
+    waveform *waveform = nullptr;
 
     auto range_it = range_map.find(item);
     if (range_it == range_map.end()) {
@@ -100,6 +146,18 @@ void DrawItem(
         label_str = "";
         fancy_corners = false;
         show_time_range = false;
+    }
+    if (auto clip = dynamic_cast<otio::Clip*>(item)) {
+        if (auto media_ref = dynamic_cast<otio::ExternalReference*>(clip->media_reference())) {
+            auto path = media_ref->target_url();
+            std::transform(path.begin(), path.end(), path.begin(),
+                           [](unsigned char c){ return std::tolower(c); });
+
+            if (ends_with(path, ".wav")) {
+                show_waveform = true;
+                waveform = fetch_waveform(path);
+            }
+        }
     }
 
     auto old_pos = ImGui::GetCursorPos();
@@ -170,6 +228,21 @@ void DrawItem(
             dark_edge_color);
     } else {
         draw_list->AddRectFilled(p0, p1, fill_color);
+    }
+
+    if (show_waveform) {
+        float *sample = &waveform->sample_data[0];
+        float mid_y = p0.y + height/2;
+        for (int i=0; i<width; i++) {
+            int s = (i / scale) * waveform->wav.sampleRate;
+            if (s<0 || s>=waveform->num_samples) continue;
+            float sample_value = sample[s];
+            float sample_height = sample_value * height;
+            draw_list->AddLine(
+                ImVec2(p0.x + i-1, mid_y),
+                ImVec2(p0.x + i, mid_y + sample_height),
+                dark_edge_color);
+        }
     }
 
     if (show_label) {
@@ -1223,7 +1296,7 @@ bool DrawTransportControls(otio::Timeline* timeline) {
 
     //-------------------------------------------------------------------------
 #endif
-    
+
     return moved_playhead;
 }
 
