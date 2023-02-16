@@ -94,6 +94,9 @@ Raven was made possible by these excellent libraries:
   - Multiple timelines in separate tabs or windows?
     - Look at ImGui document-based demo code for reference.
     - Might be fine to just open multiple instances of the app.
+  - Add support for adapters
+    - Use embedded Python, or run `otioconvert` via pipe?
+    - Constraint: We want to ensure this tool stays light weight, and works in the browser.
 - Enhancements:
   - Double-click a Clip to expand/collapse it's media reference
   - Show time-warped ruler inside media reference or nested composition
