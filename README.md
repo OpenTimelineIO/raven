@@ -8,6 +8,8 @@ This tool aims to replace [otioview](https://github.com/AcademySoftwareFoundatio
 
 ![screenshot](screenshot.png)
 
+trying CLA
+
 ![demo](demo.gif)
 
 ## Building (macOS, Windows, Linux)
