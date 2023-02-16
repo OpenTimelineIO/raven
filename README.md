@@ -1,6 +1,8 @@
 # Raven - OTIO Viewer
 
-An experimental re-write of OpenTimelineIO's `otioview` timeline viewer application.
+An experimental re-write of [OpenTimelineIO](https://opentimeline.io)'s `otioview` timeline viewer application.
+
+This tool aims to replace [otioview](https://github.com/AcademySoftwareFoundation/OpenTimelineIO/tree/main/src/opentimelineview) but it is missing a few essential features (see "Help Wanted" and "To Do" below). Contributions are welcome!
 
 [![build](https://github.com/jminor/raven/actions/workflows/build.yaml/badge.svg)](https://github.com/jminor/raven/actions/workflows/build.yaml)
 
@@ -66,35 +68,40 @@ Raven was made possible by these excellent libraries:
   - Linux
     - CI is building, does it actually run?
   - Emscripten
-    - Where can we host this? (needs specific HTTP headers. See `serve.py`)
+    - Where can we host this? (needs specific HTTP headers? See `serve.py`)
     - Needs file open/save dialog
       - Maybe [this could work](https://stackoverflow.com/questions/69935188/open-a-file-in-emscripten-using-browser-file-selector-dialogue) in app.cpp's `OpenFileDialog()` and `SaveFileDialog()`?
+      - or this: https://github.com/Armchair-Software/emscripten-browser-file
+      - See the [web-file-open branch](https://github.com/OpenTimelineIO/raven/tree/web-file-open)
     - Avoid continuous rendering
       - Is there an equivalent to `ImGui_ImplGlfw_WaitForEvent()` that works with SDL2 + Emscripten?
   - Easily downloadable pre-built binaries
 - JSON Inspector:
   - Edit JSON to replace selected object?
     - This would let you explore & understand how changes affect the composition
-  - When loading a very large OTIO, the JSON inspector can double the load time
+  - When loading a very large OTIO, the JSON inspector can double the load time (full feature film ~45 seconds)
 - Multiple selection, copy, paste, undo, redo
 - Various operations from `otiotool`
 
 ## To Do
 
-- Double-click to expand/collapse nested compositions
-- Double-click a Clip to expand/collapse it's media reference
-- Show time-warped ruler inside media reference or nested composition
-- Performance optimization
+- Feature parity with `otioview`:
+  - Show media reference details in the Inspector
+  - Double-click to expand/collapse nested compositions
+  - Arrow keys to navigate by selection
+    - This sort of works already via ImGui's navigation system, but it is too easy to get stuck on a marker, or to walk out of the timeline.
+    - Can this be rectified by turning off keyboard navigation on the widgets outside the timeline?
+  - Multiple timelines in separate tabs or windows?
+    - Look at ImGui document-based demo code for reference.
+    - Might be fine to just open multiple instances of the app.
+- Enhancements:
+  - Double-click a Clip to expand/collapse it's media reference
+  - Show time-warped ruler inside media reference or nested composition
+- Performance optimization:
   - Avoid rendering tracks outside the scroll region
   - Avoid rendering items smaller than a tiny sliver
   - Experiment with drawing the timeline without using a Dear ImGui table
     - Results so far: aligning multiple scroll regions causes 1-frame lag which is ugly
-- Arrow keys to navigate by selection
-  - This sort of works already via ImGui's navigation system, but it is too easy to get stuck on a marker, or to walk out of the timeline.
-  - Can this be rectified by turning off keyboard navigation on the widgets outside the timeline?
-- Multiple timelines in separate tabs or windows?
-  - Look at ImGui document-based demo code for reference.
-  - Might be fine to just open multiple instances of the app.
 - Inspector:
   - Show summarized timing information (ala `otiotool --inspect`)
   - Range slider could be useful:
