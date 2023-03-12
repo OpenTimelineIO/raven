@@ -4,7 +4,7 @@ An experimental re-write of [OpenTimelineIO](https://opentimeline.io)'s `otiovie
 
 This tool aims to replace [otioview](https://github.com/AcademySoftwareFoundation/OpenTimelineIO/tree/main/src/opentimelineview) but it is missing a few essential features (see "Help Wanted" and "To Do" below). Contributions are welcome!
 
-[![build](https://github.com/jminor/raven/actions/workflows/build.yaml/badge.svg)](https://github.com/jminor/raven/actions/workflows/build.yaml)
+[![build](https://github.com/OpenTimelineIO/raven/actions/workflows/build.yaml/badge.svg)](https://github.com/OpenTimelineIO/raven/actions/workflows/build.yaml)
 
 ![screenshot](screenshot.png)
 
