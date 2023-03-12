@@ -22,7 +22,7 @@ Windows:
 - A recent version of [CMake](https://cmake.org/download/)
 
 Linux (Ubuntu, or similar):
-- `sudo apt-get install -y libglfw3-dev libgtk-3-dev`
+- `sudo apt-get install libglfw3-dev libgtk-3-dev`
 - A recent version of CMake
   - You can get this via `sudo snap install cmake` or by downloading from https://cmake.org/download/
 
