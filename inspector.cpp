@@ -596,7 +596,7 @@ void DrawMarkersInspector() {
     }
 
     for (const auto& child :
-         appState.timeline->tracks()->children_if())
+         appState.timeline->tracks()->find_children())
     {
         if (const auto& item = dynamic_cast<otio::Item*>(&*child))
         {
