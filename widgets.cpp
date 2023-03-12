@@ -1,11 +1,10 @@
 // widgets.cpp
 
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
+#include "imgui_internal.h"
 
 #include "widgets.h"
-
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui_internal.h"
 
 bool Splitter(
     const char* str_id,
