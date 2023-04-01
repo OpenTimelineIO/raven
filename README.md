@@ -4,11 +4,27 @@ An experimental re-write of [OpenTimelineIO](https://opentimeline.io)'s `otiovie
 
 This tool aims to replace [otioview](https://github.com/AcademySoftwareFoundation/OpenTimelineIO/tree/main/src/opentimelineview) but it is missing a few essential features (see "Help Wanted" and "To Do" below). Contributions are welcome!
 
-[![build](https://github.com/jminor/raven/actions/workflows/build.yaml/badge.svg)](https://github.com/jminor/raven/actions/workflows/build.yaml)
+[![build](https://github.com/OpenTimelineIO/raven/actions/workflows/build.yaml/badge.svg)](https://github.com/OpenTimelineIO/raven/actions/workflows/build.yaml)
 
 ![screenshot](screenshot.png)
 
 ![demo](demo.gif)
+
+## Dependencies
+
+macOS:
+- Standard Apple developer toolchain (installed with Xcode)
+- A recent version of CMake
+  - You can get this via `brew install cmake` or by downloading from https://cmake.org/download/
+
+Windows:
+- Standard Microsoft developer toolchain (installed with Visual Studio)
+- A recent version of [CMake](https://cmake.org/download/)
+
+Linux (Ubuntu, or similar):
+- `sudo apt-get install libglfw3-dev libgtk-3-dev`
+- A recent version of CMake
+  - You can get this via `sudo snap install cmake` or by downloading from https://cmake.org/download/
 
 ## Building (macOS, Windows, Linux)
 
@@ -19,6 +35,8 @@ This tool aims to replace [otioview](https://github.com/AcademySoftwareFoundatio
 	% ./raven ../example.otio
 
 ## Building (WASM via Emscripten)
+
+You will need to install the [Emscripten toolchain](https://emscripten.org) first.
 
 	% mkdir build-web
 	% cd build-web
@@ -39,7 +57,9 @@ You might need to init/update submodules:
 % git submodule update
 ```
 
-See `.github/workflows/build.yaml` for more details.
+You might be missing some dependencies (see above).
+
+See also [`.github/workflows/build.yaml`](https://github.com/OpenTimelineIO/raven/blob/main/.github/workflows/build.yaml) for a working example of building on each of the platforms listed above.
 
 ## Example files
 

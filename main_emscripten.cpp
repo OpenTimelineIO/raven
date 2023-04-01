@@ -8,7 +8,7 @@
 // See https://github.com/ocornut/imgui/pull/2492 as an example on how to do just that.
 
 #include "imgui.h"
-#include "imgui_impl_sdl.h"
+#include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
 #include <emscripten.h>

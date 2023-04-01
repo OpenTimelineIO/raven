@@ -81,7 +81,7 @@ elseif(EMSCRIPTEN)
   target_sources(IMGUI
     PRIVATE
       # backends
-      ${IMGUI_DIR}/backends/imgui_impl_sdl.cpp
+      ${IMGUI_DIR}/backends/imgui_impl_sdl2.cpp
       ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
       #gl3w/GL/gl3w.c
   )

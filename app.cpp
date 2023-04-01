@@ -4,13 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 #include "implot.h"
+#include "imgui_internal.h"
 
 #include "widgets.h"
-
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui_internal.h"
 
 #ifndef EMSCRIPTEN
 #include "nfd.h"
