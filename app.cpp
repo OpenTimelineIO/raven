@@ -296,6 +296,10 @@ void SaveFile(std::string path) {
 void MainInit(int argc, char** argv, int initial_width, int initial_height) {
     appState.timeline_width = initial_width * 0.8f;
 
+    // Don't auto-save imgui.ini state file
+    ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = NULL;
+
     ApplyAppStyle();
 
     LoadFonts();
