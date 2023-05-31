@@ -412,6 +412,10 @@ void DrawEffects(
         }
     }
 
+    if (ColorIsBright(fill_color)) {
+        label_color = ColorInvert(label_color);
+    }
+
     ImGui::PushClipRect(p0, p1, true);
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
