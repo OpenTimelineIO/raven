@@ -598,6 +598,9 @@ void DrawObjectLabel(otio::SerializableObjectWithMetadata* object, float height)
     if (appState.selected_object == object) {
         fill_color = selected_fill_color;
     }
+    if (ColorIsBright(fill_color)) {
+        label_color = ColorInvert(label_color);
+    }
 
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
