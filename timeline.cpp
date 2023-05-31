@@ -3,6 +3,8 @@
 #include "timeline.h"
 #include "app.h"
 #include "widgets.h"
+#include "editing.h"
+#include "colors.h"
 
 #include <opentimelineio/clip.h>
 #include <opentimelineio/composable.h>
@@ -92,6 +94,12 @@ void DrawItem(
     auto hover_fill_color = appTheme.colors[AppThemeCol_ItemHovered];
     bool fancy_corners = true;
 
+    auto item_color = GetItemColor(item);
+    if (item_color != "") {
+        fill_color = U32ColorFromName(item_color);
+        fill_color = TintedColorForUI(fill_color);
+    }
+
     if (auto gap = dynamic_cast<otio::Gap*>(item)) {
         // different colors & style
         fill_color = appTheme.colors[AppThemeCol_Background];
@@ -144,6 +152,9 @@ void DrawItem(
 
     if (appState.selected_object == item) {
         fill_color = selected_fill_color;
+    }
+    if (ColorIsBright(fill_color)) {
+        label_color = ColorInvert(label_color);
     }
 
     ImGui::PushClipRect(p0, p1, true);
@@ -433,32 +444,6 @@ void DrawEffects(
     ImGui::SetCursorPos(old_pos);
 }
 
-ImU32 MarkerColor(std::string color) {
-    if (color == otio::Marker::Color::pink)
-        return IM_COL32(0xff, 0x70, 0x70, 0xff);
-    if (color == otio::Marker::Color::red)
-        return IM_COL32(0xff, 0x00, 0x00, 0xff);
-    if (color == otio::Marker::Color::orange)
-        return IM_COL32(0xff, 0xa0, 0x00, 0xff);
-    if (color == otio::Marker::Color::yellow)
-        return IM_COL32(0xff, 0xff, 0x00, 0xff);
-    if (color == otio::Marker::Color::green)
-        return IM_COL32(0x00, 0xff, 0x00, 0xff);
-    if (color == otio::Marker::Color::cyan)
-        return IM_COL32(0x00, 0xff, 0xff, 0xff);
-    if (color == otio::Marker::Color::blue)
-        return IM_COL32(0x00, 0x00, 0xff, 0xff);
-    if (color == otio::Marker::Color::purple)
-        return IM_COL32(0xa0, 0x00, 0xd0, 0xff);
-    if (color == otio::Marker::Color::magenta)
-        return IM_COL32(0xff, 0x00, 0xff, 0xff);
-    if (color == otio::Marker::Color::black)
-        return IM_COL32(0x00, 0x00, 0x00, 0xff);
-    if (color == otio::Marker::Color::white)
-        return IM_COL32(0xff, 0xff, 0xff, 0xff);
-    return IM_COL32(0x88, 0x88, 0x88, 0xff);
-}
-
 void DrawMarkers(
     otio::Item* item,
     float scale,
@@ -496,7 +481,7 @@ void DrawMarkers(
                 + origin.x - arrow_width / 2,
             ImGui::GetCursorPosY());
 
-        auto fill_color = MarkerColor(marker->color());
+        auto fill_color = U32ColorFromName(marker->color());
         auto selected_fill_color = appTheme.colors[AppThemeCol_MarkerSelected];
         auto hover_fill_color = appTheme.colors[AppThemeCol_MarkerHovered];
 
@@ -639,6 +624,12 @@ void DrawTrackLabel(otio::Track* track, int index, float height) {
     auto selected_fill_color = appTheme.colors[AppThemeCol_TrackSelected];
     auto hover_fill_color = appTheme.colors[AppThemeCol_TrackHovered];
 
+    auto track_color = GetItemColor(track);
+    if (track_color != "") {
+        fill_color = U32ColorFromName(track_color);
+        fill_color = TintedColorForUI(fill_color);
+    }
+
     ImVec2 text_offset(5.0f, 5.0f);
 
     if (ImGui::IsItemHovered()) {
@@ -650,6 +641,9 @@ void DrawTrackLabel(otio::Track* track, int index, float height) {
 
     if (appState.selected_object == track) {
         fill_color = selected_fill_color;
+    }
+    if (ColorIsBright(fill_color)) {
+        label_color = ColorInvert(label_color);
     }
 
     ImVec2 p0 = ImGui::GetItemRectMin();
