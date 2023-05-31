@@ -581,7 +581,7 @@ void DrawInspector() {
         }
 
         ImGui::SameLine();
-        ImGui::PushStyleColor(ImGuiCol_Text, U32ColorFromName(marker->color()));
+        ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(marker->color()));
         ImGui::TextUnformatted("\xef\x80\xab");
         ImGui::PopStyleColor();
 
@@ -690,7 +690,7 @@ void DrawMarkersInspector() {
             // Color + Name
             ImGui::TableNextColumn();
 
-            ImGui::PushStyleColor(ImGuiCol_Text, U32ColorFromName(marker->color()));
+            ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(marker->color()));
             ImGui::TextUnformatted("\xef\x80\xab");
             ImGui::PopStyleColor();
             ImGui::SameLine();

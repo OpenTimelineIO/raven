@@ -5,7 +5,7 @@
 #include <opentimelineio/marker.h>
 namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
 
-ImU32 ImLerpColors(ImU32 col_a, ImU32 col_b, float t) {
+ImU32 LerpColors(ImU32 col_a, ImU32 col_b, float t) {
     int r = ImLerp(
         (int)(col_a >> IM_COL32_R_SHIFT) & 0xFF,
         (int)(col_b >> IM_COL32_R_SHIFT) & 0xFF,
@@ -25,7 +25,7 @@ ImU32 ImLerpColors(ImU32 col_a, ImU32 col_b, float t) {
     return IM_COL32(r, g, b, a);
 }
 
-ImU32 U32ColorFromName(std::string color) {
+ImU32 UIColorFromName(std::string color) {
     if (color == otio::Marker::Color::pink)
         return IM_COL32(0xff, 0x70, 0x70, 0xff);
     if (color == otio::Marker::Color::red)
@@ -72,6 +72,6 @@ ImU32 ColorInvert(ImU32 color)
 
 ImU32 TintedColorForUI(ImU32 color)
 {
-    return ImLerpColors(color, IM_COL32(150,150,150,255), 0.3);
+    return LerpColors(color, IM_COL32(150,150,150,255), 0.3);
 }
 

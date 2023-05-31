@@ -96,7 +96,7 @@ void DrawItem(
 
     auto item_color = GetItemColor(item);
     if (item_color != "") {
-        fill_color = U32ColorFromName(item_color);
+        fill_color = UIColorFromName(item_color);
         fill_color = TintedColorForUI(fill_color);
     }
 
@@ -493,7 +493,7 @@ void DrawMarkers(
                 + origin.x - arrow_width / 2,
             ImGui::GetCursorPosY());
 
-        auto fill_color = U32ColorFromName(marker->color());
+        auto fill_color = UIColorFromName(marker->color());
         auto selected_fill_color = appTheme.colors[AppThemeCol_MarkerSelected];
         auto hover_fill_color = appTheme.colors[AppThemeCol_MarkerHovered];
 
@@ -638,7 +638,7 @@ void DrawTrackLabel(otio::Track* track, int index, float height) {
 
     auto track_color = GetItemColor(track);
     if (track_color != "") {
-        fill_color = U32ColorFromName(track_color);
+        fill_color = UIColorFromName(track_color);
         fill_color = TintedColorForUI(fill_color);
     }
 
