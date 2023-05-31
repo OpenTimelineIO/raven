@@ -362,7 +362,15 @@ void DrawEffects(
     }
     auto item_range = range_it->second;
 
-    ImVec2 size(width, height);
+    ImVec2 size(width, height*0.75);
+
+    // Does the label fit in the available space?
+    bool label_visible = (size.x > text_size.x && label_str != "");
+    if (!label_visible) {
+        // If not, then just put a dot.
+        size.x = fmin(size.y, width);
+    }
+
     float item_x = item_range.start_time().to_seconds() * scale + origin.x;
     ImVec2 render_pos(
         item_x + item_width / 2 - size.x / 2, // centered
@@ -420,7 +428,7 @@ void DrawEffects(
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
     draw_list->AddRectFilled(p0, p1, fill_color, 10);
-    if (size.x > text_size.x && label_str != "") {
+    if (label_visible) {
         const ImVec2 text_pos = ImVec2(
             p0.x + size.x / 2 - text_size.x / 2,
             p0.y + size.y / 2 - text_size.y / 2);
