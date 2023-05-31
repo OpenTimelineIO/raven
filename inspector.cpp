@@ -9,6 +9,7 @@
 #include <opentimelineio/anyDictionary.h>
 #include <opentimelineio/clip.h>
 #include <opentimelineio/effect.h>
+#include <opentimelineio/gap.h>
 #include <opentimelineio/linearTimeWarp.h>
 #include <opentimelineio/marker.h>
 #include <opentimelineio/track.h>
@@ -507,10 +508,14 @@ void DrawInspector() {
 
     // Item
     if (const auto& item = dynamic_cast<otio::Item*>(selected_object)) {
-        auto item_color = GetItemColor(item);
-        item_color = DrawColorChooser(item_color);
-        if (item_color != "") {
-            SetItemColor(item, item_color);
+        bool is_gap = dynamic_cast<otio::Gap*>(selected_object);
+
+        if (!is_gap) {
+            auto item_color = GetItemColor(item);
+            item_color = DrawColorChooser(item_color);
+            if (item_color != "") {
+                SetItemColor(item, item_color);
+            }
         }
 
         auto trimmed_range = item->trimmed_range();
