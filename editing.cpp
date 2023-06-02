@@ -5,6 +5,7 @@
 #include <opentimelineio/item.h>
 #include <opentimelineio/marker.h>
 #include <opentimelineio/stackAlgorithm.h>
+#include <opentimelineio/any.h>
 #include <stdlib.h>
 
 void DeleteSelectedObject() {
@@ -219,4 +220,35 @@ void FlattenTrackDown() {
     SelectObject(flat_track);
 
     // Success!
+}
+
+std::string GetItemColor(otio::Item* item)
+{
+    std::string item_color = "";
+
+    if (item->metadata().has_key("raven") &&
+        item->metadata()["raven"].type() == typeid(otio::AnyDictionary))
+    {
+        auto raven_md = otio::any_cast<otio::AnyDictionary>(item->metadata()["raven"]);
+
+        if (raven_md.has_key("color") &&
+            raven_md["color"].type() == typeid(std::string))
+        {
+            item_color = otio::any_cast<std::string>(raven_md["color"]);
+        }
+    }
+
+    return item_color;
+}
+
+void SetItemColor(otio::Item* item, std::string color_name)
+{
+    otio::AnyDictionary raven_md;
+    if (item->metadata().has_key("raven") &&
+        item->metadata()["raven"].type() == typeid(otio::AnyDictionary))
+    {
+        raven_md = otio::any_cast<otio::AnyDictionary>(item->metadata()["raven"]);
+    }
+    raven_md["color"] = color_name;
+    item->metadata()["raven"] = raven_md;
 }

@@ -11,3 +11,6 @@ void AddMarkerAtPlayhead(
     std::string color = "RED");
 void AddTrack(std::string kind = "");
 void FlattenTrackDown();
+
+std::string GetItemColor(otio::Item* item);
+void SetItemColor(otio::Item* item, std::string color_name);

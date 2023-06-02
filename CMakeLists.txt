@@ -14,12 +14,14 @@ target_sources(raven
     editing.h
     inspector.h
     timeline.h
+    colors.h
     widgets.h
 
     app.cpp
     editing.cpp
     inspector.cpp
     timeline.cpp
+    colors.cpp
     widgets.cpp
 
     fonts/embedded_font.inc

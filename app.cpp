@@ -28,6 +28,7 @@ void DrawToolbar(ImVec2 buttonSize);
 #include "editing.h"
 #include "inspector.h"
 #include "timeline.h"
+#include "colors.h"
 
 const char* app_name = "Raven";
 
@@ -318,26 +319,6 @@ void MainCleanup() { }
 bool IconButton(const char* label, const ImVec2 size = ImVec2(0, 0)) {
     bool result = ImGui::Button(label, size);
     return result;
-}
-
-ImU32 ImLerpColors(ImU32 col_a, ImU32 col_b, float t) {
-    int r = ImLerp(
-        (int)(col_a >> IM_COL32_R_SHIFT) & 0xFF,
-        (int)(col_b >> IM_COL32_R_SHIFT) & 0xFF,
-        t);
-    int g = ImLerp(
-        (int)(col_a >> IM_COL32_G_SHIFT) & 0xFF,
-        (int)(col_b >> IM_COL32_G_SHIFT) & 0xFF,
-        t);
-    int b = ImLerp(
-        (int)(col_a >> IM_COL32_B_SHIFT) & 0xFF,
-        (int)(col_b >> IM_COL32_B_SHIFT) & 0xFF,
-        t);
-    int a = ImLerp(
-        (int)(col_a >> IM_COL32_A_SHIFT) & 0xFF,
-        (int)(col_b >> IM_COL32_A_SHIFT) & 0xFF,
-        t);
-    return IM_COL32(r, g, b, a);
 }
 
 void AppUpdate() { }

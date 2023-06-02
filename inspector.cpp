@@ -3,12 +3,13 @@
 #include "inspector.h"
 #include "app.h"
 #include "widgets.h"
-
-ImU32 MarkerColor(std::string color);
+#include "editing.h"
+#include "colors.h"
 
 #include <opentimelineio/anyDictionary.h>
 #include <opentimelineio/clip.h>
 #include <opentimelineio/effect.h>
+#include <opentimelineio/gap.h>
 #include <opentimelineio/linearTimeWarp.h>
 #include <opentimelineio/marker.h>
 #include <opentimelineio/track.h>
@@ -16,6 +17,12 @@ ImU32 MarkerColor(std::string color);
 
 #include <implot.h>
 #include <TextEditor.h>
+
+static const char* marker_color_names[] = {
+    "PINK", "RED", "ORANGE", "YELLOW",
+    "GREEN", "CYAN", "BLUE", "PURPLE",
+    "MAGENTA", "BLACK", "WHITE"
+};
 
 const TextEditor::LanguageDefinition& OTIOLanguageDef()
 {
@@ -91,6 +98,26 @@ void DrawNonEditableTextField(const char* label, const char* format, ...) {
         sizeof(tmp_str),
         ImGuiInputTextFlags_ReadOnly);
     ImGui::PopStyleColor();
+}
+
+std::string DrawColorChooser(std::string current_color_name)
+{
+    const char** color_choices = marker_color_names;
+    int num_color_choices = IM_ARRAYSIZE(marker_color_names);
+
+    int current_index = -1;
+    for (int i = 0; i < num_color_choices; i++) {
+        if (current_color_name == color_choices[i]) {
+            current_index = i;
+            break;
+        }
+    }
+    if (ImGui::Combo("Color", &current_index, color_choices, num_color_choices)) {
+        if (current_index >= 0 && current_index < num_color_choices) {
+            return color_choices[current_index];
+        }
+    }
+    return "";
 }
 
 bool DrawRationalTime(
@@ -481,6 +508,16 @@ void DrawInspector() {
 
     // Item
     if (const auto& item = dynamic_cast<otio::Item*>(selected_object)) {
+        bool is_gap = dynamic_cast<otio::Gap*>(selected_object);
+
+        if (!is_gap) {
+            auto item_color = GetItemColor(item);
+            item_color = DrawColorChooser(item_color);
+            if (item_color != "") {
+                SetItemColor(item, item_color);
+            }
+        }
+
         auto trimmed_range = item->trimmed_range();
         if (DrawTimeRange("Trimmed Range", &trimmed_range, true)) {
             item->set_source_range(trimmed_range);
@@ -538,23 +575,13 @@ void DrawInspector() {
     if (const auto& marker = dynamic_cast<otio::Marker*>(selected_object)) {
         auto rate = marker->marked_range().start_time().rate();
 
-        const char* colors[] = { "PINK", "RED", "ORANGE", "YELLOW",
-            "GREEN", "CYAN", "BLUE", "PURPLE",
-            "MAGENTA", "BLACK", "WHITE" };
-        int current_index = -1;
-        for (int i = 0; i < IM_ARRAYSIZE(colors); i++) {
-            if (marker->color() == colors[i]) {
-                current_index = i;
-                break;
-            }
+        auto color_name = DrawColorChooser(marker->color());
+        if (color_name != "") {
+            marker->set_color(color_name);
         }
-        if (ImGui::Combo("Color", &current_index, colors, IM_ARRAYSIZE(colors))) {
-            if (current_index >= 0 && current_index < IM_ARRAYSIZE(colors)) {
-                marker->set_color(colors[current_index]);
-            }
-        }
+
         ImGui::SameLine();
-        ImGui::PushStyleColor(ImGuiCol_Text, MarkerColor(marker->color()));
+        ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(marker->color()));
         ImGui::TextUnformatted("\xef\x80\xab");
         ImGui::PopStyleColor();
 
@@ -663,7 +690,7 @@ void DrawMarkersInspector() {
             // Color + Name
             ImGui::TableNextColumn();
 
-            ImGui::PushStyleColor(ImGuiCol_Text, MarkerColor(marker->color()));
+            ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(marker->color()));
             ImGui::TextUnformatted("\xef\x80\xab");
             ImGui::PopStyleColor();
             ImGui::SameLine();
