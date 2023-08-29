@@ -31,7 +31,7 @@ Linux (Ubuntu, or similar):
 	% mkdir build
 	% cd build
 	% cmake ..
-	% cmake --build .
+	% cmake --build . -j
 	% ./raven ../example.otio
 
 ## Building (WASM via Emscripten)
