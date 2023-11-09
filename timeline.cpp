@@ -13,6 +13,7 @@
 #include <opentimelineio/linearTimeWarp.h>
 #include <opentimelineio/marker.h>
 #include <opentimelineio/transition.h>
+#include <opentimelineio/track.h>
 
 // counters to measure visibility-check performance optimization
 static int __tracks_rendered;
@@ -624,13 +625,19 @@ void DrawTrackLabel(otio::Track* track, int index, float height) {
     ImGui::AlignTextToFramePadding();
     ImVec2 size(width, height);
     ImGui::InvisibleButton("##empty", size);
-
+    
+    std::string kind(track->kind());
+    if(kind.empty()) {
+        // fallback when kind is not set
+        kind = "Other";
+    }
+    
     char label_str[200];
     snprintf(
         label_str,
         sizeof(label_str),
         "%c%d: %s",
-        track->kind().c_str()[0],
+        kind[0],
         index,
         track->name().c_str());
 
@@ -679,7 +686,7 @@ void DrawTrackLabel(otio::Track* track, int index, float height) {
             "%s: %s\n%s #%d\nRange: %s - %s\nDuration: %s\nChildren: %ld",
             track->schema_name().c_str(),
             track->name().c_str(),
-            track->kind().c_str(),
+            kind.c_str(),
             index,
             FormattedStringFromTime(trimmed_range.start_time()).c_str(),
             FormattedStringFromTime(trimmed_range.end_time_inclusive()).c_str(),
@@ -1232,7 +1239,7 @@ bool DrawTransportControls(otio::Timeline* timeline) {
 
     //-------------------------------------------------------------------------
 #endif
-    
+
     return moved_playhead;
 }
 
@@ -1278,10 +1285,22 @@ void DrawTimeline(otio::Timeline* timeline) {
 
     auto playhead_string = FormattedStringFromTime(playhead);
 
+    // Tracks
     auto video_tracks = timeline->video_tracks();
     auto audio_tracks = timeline->audio_tracks();
 
-    // Tracks
+    // get other (non-AV) tracks
+    std::vector<otio::Track*> other_tracks;
+    for (auto c: timeline->tracks()->children())
+    {
+        if (auto t = otio::dynamic_retainer_cast<otio::Track>(c))
+        {
+            if (t->kind() != otio::Track::Kind::video &&  t->kind() != otio::Track::Kind::audio)
+            {
+                other_tracks.push_back(t);
+            }
+        }
+    }
 
     auto available_size = ImGui::GetContentRegionAvail();
     appState.timeline_width = 0.8f * available_size.x;
@@ -1407,6 +1426,35 @@ void DrawTimeline(otio::Timeline* timeline) {
             }
             index++;
         }
+        
+        // Draw other tracks
+        index = (int)other_tracks.size();
+        for (auto i = other_tracks.rbegin(); i != other_tracks.rend(); ++i)
+        {
+            const auto& other_track = *i;
+            ImGui::TableNextRow(ImGuiTableRowFlags_None, appState.track_height);
+            if (ImGui::TableNextColumn()) {
+                DrawTrackLabel(other_track, index, appState.track_height);
+            }
+            if (ImGui::TableNextColumn()) {
+                DrawTrack(
+                    other_track,
+                    index,
+                    appState.scale,
+                    origin,
+                    full_width,
+                    appState.track_height);
+            }
+            index--;
+        }
+
+        // Make a splitter between the other tracks and AV tracks
+        // You can drag up/down to adjust the track height
+        ImGui::TableNextRow(ImGuiTableRowFlags_None, splitter_size);
+        ImGui::TableNextColumn();
+        DrawTrackSplitter("##SplitterCol1", splitter_size);
+        ImGui::TableNextColumn();
+        DrawTrackSplitter("##SplitterCol2", splitter_size);
 
         // do this at the very end, so the playhead can overlay everything
         ImGui::TableNextRow(ImGuiTableRowFlags_None, 1);
