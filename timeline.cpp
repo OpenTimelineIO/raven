@@ -2,9 +2,9 @@
 
 #include "timeline.h"
 #include "app.h"
-#include "colors.h"
-#include "editing.h"
 #include "widgets.h"
+#include "editing.h"
+#include "colors.h"
 
 #include <opentimelineio/clip.h>
 #include <opentimelineio/composable.h>
@@ -12,8 +12,8 @@
 #include <opentimelineio/gap.h>
 #include <opentimelineio/linearTimeWarp.h>
 #include <opentimelineio/marker.h>
-#include <opentimelineio/track.h>
 #include <opentimelineio/transition.h>
+#include <opentimelineio/track.h>
 
 // counters to measure visibility-check performance optimization
 static int __tracks_rendered;
@@ -30,13 +30,13 @@ TimeScalarForItem(otio::Item* item) {
     return time_scalar;
 }
 
-// otio::RationalTime TopLevelTime(otio::RationalTime time, otio::Item* context) {
-//   return context->transformed_time(time, appState.timeline->tracks());
-// }
+//otio::RationalTime TopLevelTime(otio::RationalTime time, otio::Item* context) {
+//  return context->transformed_time(time, appState.timeline->tracks());
+//}
 //
-// otio::TimeRange TopLevelTimeRange(otio::TimeRange range, otio::Item* context) {
-//   return context->transformed_time_range(range, appState.timeline->tracks());
-// }
+//otio::TimeRange TopLevelTimeRange(otio::TimeRange range, otio::Item* context) {
+//  return context->transformed_time_range(range, appState.timeline->tracks());
+//}
 
 // Transform this range map from the context item's coodinate space
 // into the top-level timeline's coordinate space. This compensates for
@@ -367,7 +367,7 @@ void DrawEffects(
     }
     auto item_range = range_it->second;
 
-    ImVec2 size(width, height * 0.75);
+    ImVec2 size(width, height*0.75);
 
     // Does the label fit in the available space?
     bool label_visible = (size.x > text_size.x && label_str != "");
@@ -629,13 +629,13 @@ void DrawTrackLabel(otio::Track* track, int index, float height) {
     ImGui::AlignTextToFramePadding();
     ImVec2 size(width, height);
     ImGui::InvisibleButton("##empty", size);
-
+    
     std::string kind(track->kind());
-    if (kind.empty()) {
+    if(kind.empty()) {
         // fallback when kind is not set
         kind = "Other";
     }
-
+    
     char label_str[200];
     snprintf(
         label_str,
@@ -1295,9 +1295,12 @@ void DrawTimeline(otio::Timeline* timeline) {
 
     // get other (non-AV) tracks
     std::vector<otio::Track*> other_tracks;
-    for (auto c : timeline->tracks()->children()) {
-        if (auto t = otio::dynamic_retainer_cast<otio::Track>(c)) {
-            if (t->kind() != otio::Track::Kind::video && t->kind() != otio::Track::Kind::audio) {
+    for (auto c: timeline->tracks()->children())
+    {
+        if (auto t = otio::dynamic_retainer_cast<otio::Track>(c))
+        {
+            if (t->kind() != otio::Track::Kind::video &&  t->kind() != otio::Track::Kind::audio)
+            {
                 other_tracks.push_back(t);
             }
         }
@@ -1427,10 +1430,11 @@ void DrawTimeline(otio::Timeline* timeline) {
             }
             index++;
         }
-
+        
         // Draw other tracks
         index = (int)other_tracks.size();
-        for (auto i = other_tracks.rbegin(); i != other_tracks.rend(); ++i) {
+        for (auto i = other_tracks.rbegin(); i != other_tracks.rend(); ++i)
+        {
             const auto& other_track = *i;
             ImGui::TableNextRow(ImGuiTableRowFlags_None, appState.track_height);
             if (ImGui::TableNextColumn()) {
