@@ -40,7 +40,7 @@ jobs:
         zip -r raven-linux.zip raven
 
     - name: Archive Product
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: raven-linux.zip
         path: build/raven-linux.zip
@@ -73,7 +73,7 @@ jobs:
         zip -r raven-mac.zip raven
 
     - name: Archive Product
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: raven-mac.zip
         path: build/raven-mac.zip
@@ -112,7 +112,7 @@ jobs:
         zip -r raven-web.zip raven.html raven.wasm raven.js raven.worker.js
 
     - name: Archive Product
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: raven-web.zip
         path: build-web/raven-web.zip
@@ -144,7 +144,7 @@ jobs:
         file ./Release/raven.exe
 
     - name: Archive Product
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: raven-windows-x64.zip
         path: |
