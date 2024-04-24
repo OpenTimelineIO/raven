@@ -5,7 +5,6 @@
 #include <opentimelineio/item.h>
 #include <opentimelineio/marker.h>
 #include <opentimelineio/stackAlgorithm.h>
-#include <opentimelineio/any.h>
 #include <stdlib.h>
 
 void DeleteSelectedObject() {
@@ -133,7 +132,7 @@ void AddTrack(std::string kind) {
     }
 
     if (stack) {
-        otio::SerializableObject::Retainer<otio::Track> new_track = new otio::Track("", nonstd::nullopt, kind);
+        otio::SerializableObject::Retainer<otio::Track> new_track = new otio::Track("", std::nullopt, kind);
 
         otio::ErrorStatus error_status;
         if (insertion_index == -1) {
@@ -229,12 +228,12 @@ std::string GetItemColor(otio::Item* item)
     if (item->metadata().has_key("raven") &&
         item->metadata()["raven"].type() == typeid(otio::AnyDictionary))
     {
-        auto raven_md = otio::any_cast<otio::AnyDictionary>(item->metadata()["raven"]);
+        auto raven_md = std::any_cast<otio::AnyDictionary>(item->metadata()["raven"]);
 
         if (raven_md.has_key("color") &&
             raven_md["color"].type() == typeid(std::string))
         {
-            item_color = otio::any_cast<std::string>(raven_md["color"]);
+            item_color = std::any_cast<std::string>(raven_md["color"]);
         }
     }
 
@@ -247,7 +246,7 @@ void SetItemColor(otio::Item* item, std::string color_name)
     if (item->metadata().has_key("raven") &&
         item->metadata()["raven"].type() == typeid(otio::AnyDictionary))
     {
-        raven_md = otio::any_cast<otio::AnyDictionary>(item->metadata()["raven"]);
+        raven_md = std::any_cast<otio::AnyDictionary>(item->metadata()["raven"]);
     }
     raven_md["color"] = color_name;
     item->metadata()["raven"] = raven_md;
