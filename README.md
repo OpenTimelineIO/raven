@@ -47,6 +47,8 @@ You will need to install the [Emscripten toolchain](https://emscripten.org) firs
 See also: `serve.py` as an alternative to `emrun`, and as
 a reference for which HTTP headers are needed to host the WASM build.
 
+Note: The WASM build of raven is missing some features - see the Help Wanted section below.
+
 ## Troubleshooting
 
 If you have trouble building, these hints might help...
