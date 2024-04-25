@@ -213,17 +213,17 @@ void DrawMetadataSubtree(std::string key, otio::AnyDictionary& metadata);
 
 void DrawMetadataArray(std::string key, otio::AnyVector& vector);
 
-void DrawMetadataRow(std::string key, otio::any& value) {
+void DrawMetadataRow(std::string key, std::any& value) {
     std::type_info const& type = value.type();
 
     if (type == typeid(otio::AnyDictionary)) {
-        auto dict = otio::any_cast<otio::AnyDictionary>(value);
+        auto dict = std::any_cast<otio::AnyDictionary>(value);
         DrawMetadataSubtree(key, dict);
         return;
     }
 
     if (type == typeid(otio::AnyVector)) {
-        auto vector = otio::any_cast<otio::AnyVector>(value);
+        auto vector = std::any_cast<otio::AnyVector>(value);
         DrawMetadataArray(key, vector);
         return;
     }
@@ -235,33 +235,33 @@ void DrawMetadataRow(std::string key, otio::any& value) {
 
     if (type == typeid(std::string)) {
         type_name = "string";
-        string_val = otio::any_cast<std::string>(value);
+        string_val = std::any_cast<std::string>(value);
     }
     else if (type == typeid(bool)) {
         type_name = "bool";
-        string_val = otio::any_cast<bool>(value) ? "true" : "false";
+        string_val = std::any_cast<bool>(value) ? "true" : "false";
     }
     else if (type == typeid(int64_t)) {
         type_name = "int64_t";
-        string_val = std::to_string(otio::any_cast<int64_t>(value));
+        string_val = std::to_string(std::any_cast<int64_t>(value));
     }
     else if (type == typeid(double)) {
         type_name = "double";
-        string_val = std::to_string(otio::any_cast<double>(value));
+        string_val = std::to_string(std::any_cast<double>(value));
     }
     else if (type == typeid(otio::RationalTime)) {
         type_name = "otio::RationalTime";
-        auto time = otio::any_cast<otio::RationalTime>(value);
+        auto time = std::any_cast<otio::RationalTime>(value);
         string_val = FormattedStringFromTime(time);
     }
     else if (type == typeid(otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata>)) {
-        auto obj = otio::any_cast<otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata>>(value);
+        auto obj = std::any_cast<otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata>>(value);
         type_name = Format("%s.%d", obj->schema_name().c_str(), obj->schema_version());
         string_val = obj->name();
         selectable = &*obj;
     }
     else if (type == typeid(otio::SerializableObject::Retainer<otio::SerializableObject>)) {
-        auto obj = otio::any_cast<otio::SerializableObject::Retainer<otio::SerializableObject>>(value);
+        auto obj = std::any_cast<otio::SerializableObject::Retainer<otio::SerializableObject>>(value);
         type_name = Format("%s.%d", obj->schema_name().c_str(), obj->schema_version());
         selectable = &*obj;
     }
