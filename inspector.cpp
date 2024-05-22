@@ -2,6 +2,7 @@
 
 #include "inspector.h"
 #include "app.h"
+#include "libs/imgui/imgui.h"
 #include "widgets.h"
 #include "editing.h"
 #include "colors.h"
@@ -656,7 +657,7 @@ void DrawMarkersInspector() {
             auto marker = pair.first;
             auto parent = pair.second;
 
-            ImGui::PushID(&marker);
+            ImGui::PushID(marker.value);
             ImGui::TableNextRow();
 
             // Local Time
@@ -753,14 +754,14 @@ void DrawEffectsInspector() {
             auto effect = pair.first;
             auto parent = pair.second;
 
-            ImGui::PushID(&effect);
+            ImGui::PushID(effect.value);
             ImGui::TableNextRow();
 
             // Global Time
             ImGui::TableNextColumn();
 
-            auto range = parent->source_range();
-            auto global_time = parent->transformed_time(range->start_time(), root) + global_start;
+            auto range = parent->trimmed_range();
+            auto global_time = parent->transformed_time(range.start_time(), root) + global_start;
 
             // Make this row selectable & jump the playhead when clicked
             auto is_selected =
