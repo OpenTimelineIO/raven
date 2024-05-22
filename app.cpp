@@ -428,7 +428,7 @@ void MainGui() {
         ImGuiID dock_id_side = ImGui::DockBuilderSplitNode(
             dock_main_id,
             ImGuiDir_Right,
-            0.25f,
+            0.3f,
             NULL,
             &dock_main_id);
 
@@ -436,6 +436,7 @@ void MainGui() {
         ImGui::DockBuilderDockWindow("Inspector", dock_id_side);
         ImGui::DockBuilderDockWindow("JSON", dock_id_side);
         ImGui::DockBuilderDockWindow("Markers", dock_id_side);
+        ImGui::DockBuilderDockWindow("Effects", dock_id_side);
         ImGui::DockBuilderDockWindow("Settings", dock_id_side);
         ImGui::DockBuilderFinish(dockspace_id);
     }
@@ -491,6 +492,13 @@ void MainGui() {
     visible = ImGui::Begin("Markers", NULL, window_flags);
     if (visible) {
         DrawMarkersInspector();
+    }
+    ImGui::End();
+
+    ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
+    visible = ImGui::Begin("Effects", NULL, window_flags);
+    if (visible) {
+        DrawEffectsInspector();
     }
     ImGui::End();
 
