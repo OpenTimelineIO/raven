@@ -2,6 +2,7 @@
 
 #include "inspector.h"
 #include "app.h"
+#include "libs/imgui/imgui.h"
 #include "widgets.h"
 #include "editing.h"
 #include "colors.h"
@@ -656,7 +657,7 @@ void DrawMarkersInspector() {
             auto marker = pair.first;
             auto parent = pair.second;
 
-            ImGui::PushID(&marker);
+            ImGui::PushID(marker.value);
             ImGui::TableNextRow();
 
             // Local Time
@@ -670,6 +671,7 @@ void DrawMarkersInspector() {
 
             auto global_time = parent->transformed_time(range.start_time(), root) + global_start;
 
+            // Make this row selectable & jump the playhead when clicked
             auto is_selected =
                 (appState.selected_object == marker) ||
                 (appState.selected_object == parent);
@@ -696,6 +698,93 @@ void DrawMarkersInspector() {
             ImGui::SameLine();
 
             ImGui::TextUnformatted(marker->name().c_str());
+
+            // Item
+            ImGui::TableNextColumn();
+
+            ImGui::TextUnformatted(parent->name().c_str());
+
+            ImGui::PopID();
+        }
+    }
+    ImGui::EndTable();
+}
+
+void DrawEffectsInspector() {
+    typedef std::pair<otio::SerializableObject::Retainer<otio::Effect>, otio::SerializableObject::Retainer<otio::Item>> effect_parent_pair;
+    std::vector<effect_parent_pair> pairs;
+
+    auto root = appState.timeline->tracks();
+    auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
+
+    for (const auto& effect : root->effects()) {
+        pairs.push_back(effect_parent_pair(effect, root));
+    }
+
+    for (const auto& child :
+         appState.timeline->tracks()->find_children())
+    {
+        if (const auto& item = dynamic_cast<otio::Item*>(&*child))
+        {
+            for (const auto& effect : item->effects()) {
+                pairs.push_back(effect_parent_pair(effect, item));
+            }
+        }
+    }
+
+    auto selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
+
+    if (ImGui::BeginTable("Effects",
+                          4,
+//                          ImGuiTableFlags_Sortable |
+                          ImGuiTableFlags_NoSavedSettings |
+                          ImGuiTableFlags_Resizable |
+                          ImGuiTableFlags_Reorderable |
+                          ImGuiTableFlags_Hideable))
+    {
+        ImGui::TableSetupColumn("Global Time", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Effect", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Item", ImGuiTableColumnFlags_WidthStretch);
+
+        ImGui::TableHeadersRow();
+
+        for (const auto& pair : pairs)
+        {
+            auto effect = pair.first;
+            auto parent = pair.second;
+
+            ImGui::PushID(effect.value);
+            ImGui::TableNextRow();
+
+            // Global Time
+            ImGui::TableNextColumn();
+
+            auto range = parent->trimmed_range();
+            auto global_time = parent->transformed_time(range.start_time(), root) + global_start;
+
+            // Make this row selectable & jump the playhead when clicked
+            auto is_selected =
+                (appState.selected_object == effect) ||
+                (appState.selected_object == parent);
+            if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
+                                    is_selected,
+                                    selectable_flags)) {
+                printf("DEBUG: clicked %s\n", TimecodeStringFromTime(global_time).c_str());
+                appState.playhead = global_time;
+                SelectObject(effect, parent);
+                appState.scroll_to_playhead = true;
+            }
+
+            // Name
+            ImGui::TableNextColumn();
+
+            ImGui::TextUnformatted(effect->name().c_str());
+
+            // Effect
+            ImGui::TableNextColumn();
+
+            ImGui::TextUnformatted(effect->effect_name().c_str());
 
             // Item
             ImGui::TableNextColumn();
