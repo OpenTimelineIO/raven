@@ -17,6 +17,10 @@
 
 #include "fonts/embedded_font.inc"
 
+#include <toucan/Init.h>
+
+#include <OpenImageIO/imagebufalgo.h>
+
 #include <chrono>
 #include <iostream>
 
@@ -259,6 +263,11 @@ void LoadFile(std::string path) {
 
     appState.file_path = path;
 
+    appState.image_graph = std::make_shared<toucan::ImageGraph>(
+        std::filesystem::path(path).parent_path(),
+        timeline);
+    UpdateImage();
+
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = (end - start);
     double elapsed_seconds = elapsed.count();
@@ -304,6 +313,15 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
     ApplyAppStyle();
 
     LoadFonts();
+
+    toucan::init();
+    std::vector<std::filesystem::path> toucan_search_path;
+    toucan_search_path.push_back("/home/darby/Dev/toucan/install-Debug");
+    toucan::ImageHostOptions image_host_options;
+    image_host_options.verbose = true;
+    appState.image_host = std::make_shared<toucan::ImageHost>(
+        toucan_search_path,
+        image_host_options);
 
     if (argc > 1) {
         LoadFile(argv[1]);
@@ -456,6 +474,16 @@ void MainGui() {
             ImGui::GetTextLineHeightWithSpacing());
 
         DrawToolbar(button_size);
+
+        ImGui::Separator();
+
+        if (appState.image_texture)
+        {
+            const auto& image_spec = appState.image_buf.spec();
+            ImGui::Image(
+                (void*)(intptr_t)appState.image_texture,
+                ImVec2(image_spec.width, image_spec.height));
+        }
 
         ImGui::Separator();
 
@@ -811,6 +839,7 @@ void SeekPlayhead(double seconds) {
     if (appState.snap_to_frames) {
         SnapPlayhead();
     }
+    UpdateImage();
 }
 
 void SnapPlayhead() {
@@ -874,4 +903,35 @@ std::string FramesStringFromTime(otio::RationalTime time) {
 
 std::string SecondsStringFromTime(otio::RationalTime time) {
     return Format("%.5f", time.to_seconds());
+}
+
+void UpdateImage() {
+    auto node = appState.image_graph->exec(appState.playhead);
+    const auto render_buf = node->exec(appState.playhead, appState.image_host);
+    const auto& render_spec = render_buf.spec();
+    const float aspect = render_spec.width / float(render_spec.height);
+    if (aspect > 0.0) {
+        appState.image_buf = OIIO::ImageBuf(OIIO::ImageSpec(640, 640 / aspect, 4));
+        OIIO::ImageBufAlgo::resize(appState.image_buf, render_buf);
+        if (!appState.image_texture)
+        {
+            glGenTextures(1, &appState.image_texture);
+            glBindTexture(GL_TEXTURE_2D, appState.image_texture);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
+        glBindTexture(GL_TEXTURE_2D, appState.image_texture);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        const auto& image_spec = appState.image_buf.spec();
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA,
+            image_spec.width,
+            image_spec.height,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            appState.image_buf.localpixels());
+    }
 }

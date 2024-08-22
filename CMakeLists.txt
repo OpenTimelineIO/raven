@@ -50,13 +50,14 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/libs/nativefiledialog/src/include
 )
 
-set(OTIO_SHARED_LIBS OFF)
-add_subdirectory("libs/opentimelineio")
-include_directories(
-  ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src
-  ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src/deps
-  ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src/deps/optional-lite/include
-)
+# TODO - toucan has it's own version of OTIO
+#set(OTIO_SHARED_LIBS OFF)
+#add_subdirectory("libs/opentimelineio")
+#include_directories(
+#  ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src
+#  ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src/deps
+#  ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src/deps/optional-lite/include
+#)
 
 if(NOT EMSCRIPTEN AND NOT WIN32)
   set(GLFW_BUILD_EXAMPLES OFF)
@@ -109,6 +110,11 @@ elseif(NOT EMSCRIPTEN)
     nativefiledialog
   )
 endif()
+
+find_package(toucan REQUIRED)
+target_link_libraries(raven PUBLIC
+  toucan::toucan
+)
 
 install(TARGETS raven
     BUNDLE DESTINATION bin

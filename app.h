@@ -4,6 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <toucan/ImageGraph.h>
+#include <toucan/ImageHost.h>
+
+#include "libs/gl3w/GL/gl3w.h"
+
 #include "imgui.h"
 #include "imgui_internal.h"
 
@@ -112,6 +117,11 @@ struct AppState {
     std::string selected_text; // displayed in the JSON inspector
     char message[1024]; // single-line message displayed in main window
 
+    std::shared_ptr<toucan::ImageHost> image_host;
+    std::shared_ptr<toucan::ImageGraph> image_graph;
+    OIIO::ImageBuf image_buf;
+    GLuint image_texture;
+
     // Toggles for Dear ImGui windows
     bool show_main_window = true;
     bool show_style_editor = false;
@@ -142,3 +152,4 @@ std::string TimecodeStringFromTime(otio::RationalTime);
 std::string FramesStringFromTime(otio::RationalTime);
 std::string SecondsStringFromTime(otio::RationalTime);
 void UpdateJSONInspector();
+void UpdateImage();
