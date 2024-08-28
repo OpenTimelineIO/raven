@@ -28,6 +28,7 @@ Linux (Ubuntu, or similar):
 
 ## Building (macOS, Windows, Linux)
 
+  % git submodule update --init --recursive
 	% mkdir build
 	% cd build
 	% cmake ..
