@@ -26,6 +26,9 @@ Linux (Ubuntu, or similar):
 - A recent version of CMake
   - You can get this via `sudo snap install cmake` or by downloading from https://cmake.org/download/
 
+__Note__: Before building, please ensure that you clone this project with the `-recursive` flag. 
+This will also clone and initialize all of the submodules that this project depends on.
+
 ## Building (macOS, Windows, Linux)
 
 	% mkdir build
