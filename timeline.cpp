@@ -98,14 +98,15 @@ void DrawItem(
     auto item_color = GetItemColor(item);
     if (item_color != "") {
         fill_color = UIColorFromName(item_color);
-        fill_color = TintedColorForUI(fill_color);
+        selected_fill_color = TintedColorForUI(fill_color);
+        hover_fill_color = TintedColorForUI(fill_color);
     }
 
     if (auto gap = dynamic_cast<otio::Gap*>(item)) {
         // different colors & style
         fill_color = appTheme.colors[AppThemeCol_Background];
-        selected_fill_color = appTheme.colors[AppThemeCol_GapSelected];
-        hover_fill_color = appTheme.colors[AppThemeCol_GapHovered];
+        selected_fill_color = TintedColorForUI(fill_color);
+        hover_fill_color = TintedColorForUI(fill_color);
         label_str = "";
         fancy_corners = false;
         show_time_range = false;
@@ -584,8 +585,8 @@ void DrawObjectLabel(otio::SerializableObjectWithMetadata* object, float height)
 
     auto label_color = appTheme.colors[AppThemeCol_Label];
     auto fill_color = appTheme.colors[AppThemeCol_Track];
-    auto selected_fill_color = appTheme.colors[AppThemeCol_TrackSelected];
-    auto hover_fill_color = appTheme.colors[AppThemeCol_TrackHovered];
+    auto selected_fill_color = TintedColorForUI(fill_color);
+    auto hover_fill_color = TintedColorForUI(fill_color);
 
     ImVec2 text_offset(5.0f, 5.0f);
 
