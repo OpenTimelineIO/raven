@@ -112,6 +112,9 @@ struct AppState {
     std::string selected_text; // displayed in the JSON inspector
     char message[1024]; // single-line message displayed in main window
 
+    // Store the currently selected MediaReference index for the inspector.
+    int selected_reference_index = -1;
+
     // Toggles for Dear ImGui windows
     bool show_main_window = true;
     bool show_style_editor = false;
