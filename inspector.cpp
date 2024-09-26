@@ -619,32 +619,12 @@ void DrawInspector() {
         const auto& media_references = clip->media_references();
 
         // Array of names and corresponding MediaReference pointers
-        const char** reference_names = new const char*[media_references.size()];
+        std::vector<const char*> reference_names;
         otio::MediaReference** reference_objects = new otio::MediaReference*[media_references.size()];
 
         size_t i = 0;
         for (const auto& media_reference : media_references) {
-            std::string ref_name = media_reference.second->name();
-
-            // Account for situations where the name attribute is not set.
-            // Use the target instead.
-            if (ref_name.empty() || ref_name == "") {
-                std::cout << "Reference name is empty, using target URL instead." << std::endl;
-                std::string target = "";
-
-                if (auto external_ref = dynamic_cast<otio::ExternalReference*>(media_reference.second)) {
-                    target = external_ref->target_url();
-                } else if (auto external_ref = dynamic_cast<otio::ImageSequenceReference*>(media_reference.second)) {
-                    target = external_ref->target_url_base();
-                } else {
-                    target = "Unknown";
-                }
-                size_t pos = target.find_last_of("/\\");
-                ref_name = (pos == std::string::npos) ? target : target.substr(pos + 1);
-                std::cout << "Reference name: " << ref_name << std::endl;
-            }
-
-            reference_names[i] = ref_name.c_str();
+            reference_names.push_back(media_reference.first.c_str());
             reference_objects[i] = media_reference.second;
             i++;
         }
@@ -662,12 +642,7 @@ void DrawInspector() {
             }
         }
 
-        // print all the reference names to console
-        for (int i = 0; i < num_references; i++) {
-            std::cout << "reference_names." << i << reference_names[i] << std::endl;
-        }
-
-        ImGui::Combo("", &appState.selected_reference_index, reference_names, num_references);
+        ImGui::Combo("", &appState.selected_reference_index, reference_names.data(), num_references);
 
         // Retrieve the selected MediaReference object
         otio::MediaReference* selected_reference = nullptr;
@@ -693,9 +668,6 @@ void DrawInspector() {
 
             // Add metadata table for the selected reference
         }
-
-        delete[] reference_names;
-        delete[] reference_objects;
     }
 }
 
