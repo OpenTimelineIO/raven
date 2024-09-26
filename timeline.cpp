@@ -274,6 +274,12 @@ void DrawTransition(
     auto selected_fill_color = appTheme.colors[AppThemeCol_TransitionSelected];
     auto hover_fill_color = appTheme.colors[AppThemeCol_TransitionHovered];
 
+    if (ColorIsBright(fill_color)) {
+        auto inverted_fill_color = ColorInvert(fill_color);
+        selected_fill_color = TintedColorForUI(inverted_fill_color);
+        hover_fill_color = TintedColorForUI(inverted_fill_color);
+    } 
+
     auto old_pos = ImGui::GetCursorPos();
     ImGui::SetCursorPos(render_pos);
 
