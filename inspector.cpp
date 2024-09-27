@@ -218,6 +218,62 @@ bool DrawTimeRange(
     return changed;
 }
 
+void DrawAvailableImageBounds(
+    char const* label,
+    otio::MediaReference* media_reference) {
+    /*
+     * Draw the widgets for viewing and modifying the available image bounds.
+     *
+     * @parm label: The label to display above the widgets.
+     * @parm media_reference: The media reference to get the available image bounds from
+     *  and set the new bounds to.
+     */
+
+    auto available_image_bounds = media_reference->available_image_bounds();
+
+    ImGui::Text("%s", label);
+    ImGui::Indent();
+
+    Imath_3_2::Box2d bounds = available_image_bounds.value();
+
+    ImGui::Text("Min:");
+    ImGui::SameLine();
+    ImGui::PushItemWidth(100);
+    float min_x = static_cast<float>(available_image_bounds->min.x);
+    if (ImGui::InputFloat("##min_x", &min_x)) {
+        bounds.min.x = static_cast<double>(min_x);
+    };
+    ImGui::SameLine();
+
+    float min_y = static_cast<float>(available_image_bounds->min.y);
+    if (ImGui::InputFloat("##min_y", &min_y)) {
+        bounds.min.y = static_cast<double>(min_y);
+    };
+
+    ImGui::PopItemWidth();
+
+    ImGui::Text("Max:");
+    ImGui::SameLine();
+    ImGui::PushItemWidth(100);
+
+    float max_x = static_cast<float>(available_image_bounds->max.x);
+    if (ImGui::InputFloat("##max_x", &max_x)) {
+        bounds.max.x = static_cast<double>(max_x);
+    };
+    ImGui::SameLine();
+
+    float max_y = static_cast<float>(available_image_bounds->max.y);
+    if (ImGui::InputFloat("##max_y", &max_y)) {
+        bounds.max.y = static_cast<double>(max_y);
+    };
+    ImGui::PopItemWidth();
+    ImGui::Unindent();
+
+    if (bounds != available_image_bounds.value()) {
+        media_reference->set_available_image_bounds(bounds);
+    }
+}
+
 void DrawMetadataSubtree(std::string key, otio::AnyDictionary& metadata);
 
 void DrawMetadataArray(std::string key, otio::AnyVector& vector);
@@ -683,18 +739,28 @@ void DrawInspector() {
 
                 auto available_image_bounds = external_ref->available_image_bounds();
                 if (available_image_bounds) {
-                    ImGui::Text("Available Image Bounds:");
-                    ImGui::Indent();
-                    ImGui::Text("Min: (%f, %f)", available_image_bounds->min.x, available_image_bounds->min.y);
-                    ImGui::Text("Max: (%f, %f)", available_image_bounds->max.x, available_image_bounds->max.y);
-                    ImGui::Unindent();
+                    DrawAvailableImageBounds("Available Image Bounds", external_ref);
                 }
 
+                ImGui::Text("Metadata:");
                 DrawMetadataTable(external_ref->metadata());
 
                 // Missing media node
             } else if (auto missing_ref = dynamic_cast<otio::MediaReference*>(selected_reference)) {
                 ImGui::Text("Type: Missing Media");
+
+                auto available_range = missing_ref->available_range();
+                if (available_range && DrawTimeRange("Available Range", &(*available_range), false)) {
+                    external_ref->set_available_range(available_range);
+                }
+
+                auto available_image_bounds = missing_ref->available_image_bounds();
+                if (available_image_bounds) {
+                    DrawAvailableImageBounds("Available Image Bounds", missing_ref);
+                }
+
+                ImGui::Text("Metadata:");
+                DrawMetadataTable(missing_ref->metadata());
             } else if (auto imageSeqRef = dynamic_cast<otio::ImageSequenceReference*>(selected_reference)) {
                 ImGui::Text("Type: Image Sequence");
 
@@ -710,13 +776,10 @@ void DrawInspector() {
 
                 auto available_image_bounds = imageSeqRef->available_image_bounds();
                 if (available_image_bounds) {
-                    ImGui::Text("Available Image Bounds:");
-                    ImGui::Indent();
-                    ImGui::Text("Min: (%f, %f)", available_image_bounds->min.x, available_image_bounds->min.y);
-                    ImGui::Text("Max: (%f, %f)", available_image_bounds->max.x, available_image_bounds->max.y);
-                    ImGui::Unindent();
+                    DrawAvailableImageBounds("Available Image Bounds", imageSeqRef);
                 }
 
+                ImGui::Text("Metadata:");
                 DrawMetadataTable(imageSeqRef->metadata());
 
             } else {
