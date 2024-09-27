@@ -8,13 +8,16 @@
 // See https://github.com/ocornut/imgui/pull/2492 as an example on how to do just that.
 
 #include "imgui.h"
-#include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
-#include <stdio.h>
-#include <emscripten.h>
+#include "imgui_impl_sdl2.h"
 #include <SDL.h>
 #include <SDL_opengles2.h>
+#include <emscripten.h>
+#include <emscripten/fetch.h>
+#include <iostream>
+#include <stdio.h>
 
+#include "app.h"
 #include "main.h"
 
 // Emscripten requires to have full control over the main loop. We're going to store our SDL book-keeping variables globally.
@@ -149,3 +152,32 @@ static void main_loop(void* arg)
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     SDL_GL_SwapWindow(g_Window);
 }
+
+void LoadUrlSuccess(emscripten_fetch_t* fetch) {
+    printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
+
+    std::string otio_string = std::string(fetch->data, fetch->numBytes);
+    emscripten_fetch_close(fetch);
+
+    LoadString(otio_string);
+
+    appState.file_path = fetch->url;
+}
+
+void LoadUrlFailure(emscripten_fetch_t* fetch) {
+    printf("Downloading %s failed, HTTP failure status code: %d.\n", fetch->url, fetch->status);
+    emscripten_fetch_close(fetch);
+}
+
+void LoadUrl(std::string url) {
+    printf("Downloading %s...\n", url.c_str());
+    emscripten_fetch_attr_t attr;
+    emscripten_fetch_attr_init(&attr);
+    strcpy(attr.requestMethod, "GET");
+    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+    // This is async, so we can provide callbacks to handle the result
+    attr.onsuccess = LoadUrlSuccess;
+    attr.onerror = LoadUrlFailure;
+    emscripten_fetch(&attr, url.c_str());
+}
+
