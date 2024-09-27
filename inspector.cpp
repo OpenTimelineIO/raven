@@ -16,6 +16,7 @@
 #include <opentimelineio/linearTimeWarp.h>
 #include <opentimelineio/marker.h>
 #include <opentimelineio/mediaReference.h>
+#include <opentimelineio/missingReference.h>
 #include <opentimelineio/track.h>
 #include <opentimelineio/transition.h>
 
@@ -743,7 +744,7 @@ void DrawInspector() {
                 ImGui::Text("Metadata:");
                 DrawMetadataTable(external_ref->metadata());
 
-            } else if (auto missing_ref = dynamic_cast<otio::MediaReference*>(selected_reference)) {
+            } else if (auto missing_ref = dynamic_cast<otio::MissingReference*>(selected_reference)) {
                 ImGui::Text("Type: Missing Media");
 
                 auto available_range = missing_ref->available_range();
