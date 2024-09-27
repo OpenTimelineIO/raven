@@ -710,14 +710,10 @@ void DrawInspector() {
 
         // Retrieve the selected MediaReference object
         otio::MediaReference* selected_reference = nullptr;
-        try {
-            if (appState.selected_reference_index >= 0 && appState.selected_reference_index < num_references) {
-                selected_reference = reference_objects[appState.selected_reference_index];
-            } else {
-                throw std::out_of_range("Selected reference index is out of range.");
-            }
-        } catch (const std::out_of_range& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
+        if (appState.selected_reference_index >= 0 && appState.selected_reference_index < num_references) {
+            selected_reference = reference_objects[appState.selected_reference_index];
+        } else {
+            std::cerr << "Error: Selected reference index is out of range." << std::endl;
         }
 
         if (selected_reference) {
