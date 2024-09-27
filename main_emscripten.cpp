@@ -181,3 +181,13 @@ void LoadUrl(std::string url) {
     emscripten_fetch(&attr, url.c_str());
 }
 
+extern "C" {
+EMSCRIPTEN_KEEPALIVE
+void js_LoadUrl(char* url) {
+    LoadUrl(std::string(url));
+}
+EMSCRIPTEN_KEEPALIVE
+void js_LoadString(char* json) {
+    LoadString(std::string(json));
+}
+}
