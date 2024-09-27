@@ -38,8 +38,8 @@ AppTheme appTheme;
 
 ImFont* gFont = nullptr;
 
-// Variables to store the state of dropped files
-std::string prompt_dropped_file = ""; // The file asking for the opened
+// Variable to store dropped file to load
+std::string prompt_dropped_file = "";
 
 // Log a message to the terminal
 void Log(const char* format, ...) {
