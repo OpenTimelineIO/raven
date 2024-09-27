@@ -269,7 +269,10 @@ void DrawAvailableImageBounds(
     ImGui::Unindent();
 
     if (bounds != available_image_bounds.value()) {
-        media_reference->set_available_image_bounds(bounds);
+        // Ensure that the min is less than the max on the x and y
+        if (bounds.min.x < bounds.max.x && bounds.min.y < bounds.max.y) {
+            media_reference->set_available_image_bounds(bounds);
+        }
     }
 }
 
