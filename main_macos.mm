@@ -18,6 +18,11 @@
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
 
+// Accept and open a file path
+void file_drop_callback(GLFWwindow* window, int count, const char** paths) {
+    FileDropCallback(count, paths);
+}
+
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -99,6 +104,9 @@ int main(int argc, char** argv)
 
     // Our state
     float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
+
+    // Set the drop callback
+    glfwSetDropCallback(window, file_drop_callback);
 
     // Main loop
     while (!glfwWindowShouldClose(window))
