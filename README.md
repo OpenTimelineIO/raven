@@ -31,21 +31,28 @@ This will also clone and initialize all of the submodules that this project depe
 
 ## Building (macOS, Windows, Linux)
 
-	% mkdir build
-	% cd build
-	% cmake ..
-	% cmake --build . -j
-	% ./raven ../example.otio
+Spin up your favourite terminal and follow these steps:
+
+```shell
+  git submodule update --init --recursive
+  mkdir build
+  cd build
+  cmake ..
+  cmake --build . -j
+  ./raven ../example.otio
+```
 
 ## Building (WASM via Emscripten)
 
 You will need to install the [Emscripten toolchain](https://emscripten.org) first.
 
-	% mkdir build-web
-	% cd build-web
-	% emcmake cmake ..
-	% cmake --build .
-	% emrun ./raven.html
+```shell
+  mkdir build-web
+  cd build-web
+  emcmake cmake ..
+  cmake --build .
+  emrun ./raven.html
+```
 
 See also: `serve.py` as an alternative to `emrun`, and as
 a reference for which HTTP headers are needed to host the WASM build.
