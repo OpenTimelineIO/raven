@@ -732,13 +732,13 @@ void DrawInspector() {
                 }
 
                 auto available_range = external_ref->available_range();
-                if (available_range && DrawTimeRange("Available Range", &(*available_range), false)) {
+                if (available_range && DrawTimeRange("Available range", &(*available_range), false)) {
                     external_ref->set_available_range(available_range);
                 }
 
                 auto available_image_bounds = external_ref->available_image_bounds();
                 if (available_image_bounds) {
-                    DrawAvailableImageBounds("Available Image Bounds", external_ref);
+                    DrawAvailableImageBounds("Available image bounds", external_ref);
                 }
 
                 ImGui::Text("Metadata:");
@@ -748,13 +748,13 @@ void DrawInspector() {
                 ImGui::Text("Type: Missing Media");
 
                 auto available_range = missing_ref->available_range();
-                if (available_range && DrawTimeRange("Available Range", &(*available_range), false)) {
+                if (available_range && DrawTimeRange("Available range", &(*available_range), false)) {
                     missing_ref->set_available_range(available_range);
                 }
 
                 auto available_image_bounds = missing_ref->available_image_bounds();
                 if (available_image_bounds) {
-                    DrawAvailableImageBounds("Available Image Bounds", missing_ref);
+                    DrawAvailableImageBounds("Available image bounds", missing_ref);
                 }
 
                 ImGui::Text("Metadata:");
@@ -768,13 +768,13 @@ void DrawInspector() {
                 }
 
                 auto available_range = imageSeqRef->available_range();
-                if (available_range && DrawTimeRange("Available Range", &(*available_range), false)) {
+                if (available_range && DrawTimeRange("Available range", &(*available_range), false)) {
                     imageSeqRef->set_available_range(available_range);
                 }
 
                 auto available_image_bounds = imageSeqRef->available_image_bounds();
                 if (available_image_bounds) {
-                    DrawAvailableImageBounds("Available Image Bounds", imageSeqRef);
+                    DrawAvailableImageBounds("Available image bounds", imageSeqRef);
                 }
 
                 ImGui::Text("Metadata:");
