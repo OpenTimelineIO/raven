@@ -335,10 +335,6 @@ bool is_valid_file(const std::string& filepath) {
 
 // Accept and open a file path
 void FileDropCallback(int count, const char** filepaths) {
-    // Validate only one file
-    // validate file type
-    // pop up confirmation
-
     if (count > 1){
         Message("Cannot open multiple files.");
         return;
