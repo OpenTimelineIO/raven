@@ -1,0 +1,3024 @@
+{
+    "OTIO_SCHEMA": "Timeline.1",
+    "metadata": {},
+    "name": "aswf-encoding-tests",
+    "global_start_time": null,
+    "tracks": {
+        "OTIO_SCHEMA": "Stack.1",
+        "metadata": {},
+        "name": "tracks",
+        "source_range": null,
+        "effects": [],
+        "markers": [],
+        "enabled": true,
+        "children": [
+            {
+                "OTIO_SCHEMA": "Track.1",
+                "metadata": {},
+                "name": "ffmpeg_version_6.0",
+                "source_range": null,
+                "effects": [],
+                "markers": [],
+                "enabled": true,
+                "children": [
+                    {
+                        "OTIO_SCHEMA": "Clip.2",
+                        "metadata": {
+                            "aswf_enctests": {
+                                "source_info": {
+                                    "config_path": "/Users/sam/git/EncodingGuidelines/enctests/sources/enc_sources/chimera_cars_srgb/chimera_cars_srgb.%05d.png.yml",
+                                    "duration": 200,
+                                    "height": 1080,
+                                    "images": true,
+                                    "in": 2500,
+                                    "path": "chimera_cars_srgb.%05d.png",
+                                    "pix_fmt": "rgb48be",
+                                    "rate": 25.0,
+                                    "width": 1920
+                                }
+                            },
+                            "raven": {
+                                "color": "PINK"
+                            },
+                            "source_test_name": "test_mp4"
+                        },
+                        "name": "chimera_cars_srgb.%05d",
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 25.0,
+                                "value": 200.0
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 25.0,
+                                "value": 2500.0
+                            }
+                        },
+                        "effects": [],
+                        "markers": [],
+                        "enabled": true,
+                        "media_references": {
+                            "DEFAULT_MEDIA": {
+                                "OTIO_SCHEMA": "ImageSequenceReference.1",
+                                "metadata": {},
+                                "name": "",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 2500.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url_base": "/Users/sam/git/EncodingGuidelines/enctests/sources/enc_sources/chimera_cars_srgb",
+                                "name_prefix": "chimera_cars_srgb.",
+                                "name_suffix": ".png",
+                                "start_frame": 2500,
+                                "frame_step": 1,
+                                "rate": 25.0,
+                                "frame_zero_padding": 5,
+                                "missing_frame_policy": "error"
+                            },
+                            "test_mp4-libsvtav1-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libsvtav1",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": 9,
+                                            "-svtav1-params": "tune=0",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:19:24.499520+00:00",
+                                            "encode_time": 20.4923,
+                                            "filesize": 3646329,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 50.325414,
+                                                "max": 51.516216,
+                                                "mean": 50.328543,
+                                                "min": 49.115223
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 49.762308,
+                                                "max": 51.33137,
+                                                "mean": 49.764491,
+                                                "min": 48.984304
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 46.696538,
+                                                "max": 49.142278,
+                                                "mean": 46.706295,
+                                                "min": 45.29358
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.434523,
+                                                "max": 100.0,
+                                                "mean": 99.441143,
+                                                "min": 95.877138
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_cars_srgb.-test_mp4-libsvtav1-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_cars_srgb.-test_mp4-libsvtav1-10bit.mp4"
+                            },
+                            "test_mp4-libsvtav1-8bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libsvtav1",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p",
+                                            "-preset": 9,
+                                            "-svtav1-params": "tune=0",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:21:03.011374+00:00",
+                                            "encode_time": 18.7277,
+                                            "filesize": 3639752,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 48.75372,
+                                                "max": 49.837518,
+                                                "mean": 48.755609,
+                                                "min": 47.814779
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 48.127583,
+                                                "max": 49.559283,
+                                                "mean": 48.129269,
+                                                "min": 47.46561
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 45.483847,
+                                                "max": 48.22492,
+                                                "mean": 45.49587,
+                                                "min": 43.882691
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.277824,
+                                                "max": 100.0,
+                                                "mean": 99.286231,
+                                                "min": 95.931186
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_cars_srgb.-test_mp4-libsvtav1-8bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_cars_srgb.-test_mp4-libsvtav1-8bit.mp4"
+                            },
+                            "test_mp4-libvpx-vp9-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-b:v": 0,
+                                            "-c:v": "libvpx-vp9",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 22,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": "slow",
+                                            "-quality": "good",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:20:14.961170+00:00",
+                                            "encode_time": 50.4597,
+                                            "filesize": 3645796,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 50.242876,
+                                                "max": 51.735213,
+                                                "mean": 50.246118,
+                                                "min": 48.902526
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 49.60329,
+                                                "max": 51.507627,
+                                                "mean": 49.605602,
+                                                "min": 48.918143
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 46.599533,
+                                                "max": 49.925824,
+                                                "mean": 46.609295,
+                                                "min": 44.9628
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.418256,
+                                                "max": 100.0,
+                                                "mean": 99.425135,
+                                                "min": 96.246675
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_cars_srgb.-test_mp4-libvpx-vp9-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_cars_srgb.-test_mp4-libvpx-vp9-10bit.mp4"
+                            },
+                            "test_mp4-libx264-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libx264",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": "slow",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:19:04.005442+00:00",
+                                            "encode_time": 18.2133,
+                                            "filesize": 3669367,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 49.899884,
+                                                "max": 50.523645,
+                                                "mean": 49.90196,
+                                                "min": 48.859751
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 49.356841,
+                                                "max": 49.900288,
+                                                "mean": 49.358003,
+                                                "min": 48.629115
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 46.208245,
+                                                "max": 47.130147,
+                                                "mean": 46.211665,
+                                                "min": 45.10649
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.397578,
+                                                "max": 100.0,
+                                                "mean": 99.40475,
+                                                "min": 95.161232
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_cars_srgb.-test_mp4-libx264-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_cars_srgb.-test_mp4-libx264-10bit.mp4"
+                            },
+                            "test_mp4-libx264-8bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libx264",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p",
+                                            "-preset": "slow",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:20:44.282039+00:00",
+                                            "encode_time": 5.9504,
+                                            "filesize": 3878811,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 48.491985,
+                                                "max": 48.957945,
+                                                "mean": 48.493181,
+                                                "min": 47.724934
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 47.952192,
+                                                "max": 48.356399,
+                                                "mean": 47.952955,
+                                                "min": 47.371182
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 45.334152,
+                                                "max": 46.122186,
+                                                "mean": 45.336499,
+                                                "min": 44.473132
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.331812,
+                                                "max": 100.0,
+                                                "mean": 99.339961,
+                                                "min": 94.928093
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_cars_srgb.-test_mp4-libx264-8bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_cars_srgb.-test_mp4-libx264-8bit.mp4"
+                            },
+                            "test_mp4-libx265-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libx265",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 20,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": "medium",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-tag:v": "hvc1",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:20:38.330119+00:00",
+                                            "encode_time": 23.3674,
+                                            "filesize": 2701507,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 49.494789,
+                                                "max": 50.159769,
+                                                "mean": 49.496876,
+                                                "min": 48.606755
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 48.926694,
+                                                "max": 49.438152,
+                                                "mean": 48.927782,
+                                                "min": 48.351656
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 45.700754,
+                                                "max": 47.153988,
+                                                "mean": 45.704974,
+                                                "min": 44.604577
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 98.875062,
+                                                "max": 100.0,
+                                                "mean": 98.888588,
+                                                "min": 94.869443
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_cars_srgb.-test_mp4-libx265-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_cars_srgb.-test_mp4-libx265-10bit.mp4"
+                            }
+                        },
+                        "active_media_reference_key": "test_mp4-libx264-10bit"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.2",
+                        "metadata": {
+                            "aswf_enctests": {
+                                "source_info": {
+                                    "config_path": "/Users/sam/git/EncodingGuidelines/enctests/sources/enc_sources/chimera_coaster_srgb/chimera_coaster_srgb.%06d.png.yml",
+                                    "duration": 200,
+                                    "height": 1080,
+                                    "images": true,
+                                    "in": 44200,
+                                    "path": "chimera_coaster_srgb.%06d.png",
+                                    "pix_fmt": "rgb48be",
+                                    "rate": 25.0,
+                                    "width": 1920
+                                }
+                            },
+                            "source_test_name": "test_mp4"
+                        },
+                        "name": "chimera_coaster_srgb.%06d",
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 25.0,
+                                "value": 200.0
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 25.0,
+                                "value": 44200.0
+                            }
+                        },
+                        "effects": [],
+                        "markers": [],
+                        "enabled": true,
+                        "media_references": {
+                            "DEFAULT_MEDIA": {
+                                "OTIO_SCHEMA": "ImageSequenceReference.1",
+                                "metadata": {},
+                                "name": "",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 44200.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url_base": "/Users/sam/git/EncodingGuidelines/enctests/sources/enc_sources/chimera_coaster_srgb",
+                                "name_prefix": "chimera_coaster_srgb.",
+                                "name_suffix": ".png",
+                                "start_frame": 44200,
+                                "frame_step": 1,
+                                "rate": 25.0,
+                                "frame_zero_padding": 6,
+                                "missing_frame_policy": "error"
+                            },
+                            "test_mp4-libsvtav1-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libsvtav1",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": 9,
+                                            "-svtav1-params": "tune=0",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:28:24.969846+00:00",
+                                            "encode_time": 29.2195,
+                                            "filesize": 7658703,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 46.229805,
+                                                "max": 48.367358,
+                                                "mean": 46.272343,
+                                                "min": 43.428809
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 46.430817,
+                                                "max": 48.005142,
+                                                "mean": 46.442715,
+                                                "min": 44.678293
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 43.273328,
+                                                "max": 46.940733,
+                                                "mean": 43.347846,
+                                                "min": 40.008069
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.193019,
+                                                "max": 100.0,
+                                                "mean": 99.206091,
+                                                "min": 94.808005
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_coaster_srgb.-test_mp4-libsvtav1-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_coaster_srgb.-test_mp4-libsvtav1-10bit.mp4"
+                            },
+                            "test_mp4-libsvtav1-8bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libsvtav1",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p",
+                                            "-preset": 9,
+                                            "-svtav1-params": "tune=0",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:30:56.954081+00:00",
+                                            "encode_time": 25.9825,
+                                            "filesize": 6798944,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 45.18191,
+                                                "max": 47.304972,
+                                                "mean": 45.216923,
+                                                "min": 42.591227
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 45.415999,
+                                                "max": 46.953655,
+                                                "mean": 45.425869,
+                                                "min": 43.717966
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 42.102575,
+                                                "max": 46.077861,
+                                                "mean": 42.15911,
+                                                "min": 39.301899
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 98.641072,
+                                                "max": 100.0,
+                                                "mean": 98.664015,
+                                                "min": 94.727856
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_coaster_srgb.-test_mp4-libsvtav1-8bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_coaster_srgb.-test_mp4-libsvtav1-8bit.mp4"
+                            },
+                            "test_mp4-libvpx-vp9-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-b:v": 0,
+                                            "-c:v": "libvpx-vp9",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 22,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": "slow",
+                                            "-quality": "good",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:29:44.390337+00:00",
+                                            "encode_time": 79.4182,
+                                            "filesize": 7900693,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 46.285124,
+                                                "max": 49.687269,
+                                                "mean": 46.328656,
+                                                "min": 43.309053
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 46.524112,
+                                                "max": 49.634483,
+                                                "mean": 46.53976,
+                                                "min": 44.50843
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 43.830853,
+                                                "max": 47.505384,
+                                                "mean": 43.921708,
+                                                "min": 40.171287
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.530172,
+                                                "max": 100.0,
+                                                "mean": 99.536965,
+                                                "min": 95.536135
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_coaster_srgb.-test_mp4-libvpx-vp9-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_coaster_srgb.-test_mp4-libvpx-vp9-10bit.mp4"
+                            },
+                            "test_mp4-libx264-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libx264",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": "slow",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:27:55.748231+00:00",
+                                            "encode_time": 26.357,
+                                            "filesize": 8538024,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 45.998854,
+                                                "max": 48.040734,
+                                                "mean": 46.034684,
+                                                "min": 43.452074
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 46.338028,
+                                                "max": 47.820437,
+                                                "mean": 46.348313,
+                                                "min": 44.936338
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 43.500409,
+                                                "max": 46.042736,
+                                                "mean": 43.575723,
+                                                "min": 40.058992
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.27909,
+                                                "max": 100.0,
+                                                "mean": 99.290404,
+                                                "min": 93.880475
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_coaster_srgb.-test_mp4-libx264-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_coaster_srgb.-test_mp4-libx264-10bit.mp4"
+                            },
+                            "test_mp4-libx264-8bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libx264",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p",
+                                            "-preset": "slow",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:30:30.969963+00:00",
+                                            "encode_time": 8.6474,
+                                            "filesize": 9031995,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 45.180556,
+                                                "max": 46.919318,
+                                                "mean": 45.207459,
+                                                "min": 42.919511
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 45.516446,
+                                                "max": 46.751879,
+                                                "mean": 45.523217,
+                                                "min": 44.342361
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 42.91937,
+                                                "max": 45.154666,
+                                                "mean": 42.978926,
+                                                "min": 39.865413
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.159661,
+                                                "max": 100.0,
+                                                "mean": 99.172628,
+                                                "min": 93.753536
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_coaster_srgb.-test_mp4-libx264-8bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_coaster_srgb.-test_mp4-libx264-8bit.mp4"
+                            },
+                            "test_mp4-libx265-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libx265",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 20,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": "medium",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-tag:v": "hvc1",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:30:22.321192+00:00",
+                                            "encode_time": 37.9287,
+                                            "filesize": 5527687,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 45.919827,
+                                                "max": 47.475851,
+                                                "mean": 45.955631,
+                                                "min": 43.227212
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 46.12958,
+                                                "max": 47.18235,
+                                                "mean": 46.139819,
+                                                "min": 44.551776
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 43.19475,
+                                                "max": 46.029324,
+                                                "mean": 43.267278,
+                                                "min": 39.800059
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 98.690663,
+                                                "max": 100.0,
+                                                "mean": 98.711175,
+                                                "min": 93.83353
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_coaster_srgb.-test_mp4-libx265-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_coaster_srgb.-test_mp4-libx265-10bit.mp4"
+                            }
+                        },
+                        "active_media_reference_key": "DEFAULT_MEDIA"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.2",
+                        "metadata": {
+                            "aswf_enctests": {
+                                "source_info": {
+                                    "config_path": "/Users/sam/git/EncodingGuidelines/enctests/sources/enc_sources/chimera_fountains_srgb/chimera_fountains_srgb.%05d.png.yml",
+                                    "duration": 200,
+                                    "height": 1080,
+                                    "images": true,
+                                    "in": 5400,
+                                    "path": "chimera_fountains_srgb.%05d.png",
+                                    "pix_fmt": "rgb48be",
+                                    "rate": 25.0,
+                                    "width": 1920
+                                }
+                            },
+                            "source_test_name": "test_mp4"
+                        },
+                        "name": "chimera_fountains_srgb.%05d",
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 25.0,
+                                "value": 200.0
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 25.0,
+                                "value": 5400.0
+                            }
+                        },
+                        "effects": [],
+                        "markers": [],
+                        "enabled": true,
+                        "media_references": {
+                            "DEFAULT_MEDIA": {
+                                "OTIO_SCHEMA": "ImageSequenceReference.1",
+                                "metadata": {},
+                                "name": "",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 5400.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url_base": "/Users/sam/git/EncodingGuidelines/enctests/sources/enc_sources/chimera_fountains_srgb",
+                                "name_prefix": "chimera_fountains_srgb.",
+                                "name_suffix": ".png",
+                                "start_frame": 5400,
+                                "frame_step": 1,
+                                "rate": 25.0,
+                                "frame_zero_padding": 5,
+                                "missing_frame_policy": "error"
+                            },
+                            "test_mp4-libsvtav1-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libsvtav1",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": 9,
+                                            "-svtav1-params": "tune=0",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:38:54.812627+00:00",
+                                            "encode_time": 33.9712,
+                                            "filesize": 35423665,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 48.360055,
+                                                "max": 50.06136,
+                                                "mean": 48.363245,
+                                                "min": 47.688624
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 47.059123,
+                                                "max": 49.129992,
+                                                "mean": 47.064283,
+                                                "min": 46.207404
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 42.395554,
+                                                "max": 46.190958,
+                                                "mean": 42.421287,
+                                                "min": 40.782292
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.969508,
+                                                "max": 100.0,
+                                                "mean": 99.971236,
+                                                "min": 94.247167
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_fountains_srgb.-test_mp4-libsvtav1-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_fountains_srgb.-test_mp4-libsvtav1-10bit.mp4"
+                            },
+                            "test_mp4-libsvtav1-8bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libsvtav1",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p",
+                                            "-preset": 9,
+                                            "-svtav1-params": "tune=0",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:43:51.628527+00:00",
+                                            "encode_time": 32.5414,
+                                            "filesize": 34013762,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 47.171775,
+                                                "max": 48.53089,
+                                                "mean": 47.173929,
+                                                "min": 46.63743
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 46.165179,
+                                                "max": 48.004123,
+                                                "mean": 46.168906,
+                                                "min": 45.479085
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 41.499103,
+                                                "max": 45.554285,
+                                                "mean": 41.525086,
+                                                "min": 40.062911
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.970078,
+                                                "max": 100.0,
+                                                "mean": 99.971744,
+                                                "min": 94.348788
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_fountains_srgb.-test_mp4-libsvtav1-8bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_fountains_srgb.-test_mp4-libsvtav1-8bit.mp4"
+                            },
+                            "test_mp4-libvpx-vp9-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-b:v": 0,
+                                            "-c:v": "libvpx-vp9",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 22,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": "slow",
+                                            "-quality": "good",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:41:46.977438+00:00",
+                                            "encode_time": 172.1605,
+                                            "filesize": 33132867,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 48.831438,
+                                                "max": 51.3058,
+                                                "mean": 48.837096,
+                                                "min": 47.971101
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 47.598113,
+                                                "max": 50.987965,
+                                                "mean": 47.607489,
+                                                "min": 46.562103
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 42.405738,
+                                                "max": 48.358629,
+                                                "mean": 42.461625,
+                                                "min": 40.302925
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.973985,
+                                                "max": 100.0,
+                                                "mean": 99.975253,
+                                                "min": 95.050655
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_fountains_srgb.-test_mp4-libvpx-vp9-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_fountains_srgb.-test_mp4-libvpx-vp9-10bit.mp4"
+                            },
+                            "test_mp4-libx264-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libx264",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": "slow",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:38:20.838407+00:00",
+                                            "encode_time": 54.0462,
+                                            "filesize": 34972900,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 48.755556,
+                                                "max": 49.22362,
+                                                "mean": 48.756362,
+                                                "min": 48.320252
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 47.229769,
+                                                "max": 48.007667,
+                                                "mean": 47.231632,
+                                                "min": 46.589777
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 41.652679,
+                                                "max": 42.390444,
+                                                "mean": 41.655599,
+                                                "min": 40.742599
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.960587,
+                                                "max": 100.0,
+                                                "mean": 99.963427,
+                                                "min": 92.685407
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_fountains_srgb.-test_mp4-libx264-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_fountains_srgb.-test_mp4-libx264-10bit.mp4"
+                            },
+                            "test_mp4-libx264-8bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libx264",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p",
+                                            "-preset": "slow",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:43:19.081749+00:00",
+                                            "encode_time": 19.7648,
+                                            "filesize": 35234179,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 47.635422,
+                                                "max": 48.046346,
+                                                "mean": 47.635923,
+                                                "min": 47.301517
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 46.422142,
+                                                "max": 47.04846,
+                                                "mean": 46.423308,
+                                                "min": 45.940926
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 41.323369,
+                                                "max": 42.057646,
+                                                "mean": 41.325869,
+                                                "min": 40.466623
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.959593,
+                                                "max": 100.0,
+                                                "mean": 99.962573,
+                                                "min": 92.514579
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_fountains_srgb.-test_mp4-libx264-8bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_fountains_srgb.-test_mp4-libx264-8bit.mp4"
+                            },
+                            "test_mp4-libx265-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libx265",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 20,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": "medium",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-tag:v": "hvc1",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:42:59.312833+00:00",
+                                            "encode_time": 72.332,
+                                            "filesize": 23589581,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 47.743693,
+                                                "max": 48.475433,
+                                                "mean": 47.744768,
+                                                "min": 47.259059
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 46.43295,
+                                                "max": 47.171916,
+                                                "mean": 46.434611,
+                                                "min": 45.762453
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 39.788635,
+                                                "max": 42.779944,
+                                                "mean": 39.803592,
+                                                "min": 38.359924
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.243685,
+                                                "max": 100.0,
+                                                "mean": 99.254268,
+                                                "min": 91.854865
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "chimera_fountains_srgb.-test_mp4-libx265-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_fountains_srgb.-test_mp4-libx265-10bit.mp4"
+                            }
+                        },
+                        "active_media_reference_key": "DEFAULT_MEDIA"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.2",
+                        "metadata": {
+                            "aswf_enctests": {
+                                "source_info": {
+                                    "config_path": "/Users/sam/git/EncodingGuidelines/enctests/sources/hdr_sources/sparks_srgb/sparks_srgb.%05d.png.yml",
+                                    "duration": 200,
+                                    "height": 1014,
+                                    "images": true,
+                                    "in": 6100,
+                                    "path": "sparks_srgb.%05d.png",
+                                    "pix_fmt": "rgb24",
+                                    "rate": 24,
+                                    "width": 1920
+                                }
+                            },
+                            "source_test_name": "test_mp4"
+                        },
+                        "name": "sparks_srgb.%05d",
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 24.0,
+                                "value": 200.0
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 24.0,
+                                "value": 6100.0
+                            }
+                        },
+                        "effects": [],
+                        "markers": [],
+                        "enabled": true,
+                        "media_references": {
+                            "DEFAULT_MEDIA": {
+                                "OTIO_SCHEMA": "ImageSequenceReference.1",
+                                "metadata": {},
+                                "name": "",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 6100.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url_base": "/Users/sam/git/EncodingGuidelines/enctests/sources/hdr_sources/sparks_srgb",
+                                "name_prefix": "sparks_srgb.",
+                                "name_suffix": ".png",
+                                "start_frame": 6100,
+                                "frame_step": 1,
+                                "rate": 24.0,
+                                "frame_zero_padding": 5,
+                                "missing_frame_policy": "error"
+                            },
+                            "test_mp4-libsvtav1-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libsvtav1",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": 9,
+                                            "-svtav1-params": "tune=0",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:50:40.105083+00:00",
+                                            "encode_time": 26.6703,
+                                            "filesize": 51856088,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 43.828261,
+                                                "max": 48.823331,
+                                                "mean": 43.860521,
+                                                "min": 42.439191
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 44.241134,
+                                                "max": 49.516746,
+                                                "mean": 44.273513,
+                                                "min": 42.923123
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 41.457886,
+                                                "max": 45.232032,
+                                                "mean": 41.478459,
+                                                "min": 40.43574
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.975515,
+                                                "max": 100.0,
+                                                "mean": 99.976266,
+                                                "min": 96.199294
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "sparks_srgb.-test_mp4-libsvtav1-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/sparks_srgb.-test_mp4-libsvtav1-10bit.mp4"
+                            },
+                            "test_mp4-libsvtav1-8bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libsvtav1",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p",
+                                            "-preset": 9,
+                                            "-svtav1-params": "tune=0",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:53:21.073237+00:00",
+                                            "encode_time": 24.5763,
+                                            "filesize": 51177121,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 43.358244,
+                                                "max": 47.895122,
+                                                "mean": 43.385131,
+                                                "min": 42.067822
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 43.840956,
+                                                "max": 48.469058,
+                                                "mean": 43.867757,
+                                                "min": 42.480941
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 40.975566,
+                                                "max": 45.045074,
+                                                "mean": 40.994497,
+                                                "min": 40.041661
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.976447,
+                                                "max": 100.0,
+                                                "mean": 99.977123,
+                                                "min": 96.398221
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "sparks_srgb.-test_mp4-libsvtav1-8bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/sparks_srgb.-test_mp4-libsvtav1-8bit.mp4"
+                            },
+                            "test_mp4-libvpx-vp9-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-b:v": 0,
+                                            "-c:v": "libvpx-vp9",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 22,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": "slow",
+                                            "-quality": "good",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:52:10.514899+00:00",
+                                            "encode_time": 90.4065,
+                                            "filesize": 45149070,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 44.659344,
+                                                "max": 50.187332,
+                                                "mean": 44.712214,
+                                                "min": 42.823737
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 45.043701,
+                                                "max": 50.52511,
+                                                "mean": 45.096244,
+                                                "min": 43.235261
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 41.752702,
+                                                "max": 47.795718,
+                                                "mean": 41.797903,
+                                                "min": 40.252583
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.967161,
+                                                "max": 100.0,
+                                                "mean": 99.967788,
+                                                "min": 96.834095
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "sparks_srgb.-test_mp4-libvpx-vp9-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/sparks_srgb.-test_mp4-libvpx-vp9-10bit.mp4"
+                            },
+                            "test_mp4-libx264-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libx264",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": "slow",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:50:13.432464+00:00",
+                                            "encode_time": 23.3883,
+                                            "filesize": 38564157,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 42.52905,
+                                                "max": 45.370691,
+                                                "mean": 42.546193,
+                                                "min": 41.404606
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 43.063198,
+                                                "max": 45.627264,
+                                                "mean": 43.080115,
+                                                "min": 41.950488
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 39.635255,
+                                                "max": 42.929145,
+                                                "mean": 39.650378,
+                                                "min": 38.617977
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.933343,
+                                                "max": 100.0,
+                                                "mean": 99.935559,
+                                                "min": 93.964978
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "sparks_srgb.-test_mp4-libx264-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/sparks_srgb.-test_mp4-libx264-10bit.mp4"
+                            },
+                            "test_mp4-libx264-8bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libx264",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 18,
+                                            "-pix_fmt": "yuv420p",
+                                            "-preset": "slow",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:52:56.493941+00:00",
+                                            "encode_time": 9.3863,
+                                            "filesize": 39193097,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 42.275532,
+                                                "max": 44.927411,
+                                                "mean": 42.29139,
+                                                "min": 41.21224
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 42.820493,
+                                                "max": 45.203316,
+                                                "mean": 42.835821,
+                                                "min": 41.701165
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 39.471238,
+                                                "max": 42.605046,
+                                                "mean": 39.486254,
+                                                "min": 38.488513
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.930621,
+                                                "max": 100.0,
+                                                "mean": 99.932913,
+                                                "min": 93.925221
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "sparks_srgb.-test_mp4-libx264-8bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/sparks_srgb.-test_mp4-libx264-8bit.mp4"
+                            },
+                            "test_mp4-libx265-10bit": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "libx265",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-crf": 20,
+                                            "-pix_fmt": "yuv420p10le",
+                                            "-preset": "medium",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-tag:v": "hvc1",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:52:47.106420+00:00",
+                                            "encode_time": 36.5886,
+                                            "filesize": 33768873,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 41.231515,
+                                                "max": 44.982949,
+                                                "mean": 41.259224,
+                                                "min": 39.783741
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 42.054527,
+                                                "max": 45.670637,
+                                                "mean": 42.079072,
+                                                "min": 40.727199
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 38.031841,
+                                                "max": 41.36038,
+                                                "mean": 38.057557,
+                                                "min": 36.61754
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.061138,
+                                                "max": 100.0,
+                                                "mean": 99.077814,
+                                                "min": 94.190353
+                                            }
+                                        },
+                                        "test_config_path": "/Users/sam/git/EncodingGuidelines/enctests/test_configs/codec_tests.yml"
+                                    }
+                                },
+                                "name": "sparks_srgb.-test_mp4-libx265-10bit.mp4",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/sparks_srgb.-test_mp4-libx265-10bit.mp4"
+                            }
+                        },
+                        "active_media_reference_key": "DEFAULT_MEDIA"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.2",
+                        "metadata": {
+                            "aswf_enctests": {
+                                "source_info": {
+                                    "config_path": "/Users/sam/git/EncodingGuidelines/enctests/sources/enc_sources/chimera_cars_srgb/chimera_cars_srgb.%05d.png.yml",
+                                    "duration": 200,
+                                    "height": 1080,
+                                    "images": true,
+                                    "in": 2500,
+                                    "path": "chimera_cars_srgb.%05d.png",
+                                    "pix_fmt": "rgb48be",
+                                    "rate": 25.0,
+                                    "width": 1920
+                                }
+                            },
+                            "source_test_name": "test_mov"
+                        },
+                        "name": "chimera_cars_srgb.%05d",
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 25.0,
+                                "value": 200.0
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 25.0,
+                                "value": 2500.0
+                            }
+                        },
+                        "effects": [],
+                        "markers": [],
+                        "enabled": true,
+                        "media_references": {
+                            "DEFAULT_MEDIA": {
+                                "OTIO_SCHEMA": "ImageSequenceReference.1",
+                                "metadata": {},
+                                "name": "",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 2500.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url_base": "/Users/sam/git/EncodingGuidelines/enctests/sources/enc_sources/chimera_cars_srgb",
+                                "name_prefix": "chimera_cars_srgb.",
+                                "name_suffix": ".png",
+                                "start_frame": 2500,
+                                "frame_step": 1,
+                                "rate": 25.0,
+                                "frame_zero_padding": 5,
+                                "missing_frame_policy": "error"
+                            },
+                            "test_mov-dnxhd": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "dnxhd",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-pix_fmt": "yuv422p10le",
+                                            "-profile:v": "dnxhr_hqx",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:58:03.873672+00:00",
+                                            "encode_time": 3.5186,
+                                            "filesize": 183502387,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 52.724971,
+                                                "max": 53.183093,
+                                                "mean": 52.727963,
+                                                "min": 51.180445
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 53.42397,
+                                                "max": 53.679999,
+                                                "mean": 53.42436,
+                                                "min": 53.095753
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 52.774063,
+                                                "max": 53.728965,
+                                                "mean": 52.790823,
+                                                "min": 49.274661
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.985288,
+                                                "max": 100.0,
+                                                "mean": 99.985702,
+                                                "min": 97.140491
+                                            }
+                                        },
+                                        "test_config_path": null
+                                    }
+                                },
+                                "name": "chimera_cars_srgb.-test_mov-dnxhd.mov",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_cars_srgb.-test_mov-dnxhd.mov"
+                            },
+                            "test_mov-mjpeg": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "mjpeg",
+                                            "-color_primaries": 1,
+                                            "-color_range": "pc",
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-pix_fmt": "yuvj444p",
+                                            "-qscale:v": 3,
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=full:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:58:00.350534+00:00",
+                                            "encode_time": 2.3734,
+                                            "filesize": 39653965,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 48.637885,
+                                                "max": 48.876947,
+                                                "mean": 48.63842,
+                                                "min": 48.047279
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 47.46414,
+                                                "max": 47.750857,
+                                                "mean": 47.464391,
+                                                "min": 47.217035
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 44.775684,
+                                                "max": 45.171577,
+                                                "mean": 44.776817,
+                                                "min": 44.046149
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.094568,
+                                                "max": 100.0,
+                                                "mean": 99.106077,
+                                                "min": 94.095421
+                                            }
+                                        },
+                                        "test_config_path": null
+                                    }
+                                },
+                                "name": "chimera_cars_srgb.-test_mov-mjpeg.mov",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_cars_srgb.-test_mov-mjpeg.mov"
+                            },
+                            "test_mov-prores_ks": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "prores_ks",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-pix_fmt": "yuvj444p",
+                                            "-profile:v": 3,
+                                            "-qscale:v": 10,
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vendor": "apl0",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=full:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T14:58:06.485369+00:00",
+                                            "encode_time": 2.6101,
+                                            "filesize": 83723580,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 52.127995,
+                                                "max": 52.563811,
+                                                "mean": 52.130207,
+                                                "min": 50.87097
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 51.459675,
+                                                "max": 51.973436,
+                                                "mean": 51.463624,
+                                                "min": 49.590206
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 32.539527,
+                                                "max": 33.749233,
+                                                "mean": 32.547767,
+                                                "min": 31.507423
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 100.0,
+                                                "max": 100.0,
+                                                "mean": 100.0,
+                                                "min": 100.0
+                                            }
+                                        },
+                                        "test_config_path": null
+                                    }
+                                },
+                                "name": "chimera_cars_srgb.-test_mov-prores_ks.mov",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_cars_srgb.-test_mov-prores_ks.mov"
+                            }
+                        },
+                        "active_media_reference_key": "DEFAULT_MEDIA"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.2",
+                        "metadata": {
+                            "aswf_enctests": {
+                                "source_info": {
+                                    "config_path": "/Users/sam/git/EncodingGuidelines/enctests/sources/enc_sources/chimera_coaster_srgb/chimera_coaster_srgb.%06d.png.yml",
+                                    "duration": 200,
+                                    "height": 1080,
+                                    "images": true,
+                                    "in": 44200,
+                                    "path": "chimera_coaster_srgb.%06d.png",
+                                    "pix_fmt": "rgb48be",
+                                    "rate": 25.0,
+                                    "width": 1920
+                                }
+                            },
+                            "source_test_name": "test_mov"
+                        },
+                        "name": "chimera_coaster_srgb.%06d",
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 25.0,
+                                "value": 200.0
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 25.0,
+                                "value": 44200.0
+                            }
+                        },
+                        "effects": [],
+                        "markers": [],
+                        "enabled": true,
+                        "media_references": {
+                            "DEFAULT_MEDIA": {
+                                "OTIO_SCHEMA": "ImageSequenceReference.1",
+                                "metadata": {},
+                                "name": "",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 44200.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url_base": "/Users/sam/git/EncodingGuidelines/enctests/sources/enc_sources/chimera_coaster_srgb",
+                                "name_prefix": "chimera_coaster_srgb.",
+                                "name_suffix": ".png",
+                                "start_frame": 44200,
+                                "frame_step": 1,
+                                "rate": 25.0,
+                                "frame_zero_padding": 6,
+                                "missing_frame_policy": "error"
+                            },
+                            "test_mov-dnxhd": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "dnxhd",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-pix_fmt": "yuv422p10le",
+                                            "-profile:v": "dnxhr_hqx",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T15:00:35.597072+00:00",
+                                            "encode_time": 3.9756,
+                                            "filesize": 183502371,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 49.66394,
+                                                "max": 51.679317,
+                                                "mean": 49.765877,
+                                                "min": 45.53689
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 50.58558,
+                                                "max": 52.253174,
+                                                "mean": 50.599808,
+                                                "min": 48.944143
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 46.750312,
+                                                "max": 50.009958,
+                                                "mean": 46.948449,
+                                                "min": 41.451333
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.982576,
+                                                "max": 100.0,
+                                                "mean": 99.983155,
+                                                "min": 96.630939
+                                            }
+                                        },
+                                        "test_config_path": null
+                                    }
+                                },
+                                "name": "chimera_coaster_srgb.-test_mov-dnxhd.mov",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_coaster_srgb.-test_mov-dnxhd.mov"
+                            },
+                            "test_mov-mjpeg": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "mjpeg",
+                                            "-color_primaries": 1,
+                                            "-color_range": "pc",
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-pix_fmt": "yuvj444p",
+                                            "-qscale:v": 3,
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=full:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T15:00:31.612372+00:00",
+                                            "encode_time": 2.5941,
+                                            "filesize": 46390043,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 46.443322,
+                                                "max": 47.761595,
+                                                "mean": 46.478035,
+                                                "min": 43.902255
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 46.917535,
+                                                "max": 47.597379,
+                                                "mean": 46.920672,
+                                                "min": 46.167591
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 43.502694,
+                                                "max": 45.602487000000004,
+                                                "mean": 43.571062,
+                                                "min": 40.331866
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.685062,
+                                                "max": 100.0,
+                                                "mean": 99.689453,
+                                                "min": 93.562439
+                                            }
+                                        },
+                                        "test_config_path": null
+                                    }
+                                },
+                                "name": "chimera_coaster_srgb.-test_mov-mjpeg.mov",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_coaster_srgb.-test_mov-mjpeg.mov"
+                            },
+                            "test_mov-prores_ks": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "prores_ks",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-pix_fmt": "yuvj444p",
+                                            "-profile:v": 3,
+                                            "-qscale:v": 10,
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vendor": "apl0",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=full:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T15:00:38.622578+00:00",
+                                            "encode_time": 3.0233,
+                                            "filesize": 86645261,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 46.286589,
+                                                "max": 48.323236,
+                                                "mean": 46.345023,
+                                                "min": 43.390523
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 48.117794,
+                                                "max": 50.783844,
+                                                "mean": 48.262313,
+                                                "min": 43.347144
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 29.41395,
+                                                "max": 31.297283,
+                                                "mean": 29.459535,
+                                                "min": 27.883989
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 100.0,
+                                                "max": 100.0,
+                                                "mean": 100.0,
+                                                "min": 100.0
+                                            }
+                                        },
+                                        "test_config_path": null
+                                    }
+                                },
+                                "name": "chimera_coaster_srgb.-test_mov-prores_ks.mov",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_coaster_srgb.-test_mov-prores_ks.mov"
+                            }
+                        },
+                        "active_media_reference_key": "DEFAULT_MEDIA"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.2",
+                        "metadata": {
+                            "aswf_enctests": {
+                                "source_info": {
+                                    "config_path": "/Users/sam/git/EncodingGuidelines/enctests/sources/enc_sources/chimera_fountains_srgb/chimera_fountains_srgb.%05d.png.yml",
+                                    "duration": 200,
+                                    "height": 1080,
+                                    "images": true,
+                                    "in": 5400,
+                                    "path": "chimera_fountains_srgb.%05d.png",
+                                    "pix_fmt": "rgb48be",
+                                    "rate": 25.0,
+                                    "width": 1920
+                                }
+                            },
+                            "source_test_name": "test_mov"
+                        },
+                        "name": "chimera_fountains_srgb.%05d",
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 25.0,
+                                "value": 200.0
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 25.0,
+                                "value": 5400.0
+                            }
+                        },
+                        "effects": [],
+                        "markers": [],
+                        "enabled": true,
+                        "media_references": {
+                            "DEFAULT_MEDIA": {
+                                "OTIO_SCHEMA": "ImageSequenceReference.1",
+                                "metadata": {},
+                                "name": "",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 5400.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url_base": "/Users/sam/git/EncodingGuidelines/enctests/sources/enc_sources/chimera_fountains_srgb",
+                                "name_prefix": "chimera_fountains_srgb.",
+                                "name_suffix": ".png",
+                                "start_frame": 5400,
+                                "frame_step": 1,
+                                "rate": 25.0,
+                                "frame_zero_padding": 5,
+                                "missing_frame_policy": "error"
+                            },
+                            "test_mov-dnxhd": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "dnxhd",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-pix_fmt": "yuv422p10le",
+                                            "-profile:v": "dnxhr_hqx",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T15:03:09.619221+00:00",
+                                            "encode_time": 3.4502,
+                                            "filesize": 183502387,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 52.939273,
+                                                "max": 53.352505,
+                                                "mean": 52.940579,
+                                                "min": 52.258893
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 52.95007,
+                                                "max": 53.789509,
+                                                "mean": 52.955295,
+                                                "min": 51.504002
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 50.406007,
+                                                "max": 51.030927,
+                                                "mean": 50.40954,
+                                                "min": 49.289954
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.98123,
+                                                "max": 100.0,
+                                                "mean": 99.981899,
+                                                "min": 96.379815
+                                            }
+                                        },
+                                        "test_config_path": null
+                                    }
+                                },
+                                "name": "chimera_fountains_srgb.-test_mov-dnxhd.mov",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_fountains_srgb.-test_mov-dnxhd.mov"
+                            },
+                            "test_mov-mjpeg": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "mjpeg",
+                                            "-color_primaries": 1,
+                                            "-color_range": "pc",
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-pix_fmt": "yuvj444p",
+                                            "-qscale:v": 3,
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=full:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T15:03:06.166416+00:00",
+                                            "encode_time": 2.4826,
+                                            "filesize": 62528487,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 48.623472,
+                                                "max": 48.889547,
+                                                "mean": 48.623783,
+                                                "min": 48.386739
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 46.90771,
+                                                "max": 47.380739,
+                                                "mean": 46.909088,
+                                                "min": 46.272338
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 42.641389,
+                                                "max": 43.227724,
+                                                "mean": 42.643968,
+                                                "min": 41.740903
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.959628,
+                                                "max": 100.0,
+                                                "mean": 99.962603,
+                                                "min": 92.520515
+                                            }
+                                        },
+                                        "test_config_path": null
+                                    }
+                                },
+                                "name": "chimera_fountains_srgb.-test_mov-mjpeg.mov",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_fountains_srgb.-test_mov-mjpeg.mov"
+                            },
+                            "test_mov-prores_ks": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "prores_ks",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-pix_fmt": "yuvj444p",
+                                            "-profile:v": 3,
+                                            "-qscale:v": 10,
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vendor": "apl0",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=full:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T15:03:12.362397+00:00",
+                                            "encode_time": 2.7413,
+                                            "filesize": 142209108,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 51.83811,
+                                                "max": 52.151394,
+                                                "mean": 51.838485,
+                                                "min": 51.582211
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 50.550282,
+                                                "max": 50.822529,
+                                                "mean": 50.55093,
+                                                "min": 50.065315
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 29.207743,
+                                                "max": 30.491845,
+                                                "mean": 29.218874,
+                                                "min": 28.41963
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 100.0,
+                                                "max": 100.0,
+                                                "mean": 100.0,
+                                                "min": 100.0
+                                            }
+                                        },
+                                        "test_config_path": null
+                                    }
+                                },
+                                "name": "chimera_fountains_srgb.-test_mov-prores_ks.mov",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 25.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/chimera_fountains_srgb.-test_mov-prores_ks.mov"
+                            }
+                        },
+                        "active_media_reference_key": "DEFAULT_MEDIA"
+                    },
+                    {
+                        "OTIO_SCHEMA": "Clip.2",
+                        "metadata": {
+                            "aswf_enctests": {
+                                "source_info": {
+                                    "config_path": "/Users/sam/git/EncodingGuidelines/enctests/sources/hdr_sources/sparks_srgb/sparks_srgb.%05d.png.yml",
+                                    "duration": 200,
+                                    "height": 1014,
+                                    "images": true,
+                                    "in": 6100,
+                                    "path": "sparks_srgb.%05d.png",
+                                    "pix_fmt": "rgb24",
+                                    "rate": 24,
+                                    "width": 1920
+                                }
+                            },
+                            "source_test_name": "test_mov"
+                        },
+                        "name": "sparks_srgb.%05d",
+                        "source_range": {
+                            "OTIO_SCHEMA": "TimeRange.1",
+                            "duration": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 24.0,
+                                "value": 200.0
+                            },
+                            "start_time": {
+                                "OTIO_SCHEMA": "RationalTime.1",
+                                "rate": 24.0,
+                                "value": 6100.0
+                            }
+                        },
+                        "effects": [],
+                        "markers": [],
+                        "enabled": true,
+                        "media_references": {
+                            "DEFAULT_MEDIA": {
+                                "OTIO_SCHEMA": "ImageSequenceReference.1",
+                                "metadata": {},
+                                "name": "",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 6100.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url_base": "/Users/sam/git/EncodingGuidelines/enctests/sources/hdr_sources/sparks_srgb",
+                                "name_prefix": "sparks_srgb.",
+                                "name_suffix": ".png",
+                                "start_frame": 6100,
+                                "frame_step": 1,
+                                "rate": 24.0,
+                                "frame_zero_padding": 5,
+                                "missing_frame_policy": "error"
+                            },
+                            "test_mov-dnxhd": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "dnxhd",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-pix_fmt": "yuv422p10le",
+                                            "-profile:v": "dnxhr_hqx",
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=tv:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T15:05:43.932991+00:00",
+                                            "encode_time": 2.9071,
+                                            "filesize": 172852787,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 48.605083,
+                                                "max": 51.628808,
+                                                "mean": 48.626091,
+                                                "min": 47.06892
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 48.846116,
+                                                "max": 52.060041,
+                                                "mean": 48.869235,
+                                                "min": 47.420523
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 46.618336,
+                                                "max": 49.723039,
+                                                "mean": 46.641074,
+                                                "min": 45.136702
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.991138,
+                                                "max": 100.0,
+                                                "mean": 99.99129,
+                                                "min": 98.258054
+                                            }
+                                        },
+                                        "test_config_path": null
+                                    }
+                                },
+                                "name": "sparks_srgb.-test_mov-dnxhd.mov",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/sparks_srgb.-test_mov-dnxhd.mov"
+                            },
+                            "test_mov-mjpeg": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "mjpeg",
+                                            "-color_primaries": 1,
+                                            "-color_range": "pc",
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-pix_fmt": "yuvj444p",
+                                            "-qscale:v": 3,
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=full:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T15:05:41.019488+00:00",
+                                            "encode_time": 1.6491,
+                                            "filesize": 107053286,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 43.606776,
+                                                "max": 45.678529,
+                                                "mean": 43.616932,
+                                                "min": 42.571085
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 43.80491,
+                                                "max": 45.978499,
+                                                "mean": 43.815534,
+                                                "min": 42.914635
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 41.139537,
+                                                "max": 42.245794,
+                                                "mean": 41.142505,
+                                                "min": 40.640868
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 99.970873,
+                                                "max": 100.0,
+                                                "mean": 99.972454,
+                                                "min": 94.490829
+                                            }
+                                        },
+                                        "test_config_path": null
+                                    }
+                                },
+                                "name": "sparks_srgb.-test_mov-mjpeg.mov",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/sparks_srgb.-test_mov-mjpeg.mov"
+                            },
+                            "test_mov-prores_ks": {
+                                "OTIO_SCHEMA": "ExternalReference.1",
+                                "metadata": {
+                                    "aswf_enctests": {
+                                        "description": "A comparison of different codecs, with VMAF > 98.",
+                                        "encode_arguments": {
+                                            "-c:v": "prores_ks",
+                                            "-color_primaries": 1,
+                                            "-color_range": 1,
+                                            "-color_trc": 2,
+                                            "-colorspace": 1,
+                                            "-pix_fmt": "yuvj444p",
+                                            "-profile:v": 3,
+                                            "-qscale:v": 10,
+                                            "-sws_flags": "spline+accurate_rnd+full_chroma_int",
+                                            "-vendor": "apl0",
+                                            "-vf": "\"scale=in_range=full:in_color_matrix=bt709:out_range=full:out_color_matrix=bt709\""
+                                        },
+                                        "results": {
+                                            "completed_utc": "2023-09-02T15:05:46.271678+00:00",
+                                            "encode_time": 2.332,
+                                            "filesize": 235894554,
+                                            "psnr": null,
+                                            "psnr_cb": {
+                                                "harmonic_mean": 48.167753,
+                                                "max": 49.76611,
+                                                "mean": 48.173506,
+                                                "min": 47.234445
+                                            },
+                                            "psnr_cr": {
+                                                "harmonic_mean": 49.764946,
+                                                "max": 50.789645,
+                                                "mean": 49.767341,
+                                                "min": 49.103259
+                                            },
+                                            "psnr_y": {
+                                                "harmonic_mean": 31.286978,
+                                                "max": 31.913112,
+                                                "mean": 31.289394,
+                                                "min": 30.465914
+                                            },
+                                            "result": "Completed",
+                                            "vmaf": {
+                                                "harmonic_mean": 100.0,
+                                                "max": 100.0,
+                                                "mean": 100.0,
+                                                "min": 100.0
+                                            }
+                                        },
+                                        "test_config_path": null
+                                    }
+                                },
+                                "name": "sparks_srgb.-test_mov-prores_ks.mov",
+                                "available_range": {
+                                    "OTIO_SCHEMA": "TimeRange.1",
+                                    "duration": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 200.0
+                                    },
+                                    "start_time": {
+                                        "OTIO_SCHEMA": "RationalTime.1",
+                                        "rate": 24.0,
+                                        "value": 0.0
+                                    }
+                                },
+                                "available_image_bounds": null,
+                                "target_url": "/Users/sam/git/EncodingGuidelines/enctests/codec-encode/sparks_srgb.-test_mov-prores_ks.mov"
+                            }
+                        },
+                        "active_media_reference_key": "DEFAULT_MEDIA"
+                    }
+                ],
+                "kind": "Video"
+            }
+        ]
+    }
+}

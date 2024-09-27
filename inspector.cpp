@@ -79,6 +79,10 @@ void UpdateJSONInspector() {
     jsonEditor.SetReadOnly(true);
     jsonEditor.SetLanguageDefinition(otioLangDef);
     jsonEditor.SetText(appState.selected_text);
+
+    // When the user selects a new clip, we need to update the selected reference index
+    // this allows the inspector to show the correct reference when the user selects a clip
+    appState.selected_reference_index = -1;
 }
 
 void DrawJSONInspector() {
@@ -614,7 +618,7 @@ void DrawInspector() {
     // Draw Reference Media Information
     if (const auto& clip = dynamic_cast<otio::Clip*>(selected_object)) {
         ImGui::Dummy(ImVec2(0.0f, 20.0f));
-        ImGui::Text("Media Information:");
+        ImGui::Text("Selected Media Reference:");
 
         const auto& media_references = clip->media_references();
 
@@ -632,7 +636,7 @@ void DrawInspector() {
 
         std::string current_reference_name = clip->active_media_reference_key();
 
-        // Initialize selected_reference_index if it's not set
+        // Select the active media reference if it is not already set in the appState.
         if (appState.selected_reference_index == -1) {
             for (int i = 0; i < num_references; i++) {
                 if (current_reference_name == reference_names[i]) {
@@ -642,7 +646,12 @@ void DrawInspector() {
             }
         }
 
-        ImGui::Combo("", &appState.selected_reference_index, reference_names.data(), num_references);
+        // Set the active media ref key based on user selection
+        if (ImGui::Combo("", &appState.selected_reference_index, reference_names.data(), num_references)) {
+            if (appState.selected_reference_index >= 0 && appState.selected_reference_index < num_references) {
+                clip->set_active_media_reference_key(reference_names[appState.selected_reference_index]);
+            }
+        }
 
         // Retrieve the selected MediaReference object
         otio::MediaReference* selected_reference = nullptr;
@@ -656,17 +665,64 @@ void DrawInspector() {
             std::cerr << "Error: " << e.what() << std::endl;
         }
 
-        // You can now use the selected_reference object here
         if (selected_reference) {
+            ImGui::Indent();
+            ImGui::Dummy(ImVec2(0.0f, 5.0f));
+            // External Reference Node
             if (auto external_ref = dynamic_cast<otio::ExternalReference*>(selected_reference)) {
                 ImGui::Text("Type: External Media");
-                ImGui::Text("Target: %s", external_ref->target_url().c_str());
+                snprintf(tmp_str, sizeof(tmp_str), "%s", external_ref->target_url().c_str());
+                if (ImGui::InputText("Target", tmp_str, sizeof(tmp_str))) {
+                    external_ref->set_target_url(tmp_str);
+                }
 
+                auto available_range = external_ref->available_range();
+                if (available_range && DrawTimeRange("Available Range", &(*available_range), false)) {
+                    external_ref->set_available_range(available_range);
+                }
+
+                auto available_image_bounds = external_ref->available_image_bounds();
+                if (available_image_bounds) {
+                    ImGui::Text("Available Image Bounds:");
+                    ImGui::Indent();
+                    ImGui::Text("Min: (%f, %f)", available_image_bounds->min.x, available_image_bounds->min.y);
+                    ImGui::Text("Max: (%f, %f)", available_image_bounds->max.x, available_image_bounds->max.y);
+                    ImGui::Unindent();
+                }
+
+                DrawMetadataTable(external_ref->metadata());
+
+                // Missing media node
             } else if (auto missing_ref = dynamic_cast<otio::MediaReference*>(selected_reference)) {
                 ImGui::Text("Type: Missing Media");
-            }
+            } else if (auto imageSeqRef = dynamic_cast<otio::ImageSequenceReference*>(selected_reference)) {
+                ImGui::Text("Type: Image Sequence");
 
-            // Add metadata table for the selected reference
+                auto target_url = imageSeqRef->target_url_base();
+                if (ImGui::InputText("Target url base", tmp_str, sizeof(tmp_str))) {
+                    imageSeqRef->set_target_url_base(tmp_str);
+                }
+
+                auto available_range = imageSeqRef->available_range();
+                if (available_range && DrawTimeRange("Available Range", &(*available_range), false)) {
+                    imageSeqRef->set_available_range(available_range);
+                }
+
+                auto available_image_bounds = imageSeqRef->available_image_bounds();
+                if (available_image_bounds) {
+                    ImGui::Text("Available Image Bounds:");
+                    ImGui::Indent();
+                    ImGui::Text("Min: (%f, %f)", available_image_bounds->min.x, available_image_bounds->min.y);
+                    ImGui::Text("Max: (%f, %f)", available_image_bounds->max.x, available_image_bounds->max.y);
+                    ImGui::Unindent();
+                }
+
+                DrawMetadataTable(imageSeqRef->metadata());
+
+            } else {
+                ImGui::Text("Type: The selected media type is not yet supported in the inspector.");
+            }
+            ImGui::Unindent();
         }
     }
 }
