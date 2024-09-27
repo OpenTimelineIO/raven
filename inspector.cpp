@@ -21,7 +21,6 @@
 
 #include <TextEditor.h>
 #include <implot.h>
-#include <iostream>
 
 static const char* marker_color_names[] = {
     "PINK", "RED", "ORANGE", "YELLOW",
