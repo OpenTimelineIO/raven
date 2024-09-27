@@ -677,7 +677,7 @@ void DrawInspector() {
     // Draw Reference Media Information
     if (const auto& clip = dynamic_cast<otio::Clip*>(selected_object)) {
         ImGui::Dummy(ImVec2(0.0f, 20.0f));
-        ImGui::Text("Selected Media Reference:");
+        ImGui::Text("Selected media reference:");
 
         const auto& media_references = clip->media_references();
 
