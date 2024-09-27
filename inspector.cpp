@@ -719,7 +719,7 @@ void DrawInspector() {
         if (selected_reference) {
             ImGui::Indent();
             ImGui::Dummy(ImVec2(0.0f, 5.0f));
-            // External Reference Node
+
             if (auto external_ref = dynamic_cast<otio::ExternalReference*>(selected_reference)) {
                 ImGui::Text("Type: External Media");
                 snprintf(tmp_str, sizeof(tmp_str), "%s", external_ref->target_url().c_str());
@@ -740,7 +740,6 @@ void DrawInspector() {
                 ImGui::Text("Metadata:");
                 DrawMetadataTable(external_ref->metadata());
 
-                // Missing media node
             } else if (auto missing_ref = dynamic_cast<otio::MediaReference*>(selected_reference)) {
                 ImGui::Text("Type: Missing Media");
 
