@@ -745,7 +745,7 @@ void DrawInspector() {
 
                 auto available_range = missing_ref->available_range();
                 if (available_range && DrawTimeRange("Available Range", &(*available_range), false)) {
-                    external_ref->set_available_range(available_range);
+                    missing_ref->set_available_range(available_range);
                 }
 
                 auto available_image_bounds = missing_ref->available_image_bounds();
