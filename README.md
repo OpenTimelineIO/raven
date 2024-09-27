@@ -47,6 +47,7 @@ Spin up your favourite terminal and follow these steps:
 You will need to install the [Emscripten toolchain](https://emscripten.org) first.
 
 ```shell
+  git submodule update --init --recursive
   mkdir build-web
   cd build-web
   emcmake cmake ..
