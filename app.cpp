@@ -22,6 +22,7 @@
 
 void DrawMenu();
 void DrawToolbar(ImVec2 buttonSize);
+void DrawDroppedFilesPrompt();
 
 #define DEFINE_APP_THEME_NAMES
 #include "app.h"
@@ -36,6 +37,9 @@ AppState appState;
 AppTheme appTheme;
 
 ImFont* gFont = nullptr;
+
+// Variable to store dropped file to load
+std::string prompt_dropped_file = "";
 
 // Log a message to the terminal
 void Log(const char* format, ...) {
@@ -315,6 +319,43 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
 
 void MainCleanup() { }
 
+// Validate that a file has the .otio extension
+bool is_valid_file(const std::string& filepath) {
+    size_t last_dot = filepath.find_last_of('.');
+    
+    // If no dot is found, it's not a valid file
+    if (last_dot == std::string::npos) {
+        return false;
+    }
+
+    // Get and check the extension
+    std::string extension = filepath.substr(last_dot + 1);
+    return extension == "otio";
+}
+
+// Accept and open a file path
+void FileDropCallback(int count, const char** filepaths) {
+    if (count > 1){
+        Message("Cannot open multiple files.");
+        return;
+    }
+
+    else if (count == 0) {
+        return;
+    }
+
+    std::string file_path = filepaths[0];
+
+    if (!is_valid_file(file_path)){
+        Message("Invalid file: %s", file_path.c_str());
+        return;
+    }
+
+    // Loading is done in DrawDroppedFilesPrompt()
+    prompt_dropped_file = file_path;
+
+}
+
 // Make a button using the fancy icon font
 bool IconButton(const char* label, const ImVec2 size = ImVec2(0, 0)) {
     bool result = ImGui::Button(label, size);
@@ -383,6 +424,7 @@ void MainGui() {
         exit(0);
     }
 
+    DrawDroppedFilesPrompt();
     DrawMenu();
 
     // ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - button_size.x +
@@ -783,6 +825,32 @@ void DrawToolbar(ImVec2 button_size) {
     ImGui::SameLine();
     ImGui::Text("Frame: %d @ %3d fps", ImGui::GetFrameCount(), fps);
 #endif
+}
+
+// Prompt the user to confirm file loading
+void DrawDroppedFilesPrompt() {
+    if (prompt_dropped_file == "") {
+        return;
+    }
+
+    ImGui::OpenPopup("Open File?");
+    // Modal window for confirmation
+    if (ImGui::BeginPopupModal("Open File?", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Open file \n%s?", prompt_dropped_file.c_str());
+        
+        if (ImGui::Button("Yes")) {
+            LoadFile(prompt_dropped_file);
+            prompt_dropped_file = "";
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("No")) {
+            Message(""); // Reset last message
+            prompt_dropped_file = "";
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
 }
 
 void SelectObject(
