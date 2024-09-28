@@ -245,6 +245,32 @@ void LoadTimeline(otio::Timeline* timeline) {
     SelectObject(timeline);
 }
 
+void LoadString(std::string json) {
+    auto start = std::chrono::high_resolution_clock::now();
+
+    otio::ErrorStatus error_status;
+    auto timeline = dynamic_cast<otio::Timeline*>(
+        otio::Timeline::from_json_string(json, &error_status));
+    if (!timeline || otio::is_error(error_status)) {
+        Message(
+            "Error loading JSON: %s",
+            otio_error_string(error_status).c_str());
+        return;
+    }
+
+    LoadTimeline(timeline);
+
+    appState.file_path = timeline->name().c_str();
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = (end - start);
+    double elapsed_seconds = elapsed.count();
+    Message(
+        "Loaded \"%s\" in %.3f seconds",
+        timeline->name().c_str(),
+        elapsed_seconds);
+}
+
 void LoadFile(std::string path) {
     auto start = std::chrono::high_resolution_clock::now();
 

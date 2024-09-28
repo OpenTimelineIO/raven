@@ -128,6 +128,8 @@ void Log(const char* format, ...);
 void Message(const char* format, ...);
 std::string Format(const char* format, ...);
 
+void LoadString(std::string json);
+
 std::string otio_error_string(otio::ErrorStatus const& error_status);
 
 void SelectObject(
