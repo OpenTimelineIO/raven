@@ -47,6 +47,12 @@ You will need to install the [Emscripten toolchain](https://emscripten.org) firs
 See also: `serve.py` as an alternative to `emrun`, and as
 a reference for which HTTP headers are needed to host the WASM build.
 
+You can load a file into WASM Raven a few ways:
+- Add a JSON string to Module.otioLoadString in the HTML file
+- Add a URL to Module.otioLoadURL in the HTML file
+- Call Module.LoadString(otio_data) at runtime
+- Call Module.LoadURL(otio_url) at runtime
+
 Note: The WASM build of raven is missing some features - see the Help Wanted section below.
 
 ## Troubleshooting
