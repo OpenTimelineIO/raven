@@ -30,9 +30,42 @@
   <body>
     <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
     <script type='text/javascript'>
+
+  /** 
+   * Wrap and expose functions from Raven/emscripten to the browser.
+   */
+  function exposeRavenFunctions() {
+    Module.LoadString = function (str) {
+      // This is annoying, but we need to allocate memory manually on the wasm heap
+      // to avoid a stack overflow if you pass in a very large string.
+      var lengthBytes = lengthBytesUTF8(str) + 1;
+      var stringOnWasmHeap = _malloc(lengthBytes);
+      stringToUTF8(str, stringOnWasmHeap, lengthBytes);
+
+      Module.ccall("js_LoadString", "number", ["number"], [stringOnWasmHeap]);
+
+      // ... And free it when we're done.
+      _free(stringOnWasmHeap);
+    }
+    Module.LoadUrl = Module.cwrap("js_LoadUrl", "number", ["string"]);
+  }
+
+  /**
+   * Once raven loads, load any OTIO timeline that was passed in.
+   */
+  function ravenPostRun() {
+    if (Module.otioLoadUrl) {
+      Module.LoadUrl(Module.otioLoadUrl);
+    } else if (Module.otioLoadString) {
+      Module.LoadString(Module.otioLoadString);
+    }
+  }
+
       var Module = {
-        preRun: [],
-        postRun: [],
+        // otioLoadUrl: "",
+        // otioLoadString: "",
+        preRun: [exposeRavenFunctions],
+        postRun: [ravenPostRun],
         print: (function() {
             return function(text) {
                 text = Array.prototype.slice.call(arguments).join(' ');
