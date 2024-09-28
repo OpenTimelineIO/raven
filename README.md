@@ -26,23 +26,34 @@ Linux (Ubuntu, or similar):
 - A recent version of CMake
   - You can get this via `sudo snap install cmake` or by downloading from https://cmake.org/download/
 
+__Note__: Before building, please ensure that you clone this project with the `--recursive` flag. 
+This will also clone and initialize all of the submodules that this project depends on.
+
 ## Building (macOS, Windows, Linux)
 
-	% mkdir build
-	% cd build
-	% cmake ..
-	% cmake --build . -j
-	% ./raven ../example.otio
+Spin up your favourite terminal and follow these steps:
+
+```shell
+  git submodule update --init --recursive
+  mkdir build
+  cd build
+  cmake ..
+  cmake --build . -j
+  ./raven ../example.otio
+```
 
 ## Building (WASM via Emscripten)
 
 You will need to install the [Emscripten toolchain](https://emscripten.org) first.
 
-	% mkdir build-web
-	% cd build-web
-	% emcmake cmake ..
-	% cmake --build .
-	% emrun ./raven.html
+```shell
+  git submodule update --init --recursive
+  mkdir build-web
+  cd build-web
+  emcmake cmake ..
+  cmake --build .
+  emrun ./raven.html
+```
 
 See also: `serve.py` as an alternative to `emrun`, and as
 a reference for which HTTP headers are needed to host the WASM build.
