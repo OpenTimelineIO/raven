@@ -923,7 +923,25 @@ void DetectPlayheadLimits() {
 void FitZoomWholeTimeline() {
     appState.scale = appState.timeline_width / appState.timeline->duration().to_seconds();
 }
+// GUI utility to add dynamic height to GUI elements
 
+float CalculateDynamicHeight() {
+    // Get the current font size
+    float fontSize = ImGui::GetFontSize();
+    // Get the vertical spacing from the ImGui style
+    float verticalSpacing = ImGui::GetStyle().ItemSpacing.y;
+
+    // Determine how many elements are selected
+    int visibleElementCount = 0;
+    if (appState.display_timecode) visibleElementCount++;
+    if (appState.display_frames) visibleElementCount++;
+    if (appState.display_seconds) visibleElementCount++;
+    if (appState.display_rate) visibleElementCount++;
+
+    // Set height based on selected elements
+    // Use fontSize as base height and verticalSpacing for additional height
+    return fontSize + (visibleElementCount - 1) * (fontSize + verticalSpacing);
+}
 std::string FormattedStringFromTime(otio::RationalTime time, bool allow_rate) {
     std::string result;
     if (appState.display_timecode) {
