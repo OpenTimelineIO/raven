@@ -887,6 +887,17 @@ bool DrawTimecodeTrack(
     bool interactive = true) {
     bool moved_playhead = false;
 
+    // Adjust track_height based on the number of visible elements
+    const float baseHeight = 25.0f; // Base height of one element
+    int visibleElementCount = 0;
+    if (appState.display_timecode) visibleElementCount++;
+    if (appState.display_frames) visibleElementCount++;
+    if (appState.display_seconds) visibleElementCount++;
+    if (appState.display_rate) visibleElementCount++;
+
+    // Calculate the new track height
+    track_height = baseHeight * visibleElementCount;
+
     float width = ImGui::GetContentRegionAvail().x;
     ImVec2 size(fmaxf(full_width, width), track_height);
 
