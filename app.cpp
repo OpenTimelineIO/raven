@@ -940,7 +940,9 @@ float CalculateDynamicHeight() {
 
     // Set height based on selected elements
     // Use fontSize as base height and verticalSpacing for additional height
-    return fontSize + (visibleElementCount - 1) * (fontSize + verticalSpacing);
+    float calculatedHeight = fontSize + (visibleElementCount - 1) * (fontSize + verticalSpacing);
+        // Return the maximum of calculatedHeight and the minimum height (10)
+    return std::max(calculatedHeight, 10.0f);
 }
 std::string FormattedStringFromTime(otio::RationalTime time, bool allow_rate) {
     std::string result;
