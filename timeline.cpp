@@ -887,6 +887,9 @@ bool DrawTimecodeTrack(
     bool interactive = true) {
     bool moved_playhead = false;
 
+    // Adjust track_height based on the number of visible elements
+    track_height = CalculateDynamicHeight();
+
     float width = ImGui::GetContentRegionAvail().x;
     ImVec2 size(fmaxf(full_width, width), track_height);
 
