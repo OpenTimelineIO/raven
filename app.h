@@ -139,6 +139,7 @@ void SeekPlayhead(double seconds);
 void SnapPlayhead();
 void DetectPlayheadLimits();
 void FitZoomWholeTimeline();
+float CalculateDynamicHeight();
 std::string FormattedStringFromTime(otio::RationalTime time, bool allow_rate = true);
 std::string TimecodeStringFromTime(otio::RationalTime);
 std::string FramesStringFromTime(otio::RationalTime);
