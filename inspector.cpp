@@ -784,6 +784,8 @@ void DrawInspector() {
                 ImGui::Text("Type: The selected media type is not yet supported in the inspector.");
             }
             ImGui::Unindent();
+        } else {
+            ImGui::Text("No media reference found.");
         }
     }
 }
