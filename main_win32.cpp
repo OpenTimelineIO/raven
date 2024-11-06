@@ -8,6 +8,7 @@
 #include <d3d11.h>
 #include <shellapi.h>
 #include <tchar.h>
+#include <stdio.h>
 
 #include "main.h"
 
@@ -309,15 +310,15 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         for(UINT i = 0; i < count; ++i)
         {
-           if (DragQueryFileW(hDrop, i, temp_filename, MAX_PATH))
-           {
+            if (DragQueryFileW(hDrop, i, temp_filename, MAX_PATH))
+            {
                 // Determine the required buffer size for the multi-byte string
                 int buffer_size = WideCharToMultiByte(CP_UTF8, 0, temp_filename, -1, NULL, 0, NULL, NULL);
                 file_list[i] = (char*)malloc(buffer_size * sizeof(char));
 
                 // Convert wide character filename to UTF-8
                 WideCharToMultiByte(CP_UTF8, 0, temp_filename, -1, file_list[i], buffer_size, NULL, NULL);
-           }
+            }
         }
 
         DragFinish(hDrop);
