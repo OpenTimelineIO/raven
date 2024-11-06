@@ -304,7 +304,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         UINT count = DragQueryFileA(hDrop, -1, NULL, 0);
 
         char** file_list;
-        file_list = (char**)malloc(count * sizeof(wchar_t*));
+        file_list = (char**)malloc(count * sizeof(char*));
         wchar_t temp_filename[MAX_PATH];
 
         for(UINT i = 0; i < count; ++i)
