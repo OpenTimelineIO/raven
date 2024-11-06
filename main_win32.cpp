@@ -304,14 +304,20 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         UINT count = DragQueryFileA(hDrop, -1, NULL, 0);
 
         char** file_list;
-        file_list = (char**)malloc(count * sizeof(char*));
-        char temp_filename[MAX_PATH];
+        file_list = (char**)malloc(count * sizeof(wchar_t*));
+        wchar_t temp_filename[MAX_PATH];
 
         for(UINT i = 0; i < count; ++i)
         {
-           if (DragQueryFileA(hDrop, i, temp_filename, MAX_PATH))
-               file_list[i] = (char*)malloc(MAX_PATH * sizeof(char));
-               strcpy_s(file_list[i],MAX_PATH, temp_filename);
+           if (DragQueryFileW(hDrop, i, temp_filename, MAX_PATH))
+           {
+                // Determine the required buffer size for the multi-byte string
+                int buffer_size = WideCharToMultiByte(CP_UTF8, 0, temp_filename, -1, NULL, 0, NULL, NULL);
+                file_list[i] = (char*)malloc(buffer_size * sizeof(char));
+
+                // Convert wide character filename to UTF-8
+                WideCharToMultiByte(CP_UTF8, 0, temp_filename, -1, file_list[i], buffer_size, NULL, NULL);
+           }
         }
 
         DragFinish(hDrop);
