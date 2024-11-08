@@ -302,7 +302,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
     case WM_DROPFILES:
         HDROP hDrop = reinterpret_cast<HDROP>(wParam);
-        UINT count = DragQueryFileA(hDrop, -1, NULL, 0);
+        UINT count = DragQueryFileW(hDrop, -1, NULL, 0);
 
         char** file_list;
         file_list = (char**)malloc(count * sizeof(char*));
