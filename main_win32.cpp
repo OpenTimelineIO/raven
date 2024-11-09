@@ -6,7 +6,9 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
 #include <d3d11.h>
+#include <shellapi.h>
 #include <tchar.h>
+#include <stdio.h>
 
 #include "main.h"
 
@@ -115,6 +117,8 @@ int main(int argc, char** argv)
 
     MainInit(argc, argv, initial_width, initial_height);
 
+    DragAcceptFiles(hwnd, TRUE);
+
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
     // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
@@ -179,6 +183,8 @@ int main(int argc, char** argv)
 
     DeleteFiber(g_messageFiber);
     ConvertFiberToThread();
+
+    DragAcceptFiles(hwnd, FALSE);
 
     return 0;
 }
@@ -293,6 +299,37 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         // back to the main fiber allowing gui to draw a frame. After a frame is drawn
         // execution is yielded back to the message fiber.
         SwitchToFiber(g_mainFiber);
+        break;
+    case WM_DROPFILES:
+        HDROP hDrop = reinterpret_cast<HDROP>(wParam);
+        UINT count = DragQueryFileW(hDrop, -1, NULL, 0);
+
+        char** file_list;
+        file_list = (char**)malloc(count * sizeof(char*));
+        wchar_t temp_filename[MAX_PATH];
+
+        for(UINT i = 0; i < count; ++i)
+        {
+            if (DragQueryFileW(hDrop, i, temp_filename, MAX_PATH))
+            {
+                // Determine the required buffer size for the multi-byte string
+                int buffer_size = WideCharToMultiByte(CP_UTF8, 0, temp_filename, -1, NULL, 0, NULL, NULL);
+                file_list[i] = (char*)malloc(buffer_size * sizeof(char));
+
+                // Convert wide character filename to UTF-8
+                WideCharToMultiByte(CP_UTF8, 0, temp_filename, -1, file_list[i], buffer_size, NULL, NULL);
+            }
+        }
+
+        DragFinish(hDrop);
+
+        FileDropCallback(count, (const char**)file_list);
+
+        for (UINT i = 0; i < count; ++i){
+            free(file_list[i]);
+        }
+        free(file_list);
+
         break;
     }
     return ::DefWindowProc(hWnd, msg, wParam, lParam);
