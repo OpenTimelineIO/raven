@@ -66,6 +66,8 @@ if(NOT EMSCRIPTEN AND NOT WIN32)
   add_subdirectory("libs/glfw")
 endif()
 
+add_subdirectory("libs/minizip-ng")
+
 if(NOT EMSCRIPTEN)
   add_custom_command(
       OUTPUT "${PROJECT_SOURCE_DIR}/fonts/embedded_font.inc"
@@ -81,6 +83,7 @@ target_compile_definitions(raven
 target_link_libraries(raven PUBLIC
     OTIO::opentimelineio
     IMGUI
+    MINIZIP::minizip
 )
 
 if (APPLE)
