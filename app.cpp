@@ -351,6 +351,7 @@ otio::Timeline* LoadOTIOZFile(std::string path) {
                         timeline = dynamic_cast<otio::Timeline*>(
                             otio::Timeline::from_json_string(json));
                     }
+                    free(buf);
                     mz_zip_reader_entry_close(zip_reader);
                 }
             }
