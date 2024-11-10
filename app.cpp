@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,6 +16,11 @@
 #ifndef EMSCRIPTEN
 #include "nfd.h"
 #endif
+
+#include "mz.h"
+#include "mz_zip.h"
+#include "mz_strm.h"
+#include "mz_zip_rw.h"
 
 #include "fonts/embedded_font.inc"
 
@@ -287,7 +293,75 @@ otio::Timeline* LoadOTIOFile(std::string path) {
 }
 
 otio::Timeline* LoadOTIOZFile(std::string path) {
-    return nullptr;
+    otio::Timeline* timeline = nullptr;
+
+    void *zip_reader = mz_zip_reader_create();
+
+    auto status = mz_zip_reader_open_file(zip_reader, path.c_str());
+    if (status != MZ_OK) {
+        Message(
+            "Error opening \"%s\": %d",
+            path.c_str(),
+            status);
+    } else {
+        status = mz_zip_reader_locate_entry(zip_reader, "content.otio", 1);
+        if (status != MZ_OK) {
+            Message(
+                "Invalid OTIOZ: \"%s\": \"content.otio\" not found in archive.",
+                path.c_str());
+        } else {
+            mz_zip_file *file_info = NULL;
+            status = mz_zip_reader_entry_get_info(zip_reader, &file_info);
+            if (status != MZ_OK) {
+                Message(
+                    "Invalid OTIOZ: \"%s\": Error getting entry info: %d",
+                    path.c_str(),
+                    status);
+            } else {
+                status = mz_zip_reader_entry_open(zip_reader);
+                if (status != MZ_OK) {
+                    Message(
+                        "Invalid OTIOZ: \"%s\": Unable to open entry: %d",
+                        path.c_str(),
+                        status);
+                } else {
+                    char* buf = (char*)malloc(file_info->uncompressed_size + 1);
+                    char* buf_cursor = buf;
+                    int64_t bytes_remaining = file_info->uncompressed_size;
+                    int32_t bytes_read = 0;
+                    while (bytes_remaining > 0) {
+                        int32_t chunk_size = bytes_remaining < INT32_MAX ? bytes_remaining : INT32_MAX;
+                        bytes_read = mz_zip_reader_entry_read(zip_reader, buf_cursor, chunk_size);
+                        if (bytes_read > 0) {
+                            bytes_remaining -= bytes_read;
+                            buf_cursor += bytes_read;
+                        } else {
+                            break;
+                        }
+                    }
+                    if (bytes_remaining != 0) {
+                        Message(
+                            "Invalid OTIOZ: \"%s\": Error reading entry: %ld",
+                            path.c_str(),
+                            bytes_remaining);
+                    } else {
+                        // Add a null terminator
+                        buf[file_info->uncompressed_size] = '\0';
+                        std::string json(buf);
+                        timeline = dynamic_cast<otio::Timeline*>(
+                            otio::Timeline::from_json_string(json));
+                    }
+                    mz_zip_reader_entry_close(zip_reader);
+                }
+            }
+        }
+
+        mz_zip_reader_close(zip_reader);
+    }
+
+    mz_zip_reader_delete(&zip_reader);
+
+    return timeline;
 }
 
 std::string FileExtension(std::string path) {
