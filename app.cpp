@@ -1,5 +1,6 @@
 // Raven NLE
 
+#include <cstddef>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -271,9 +272,7 @@ void LoadString(std::string json) {
         elapsed_seconds);
 }
 
-void LoadFile(std::string path) {
-    auto start = std::chrono::high_resolution_clock::now();
-
+otio::Timeline* LoadOTIOFile(std::string path) {
     otio::ErrorStatus error_status;
     auto timeline = dynamic_cast<otio::Timeline*>(
         otio::Timeline::from_json_file(path, &error_status));
@@ -282,8 +281,43 @@ void LoadFile(std::string path) {
             "Error loading \"%s\": %s",
             path.c_str(),
             otio_error_string(error_status).c_str());
+        return nullptr;
+    }
+    return timeline;
+}
+
+otio::Timeline* LoadOTIOZFile(std::string path) {
+    return nullptr;
+}
+
+std::string FileExtension(std::string path) {
+    return path.substr(path.find_last_of(".") + 1);
+}
+
+std::string LowerCase(std::string str) {
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); }); // 🙄
+    return str;
+}
+
+void LoadFile(std::string path) {
+    otio::Timeline* timeline = nullptr;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    auto ext = LowerCase(FileExtension(path));
+    if (ext == "otio") {
+        timeline = LoadOTIOFile(path);
+    } else if (ext == "otioz") {
+        timeline = LoadOTIOZFile(path);
+    } else {
+        Message(
+            "Unsupported file type \"%s\"",
+            ext.c_str());
         return;
     }
+
+    if (!timeline)
+        return;
 
     LoadTimeline(timeline);
 
@@ -335,11 +369,13 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
 
     LoadFonts();
 
+    // Load an empty timeline if no file is provided
+    // or if loading the file fails for some reason.
+    auto tl = new otio::Timeline();
+    LoadTimeline(tl);
+
     if (argc > 1) {
         LoadFile(argv[1]);
-    } else {
-        auto tl = new otio::Timeline();
-        LoadTimeline(tl);
     }
 }
 
@@ -348,7 +384,7 @@ void MainCleanup() { }
 // Validate that a file has the .otio extension
 bool is_valid_file(const std::string& filepath) {
     size_t last_dot = filepath.find_last_of('.');
-    
+
     // If no dot is found, it's not a valid file
     if (last_dot == std::string::npos) {
         return false;
@@ -863,7 +899,7 @@ void DrawDroppedFilesPrompt() {
     // Modal window for confirmation
     if (ImGui::BeginPopupModal("Open File?", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Open file \n%s?", prompt_dropped_file.c_str());
-        
+
         if (ImGui::Button("Yes")) {
             LoadFile(prompt_dropped_file);
             prompt_dropped_file = "";
