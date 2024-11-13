@@ -20,6 +20,8 @@
 #include <chrono>
 #include <iostream>
 
+#include <opentimelineio/clip.h>
+
 void DrawMenu();
 void DrawToolbar(ImVec2 buttonSize);
 void DrawDroppedFilesPrompt();
@@ -275,9 +277,8 @@ void LoadFile(std::string path) {
     auto start = std::chrono::high_resolution_clock::now();
 
     otio::ErrorStatus error_status;
-    auto timeline = dynamic_cast<otio::Timeline*>(
-        otio::Timeline::from_json_file(path, &error_status));
-    if (!timeline || otio::is_error(error_status)) {
+    auto root = otio::Timeline::from_json_file(path, &error_status);
+    if (!root || otio::is_error(error_status)) {
         Message(
             "Error loading \"%s\": %s",
             path.c_str(),
@@ -285,7 +286,26 @@ void LoadFile(std::string path) {
         return;
     }
 
-    LoadTimeline(timeline);
+    std::string file_name;
+    if (root->schema_name() == "Timeline") {
+        auto timeline = dynamic_cast<otio::Timeline*>(root);
+        LoadTimeline(timeline);
+        file_name = timeline->name();
+    } else if (root->schema_name() == "Clip") {
+        auto clip = dynamic_cast<otio::Clip*>(root);
+        file_name = clip->name();
+
+        auto timeline = new otio::Timeline();
+        LoadTimeline(timeline);
+        SelectObject(clip);
+    } else{
+        Message(
+            "Error loading \"%s\": Unsupported root schema: %s",
+            path.c_str(),
+            root->schema_name().c_str()
+        );
+        return;
+    }
 
     appState.file_path = path;
 
@@ -294,7 +314,7 @@ void LoadFile(std::string path) {
     double elapsed_seconds = elapsed.count();
     Message(
         "Loaded \"%s\" in %.3f seconds",
-        timeline->name().c_str(),
+        file_name.c_str(),
         elapsed_seconds);
 }
 
@@ -889,7 +909,7 @@ void SelectObject(
         appState.selected_text = "No selection";
     } else {
         otio::ErrorStatus error_status;
-        appState.selected_text = object->to_json_string(&error_status);
+        //appState.selected_text = object->to_json_string(&error_status);
         if (otio::is_error(error_status)) {
             appState.selected_text = otio_error_string(error_status);
         }
