@@ -20,6 +20,8 @@
 #include <chrono>
 #include <iostream>
 
+#include <opentimelineio/clip.h>
+
 void DrawMenu();
 void DrawToolbar(ImVec2 buttonSize);
 void DrawDroppedFilesPrompt();
@@ -289,7 +291,14 @@ void LoadFile(std::string path) {
         auto timeline = dynamic_cast<otio::Timeline*>(root);
         LoadTimeline(timeline);
         file_name = timeline->name();
-    } else {
+    } else if (root->schema_name() == "Clip") {
+        auto clip = dynamic_cast<otio::Clip*>(root);
+        file_name = clip->name();
+
+        auto timeline = new otio::Timeline();
+        LoadTimeline(timeline);
+        SelectObject(clip);
+    } else{
         Message(
             "Error loading \"%s\": Unsupported root schema: %s",
             path.c_str(),
@@ -900,7 +909,7 @@ void SelectObject(
         appState.selected_text = "No selection";
     } else {
         otio::ErrorStatus error_status;
-        appState.selected_text = object->to_json_string(&error_status);
+        //appState.selected_text = object->to_json_string(&error_status);
         if (otio::is_error(error_status)) {
             appState.selected_text = otio_error_string(error_status);
         }
