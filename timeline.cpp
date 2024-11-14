@@ -393,6 +393,12 @@ void DrawEffects(
     auto old_pos = ImGui::GetCursorPos();
     ImGui::SetCursorPos(render_pos);
 
+    // ImGui::InvisibleButton size x and y must be greater than 0.0.
+    // See definition of ImGui::InvisibleButton in imgui_widgets.cpp:
+    if (size.x <= 0.0 || size.y <= 0.0) {
+        return;
+    }
+
     ImGui::PushID(item);
     ImGui::BeginGroup();
 
