@@ -77,6 +77,8 @@ set(MZ_OPENSSL OFF)
 set(MZ_BCRYPT OFF)
 set(MZ_LIBBSD OFF)
 set(MZ_ICONV OFF)
+set(MZ_ZLIB ON)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 add_subdirectory("libs/minizip-ng")
 
 if(NOT EMSCRIPTEN)
