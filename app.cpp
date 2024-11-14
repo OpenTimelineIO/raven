@@ -25,7 +25,7 @@
 #include "fonts/embedded_font.inc"
 
 #include <chrono>
-#include <iostream>
+#include <filesystem>
 
 void DrawMenu();
 void DrawToolbar(ImVec2 buttonSize);
@@ -374,10 +374,38 @@ std::string LowerCase(std::string str) {
     return str;
 }
 
+// Validate that a file has the .otio or .otioz extension
+bool SupportedFileType(const std::string& filepath) {
+    size_t last_dot = filepath.find_last_of('.');
+
+    // If no dot is found, it's not a valid file
+    if (last_dot == std::string::npos) {
+        return false;
+    }
+
+    // Get and check the extension
+    std::string extension = filepath.substr(last_dot + 1);
+    return extension == "otio" || extension == "otioz";
+}
+
 void LoadFile(std::string path) {
     otio::Timeline* timeline = nullptr;
 
     auto start = std::chrono::high_resolution_clock::now();
+
+    if (!std::filesystem::exists(path)) {
+        Message(
+            "File not found \"%s\"",
+            path.c_str());
+        return;
+    }
+
+    if (!SupportedFileType(path)) {
+        Message(
+            "Unsuported file type \"%s\"",
+            path.c_str());
+        return;
+    }
 
     auto ext = LowerCase(FileExtension(path));
     if (ext == "otio") {
@@ -403,7 +431,7 @@ void LoadFile(std::string path) {
     double elapsed_seconds = elapsed.count();
     Message(
         "Loaded \"%s\" in %.3f seconds",
-        timeline->name().c_str(),
+        path.c_str(),
         elapsed_seconds);
 }
 
@@ -456,20 +484,6 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
 
 void MainCleanup() { }
 
-// Validate that a file has the .otio extension
-bool is_valid_file(const std::string& filepath) {
-    size_t last_dot = filepath.find_last_of('.');
-
-    // If no dot is found, it's not a valid file
-    if (last_dot == std::string::npos) {
-        return false;
-    }
-
-    // Get and check the extension
-    std::string extension = filepath.substr(last_dot + 1);
-    return extension == "otio";
-}
-
 // Accept and open a file path
 void FileDropCallback(int count, const char** filepaths) {
     if (count > 1){
@@ -483,14 +497,13 @@ void FileDropCallback(int count, const char** filepaths) {
 
     std::string file_path = filepaths[0];
 
-    if (!is_valid_file(file_path)){
-        Message("Invalid file: %s", file_path.c_str());
+    if (!SupportedFileType(file_path)){
+        Message("Unsupported file type: %s", file_path.c_str());
         return;
     }
 
     // Loading is done in DrawDroppedFilesPrompt()
     prompt_dropped_file = file_path;
-
 }
 
 // Make a button using the fancy icon font
