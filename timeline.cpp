@@ -62,6 +62,11 @@ void DrawItem(
     float height,
     std::map<otio::Composable*, otio::TimeRange>& range_map) {
     auto duration = item->duration();
+
+    // If duration is 0, don't draw Item.
+    if (duration.to_seconds() <= 0) {
+        return;
+    }
     auto trimmed_range = item->trimmed_range();
     float width = duration.to_seconds() * scale;
     if (width < 1)
@@ -254,6 +259,11 @@ void DrawTransition(
     float height,
     std::map<otio::Composable*, otio::TimeRange>& range_map) {
     auto duration = transition->duration();
+
+    // If duration is 0, don't draw Transition.
+    if (duration.to_seconds() <= 0) {
+        return;
+    }
     float width = duration.to_seconds() * scale;
 
     auto range_it = range_map.find(transition);
@@ -348,6 +358,12 @@ void DrawEffects(
     if (effects.size() == 0)
         return;
 
+    auto item_duration = item->duration();
+    // If duration is 0, don't draw Effect.
+    if (item_duration.to_seconds() <= 0) {
+        return;
+    }
+
     std::string label_str;
     for (const auto& effect : effects) {
         if (label_str != "")
@@ -358,7 +374,6 @@ void DrawEffects(
     const auto text_size = ImGui::CalcTextSize(label_str.c_str());
     ImVec2 text_offset(5.0f, 5.0f);
 
-    auto item_duration = item->duration();
     float item_width = item_duration.to_seconds() * scale;
     float width = fminf(item_width, text_size.x + text_offset.x * 2);
     float height = fminf(row_height - 2, text_size.y + text_offset.y * 2);
