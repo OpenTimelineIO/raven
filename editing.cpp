@@ -8,8 +8,8 @@
 #include <stdlib.h>
 
 void DeleteSelectedObject() {
-    if (appState.selected_object == appState.timeline) {
-        appState.timeline = NULL;
+    if (appState.selected_object == appState.root) {
+        appState.root = NULL;
         SelectObject(NULL);
         return;
     }
@@ -57,10 +57,16 @@ void DeleteSelectedObject() {
 
 void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) {
     auto playhead = appState.playhead;
-
-    const auto& timeline = appState.timeline;
-    if (!timeline)
+    
+    
+    if (!appState.root)
         return;
+
+    if (appState.root->schema_name() != "Timeline"){
+        return;
+    }
+
+    const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root);
 
     // Default to the selected item, or the top-level timeline.
     if (item == NULL) {
@@ -91,9 +97,14 @@ void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) 
 }
 
 void AddTrack(std::string kind) {
-    const auto& timeline = appState.timeline;
-    if (!timeline)
+    if (!appState.root)
         return;
+
+    if (appState.root->schema_name() != "Timeline"){
+        return;
+    }
+
+    const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root);
 
     // Fall back to the top level stack.
     int insertion_index = -1;
@@ -150,7 +161,7 @@ void AddTrack(std::string kind) {
 }
 
 void FlattenTrackDown() {
-    const auto& timeline = appState.timeline;
+    const auto& timeline = appState.root;
     if (!timeline) {
         Message("Cannot flatten: No timeline.");
         return;

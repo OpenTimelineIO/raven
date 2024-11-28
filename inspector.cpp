@@ -616,20 +616,27 @@ void DrawMarkersInspector() {
     typedef std::pair<otio::SerializableObject::Retainer<otio::Marker>, otio::SerializableObject::Retainer<otio::Item>> marker_parent_pair;
     std::vector<marker_parent_pair> pairs;
 
-    auto root = appState.timeline->tracks();
-    auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
+    auto root = new otio::Stack();
+    auto global_start = otio::RationalTime(0.0);
 
-    for (const auto& marker : root->markers()) {
-        pairs.push_back(marker_parent_pair(marker, root));
-    }
+    if (appState.root->schema_name() == "Timeline"){
+        const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root);
 
-    for (const auto& child :
-         appState.timeline->tracks()->find_children())
-    {
-        if (const auto& item = dynamic_cast<otio::Item*>(&*child))
+        root = timeline->tracks();
+        global_start = timeline->global_start_time().value_or(otio::RationalTime());
+
+        for (const auto& marker : root->markers()) {
+            pairs.push_back(marker_parent_pair(marker, root));
+        }
+
+        for (const auto& child :
+            timeline->tracks()->find_children())
         {
-            for (const auto& marker : item->markers()) {
-                pairs.push_back(marker_parent_pair(marker, item));
+            if (const auto& item = dynamic_cast<otio::Item*>(&*child))
+            {
+                for (const auto& marker : item->markers()) {
+                    pairs.push_back(marker_parent_pair(marker, item));
+                }
             }
         }
     }
@@ -714,20 +721,27 @@ void DrawEffectsInspector() {
     typedef std::pair<otio::SerializableObject::Retainer<otio::Effect>, otio::SerializableObject::Retainer<otio::Item>> effect_parent_pair;
     std::vector<effect_parent_pair> pairs;
 
-    auto root = appState.timeline->tracks();
-    auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
+    auto root = new otio::Stack();
+    auto global_start = otio::RationalTime(0.0);
 
-    for (const auto& effect : root->effects()) {
-        pairs.push_back(effect_parent_pair(effect, root));
-    }
+    if (appState.root->schema_name() == "Timeline"){
+        const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root);
 
-    for (const auto& child :
-         appState.timeline->tracks()->find_children())
-    {
-        if (const auto& item = dynamic_cast<otio::Item*>(&*child))
+        root = timeline->tracks();
+        global_start = timeline->global_start_time().value_or(otio::RationalTime());
+
+        for (const auto& effect : root->effects()) {
+            pairs.push_back(effect_parent_pair(effect, root));
+        }
+
+        for (const auto& child :
+            timeline->tracks()->find_children())
         {
-            for (const auto& effect : item->effects()) {
-                pairs.push_back(effect_parent_pair(effect, item));
+            if (const auto& item = dynamic_cast<otio::Item*>(&*child))
+            {
+                for (const auto& effect : item->effects()) {
+                    pairs.push_back(effect_parent_pair(effect, item));
+                }
             }
         }
     }

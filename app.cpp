@@ -240,7 +240,7 @@ std::string otio_error_string(otio::ErrorStatus const& error_status) {
 }
 
 void LoadTimeline(otio::Timeline* timeline) {
-    appState.timeline = timeline;
+    appState.root = timeline;
     DetectPlayheadLimits();
     appState.playhead = appState.playhead_limit.start_time();
     FitZoomWholeTimeline();
@@ -294,9 +294,9 @@ void LoadFile(std::string path) {
     } else if (root->schema_name() == "Clip") {
         auto clip = dynamic_cast<otio::Clip*>(root);
         file_name = clip->name();
+        appState.root = clip;
 
         auto timeline = new otio::Timeline();
-        LoadTimeline(timeline);
         SelectObject(clip);
     } else{
         Message(
@@ -319,7 +319,7 @@ void LoadFile(std::string path) {
 }
 
 void SaveFile(std::string path) {
-    auto timeline = appState.timeline;
+    auto timeline = appState.root;
     if (!timeline)
         return;
 
@@ -409,6 +409,12 @@ bool IconButton(const char* label, const ImVec2 size = ImVec2(0, 0)) {
 }
 
 void AppUpdate() { }
+
+void DrawRoot(){
+    if (appState.root->schema_name() == "Timeline") {
+        DrawTimeline(dynamic_cast<otio::Timeline*>(appState.root));
+    }
+}
 
 void MainGui() {
     AppUpdate();
@@ -552,12 +558,14 @@ void MainGui() {
         contentSize.y -= ImGui::GetTextLineHeightWithSpacing() + 7;
         ImGui::BeginChild("##TimelineContainer", contentSize);
 
-        DrawTimeline(appState.timeline);
+        DrawRoot();
 
         ImGui::EndChild();
 
-        if (DrawTransportControls(appState.timeline)) {
-            appState.scroll_to_playhead = true;
+        if (appState.root->schema_name() == "Timeline"){
+            if (DrawTransportControls(dynamic_cast<otio::Timeline*>(appState.root))) {
+                appState.scroll_to_playhead = true;
+            }
         }
     }
     ImGui::End();
@@ -707,8 +715,8 @@ void DrawMenu() {
             if (ImGui::MenuItem("Revert")) {
                 LoadFile(appState.file_path);
             }
-            if (ImGui::MenuItem("Close", NULL, false, appState.timeline)) {
-                appState.timeline = NULL;
+            if (ImGui::MenuItem("Close", NULL, false, appState.root)) {
+                appState.root = NULL;
                 SelectObject(NULL);
             }
 #ifndef EMSCRIPTEN
@@ -934,14 +942,19 @@ void SnapPlayhead() {
 }
 
 void DetectPlayheadLimits() {
-    const auto timeline = appState.timeline;
-    appState.playhead_limit = otio::TimeRange(
-        timeline->global_start_time().value_or(otio::RationalTime()),
-        timeline->duration());
+    if (appState.root->schema_name() == "Timeline"){
+        const auto timeline = dynamic_cast<otio::Timeline*>(appState.root);
+        appState.playhead_limit = otio::TimeRange(
+            timeline->global_start_time().value_or(otio::RationalTime()),
+            timeline->duration());
+    }
 }
 
 void FitZoomWholeTimeline() {
-    appState.scale = appState.timeline_width / appState.timeline->duration().to_seconds();
+    if (appState.root->schema_name() == "Timeline"){
+        const auto timeline = dynamic_cast<otio::Timeline*>(appState.root);
+        appState.scale = appState.timeline_width / timeline->duration().to_seconds();
+    }
 }
 // GUI utility to add dynamic height to GUI elements
 
