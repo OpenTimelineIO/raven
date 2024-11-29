@@ -124,6 +124,23 @@ void DrawItem(
     ImGui::BeginGroup();
 
     ImGui::InvisibleButton("##Item", size);
+
+    // Don't skip invisible item if it is the item we have just selected
+    if (!ImGui::IsItemVisible() 
+        && appState.selected_object == item
+        && (appState.scroll_left || appState.scroll_right)) {
+
+        otio::Item* selected_item = dynamic_cast<otio::Item*>(appState.selected_object);
+        if (appState.scroll_right) {
+            ImGui::SetScrollX( ImGui::GetScrollX() + 
+                               selected_item->range_in_parent().duration().to_seconds() * scale);
+            appState.scroll_right = false;
+        }
+        if (appState.scroll_left) {
+            ImGui::SetScrollX(selected_item->range_in_parent().start_time().to_seconds() * scale);
+            appState.scroll_left = false;
+        }
+    }
     if (!ImGui::IsItemVisible()) {
         // exit early if this item is off-screen
         ImGui::EndGroup();
@@ -300,6 +317,24 @@ void DrawTransition(
 
     ImVec2 p0 = ImGui::GetItemRectMin();
     ImVec2 p1 = ImGui::GetItemRectMax();
+
+    // Don't skip invisible item if it is the item we have just selected
+    if (!ImGui::IsItemVisible() 
+        && appState.selected_object == transition 
+        && (appState.scroll_left || appState.scroll_right)) {
+
+        otio::Transition* selected_item = dynamic_cast<otio::Transition*>(appState.selected_object);
+        if (appState.scroll_right) {
+            ImGui::SetScrollX( ImGui::GetScrollX() + 
+                               selected_item->range_in_parent()->duration().to_seconds() * scale);
+            appState.scroll_right = false;
+        }
+        if (appState.scroll_left) {
+            ImGui::SetScrollX( selected_item->range_in_parent()->start_time().to_seconds() * scale);
+            appState.scroll_left = false;
+        }
+    }
+    
     if (!ImGui::IsRectVisible(p0, p1)) {
         ImGui::EndGroup();
         ImGui::PopID();
@@ -1503,6 +1538,45 @@ void DrawTimeline(otio::Timeline* timeline) {
             // looking.
             ImGui::SetScrollFromPosX(playhead_x - ImGui::GetScrollX());
             appState.scroll_to_playhead = false;
+        }
+
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_RightArrow)) {
+            std::string selected_type = appState.selected_object->schema_name();
+            if (selected_type == "Clip" || selected_type == "Gap" || selected_type == "Transition") {
+                // Loop through selected items parent track to find the next item
+                auto parent = dynamic_cast<otio::Composable*>(appState.selected_object)->parent();
+                for(auto it = parent->children().begin(); it != parent->children().end(); it++ ){
+                    // If last item then do nothing
+                    if (std::next(it) == parent->children().end()) {
+                        break;
+                    }
+                    if (*it == appState.selected_object) {
+                        std::advance(it, 1);
+                        SelectObject(*it);
+                        appState.scroll_right = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_LeftArrow)) {
+            std::string selected_type = appState.selected_object->schema_name();
+            if (selected_type == "Clip" || selected_type == "Gap" || selected_type == "Transition") {
+                // Loop through selected items parent track to find the previous item
+                auto parent = dynamic_cast<otio::Composable*>(appState.selected_object)->parent();
+                for(auto it = parent->children().begin(); it != parent->children().end(); it++ ){
+                    if (*it == appState.selected_object) {
+                        // If first item do nothin
+                        if (it == parent->children().begin()) {
+                            break;
+                        }
+                        std::advance(it, -1);
+                        SelectObject(*it);
+                        appState.scroll_left = true;
+                        break;
+                    }
+                }
+            }
         }
 
         // This is helpful when debugging visibility performance optimization
