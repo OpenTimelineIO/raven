@@ -1581,6 +1581,7 @@ void DrawTimeline(otio::Timeline* timeline) {
                     }
                 }
             }
+
             // The Stacks of video and audio Tracks go in opposite directions
             // therefore the logic for the for the Up Arrow on Video tracks is
             // the same as the logic for Down Arrow on Audio tracks and vice versa
@@ -1589,10 +1590,13 @@ void DrawTimeline(otio::Timeline* timeline) {
             auto selected_track = dynamic_cast<otio::Track*>(parent);
             std::string selected_track_type = selected_track->kind();
 
-            if ((ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow) && selected_track_type == "Video") ||
-                (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow) && selected_track_type == "Audio")) {
+             if ((ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow)) ||
+                (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow))) {
+
+                // Only run if the right type is selected
                 std::string selected_type = appState.selected_object->schema_name();
                 if (selected_type == "Clip" || selected_type == "Gap" || selected_type == "Transition") {
+
                     // Finding start time varies depending on object type
                     otio::RationalTime start_time;
                     if (selected_type == "Clip" || selected_type == "Gap") {
@@ -1603,6 +1607,7 @@ void DrawTimeline(otio::Timeline* timeline) {
                         start_time = child->range_in_parent().value().start_time();
                     }
 
+                    // Get the parent object and track stack
                     auto parent = dynamic_cast<otio::Composable*>(appState.selected_object)->parent();
                     auto tracks = dynamic_cast<otio::Stack*>(parent->parent());
 
@@ -1610,12 +1615,29 @@ void DrawTimeline(otio::Timeline* timeline) {
                     for(auto it = tracks->children().begin(); it != tracks->children().end(); it++ ){
                         otio::Composable* track = *it;
                         if (track == parent) {
-                            // If last item then do nothing
-                            if (std::next(it) == tracks->children().end()) {
+                            // Down Arrow and Video or Up Arrow and Audio
+                            if ((ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow) && selected_track_type == "Video") ||
+                                (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow) && selected_track_type == "Audio")) {
+                                // If first item then do nothing
+                                if (it == tracks->children().begin()) {
+                                    break;
+                                }
+                                // Select the next track up
+                                std::advance(it, -1);
+
+                            // Up Arrow and Video or Down Arrow and Audio
+                            } else if ((ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow) && selected_track_type == "Video") ||
+                                       (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow) && selected_track_type == "Audio")) {
+                                // If last item then do nothing
+                                if (std::next(it) == tracks->children().end()) {
+                                    break;
+                                }
+                                // Select the next track up
+                                std::advance(it, 1);
+                            } else{
                                 break;
                             }
-                            // Select the next track up
-                            std::advance(it, 1);
+
                             otio::Composable* next_it = *it;
                             otio::Track* next_track = dynamic_cast<otio::Track*>(next_it);
 
@@ -1624,53 +1646,7 @@ void DrawTimeline(otio::Timeline* timeline) {
                                 break;
                             }
 
-                            // If there is an iten that overlaps with the current selection start time
-                            // select it
-                            if (next_track->child_at_time(start_time)){
-                                SelectObject(next_track->child_at_time(start_time));
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-             if ((ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow) && selected_track_type == "Video") ||
-                (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow) && selected_track_type == "Audio")) {
-                std::string selected_type = appState.selected_object->schema_name();
-                if (selected_type == "Clip" || selected_type == "Gap" || selected_type == "Transition") {
-                    // Finding start time varies depending on object type
-                    otio::RationalTime start_time;
-                    if (selected_type == "Clip" || selected_type == "Gap") {
-                        auto child = dynamic_cast<otio::Item*>(appState.selected_object);
-                        start_time = child->range_in_parent().start_time();
-                    } else if (selected_type == "Transition") {
-                        auto child = dynamic_cast<otio::Transition*>(appState.selected_object);
-                        start_time = child->range_in_parent().value().start_time();
-                    }
-
-                    auto parent = dynamic_cast<otio::Composable*>(appState.selected_object)->parent();
-                    auto tracks = dynamic_cast<otio::Stack*>(parent->parent());
-
-                    // Loop through tracks until we find the current one
-                    for(auto it = tracks->children().begin(); it != tracks->children().end(); it++ ){
-                        otio::Composable* track = *it;
-                        if (track == parent) {
-                            // If last item then do nothing
-                            if (it == tracks->children().begin()) {
-                                break;
-                            }
-                            // Select the next track up
-                            std::advance(it, -1);
-                            otio::Composable* next_it = *it;
-                            otio::Track* next_track = dynamic_cast<otio::Track*>(next_it);
-
-                            // Only iterate over tracks of the same kind
-                            if(next_track->kind() != selected_track_type){
-                                break;
-                            }
-
-                            // If there is an iten that overlaps with the current selection start time
+                            // If there is an iten that overlaps with the current selection's start time
                             // select it
                             if (next_track->child_at_time(start_time)){
                                 SelectObject(next_track->child_at_time(start_time));
