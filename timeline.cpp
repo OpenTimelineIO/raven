@@ -1581,8 +1581,11 @@ void DrawTimeline(otio::Timeline* timeline) {
                     }
                 }
             }
-            // Up Arrow
-            if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow)) {
+            // Up arrow for Video tracks and down arrow for Audio tracks use the same logic
+            auto parent = dynamic_cast<otio::Composable*>(appState.selected_object)->parent();
+            auto selected_track = dynamic_cast<otio::Track*>(parent);
+            if ((ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow) && selected_track->kind() == "Video") ||
+                (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow) && selected_track->kind() == "Audio")) {
                 std::string selected_type = appState.selected_object->schema_name();
                 if (selected_type == "Clip" || selected_type == "Gap" || selected_type == "Transition") {
                     // Finding start time varies depending on object type
