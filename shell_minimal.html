@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"/>
     <title>Raven</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
     <style>
         body { margin: 0; background-color: black }
         .emscripten {
@@ -46,6 +47,23 @@
 
       // ... And free it when we're done.
       _free(stringOnWasmHeap);
+    }
+    // https://stackoverflow.com/a/69935189
+    Module.LoadStringFromEvent = function (event) {
+      const file_reader = new FileReader();
+      file_reader.onload = (event) => {
+        // This is annoying, but we need to allocate memory manually on the wasm heap
+        // to avoid a stack overflow if you pass in a very large string.
+        var lengthBytes = lengthBytesUTF8(event.target.result) + 1;
+        var stringOnWasmHeap = _malloc(lengthBytes);
+        stringToUTF8(event.target.result, stringOnWasmHeap, lengthBytes);
+
+        Module.ccall("js_LoadString", "number", ["number"], [stringOnWasmHeap]);
+
+        // ... And free it when we're done.
+        _free(stringOnWasmHeap);
+      }
+      file_reader.readAsBinaryString(event.target.files[0]);
     }
     Module.LoadUrl = Module.cwrap("js_LoadUrl", "number", ["string"]);
   }
