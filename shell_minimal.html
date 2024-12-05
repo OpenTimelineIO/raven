@@ -49,9 +49,26 @@
       _free(stringOnWasmHeap);
     }
     // https://stackoverflow.com/a/69935189
-    Module.LoadStringFromEvent = function (event) {
+    Module.LoadStringFromEvent = function (element_event) {
       const file_reader = new FileReader();
+      let file_name = element_event.target.files[0].name;
+
       file_reader.onload = (event) => {
+
+        pyodide.registerJsModule("otio_js_data", {file_name: file_name});
+
+        // Get adapter
+        var adapter = pyodide.runPython(`
+          from otio_js_data import file_name
+          import opentimelineio
+
+          adapter = opentimelineio.adapters.from_filepath(file_name)
+          timeline = opentimelineio.adapters.read_from_string(adapter, adapter_name=adapter.name)
+          opentimelineio.adapters.write_to_string(timeline, adapter_name='otio_json')
+        `)
+
+        console.log('adapter:', adapter)
+
         // This is annoying, but we need to allocate memory manually on the wasm heap
         // to avoid a stack overflow if you pass in a very large string.
         var lengthBytes = lengthBytesUTF8(event.target.result) + 1;
@@ -63,9 +80,51 @@
         // ... And free it when we're done.
         _free(stringOnWasmHeap);
       }
-      file_reader.readAsBinaryString(event.target.files[0]);
+      file_reader.readAsBinaryString(element_event.target.files[0]);
     }
     Module.LoadUrl = Module.cwrap("js_LoadUrl", "number", ["string"]);
+  }
+
+  async function initializePyodide() {
+    console.log("Loading pyodide");
+    let pyodide = await loadPyodide();
+    console.log("Loaded pyodide");
+  
+    console.log("Installing micropip");
+    await pyodide.loadPackage("micropip");
+    console.log("Installed micropip");
+
+    console.log("Installing OTIO python bindings and plugins");
+    const micropip = pyodide.pyimport("micropip");
+    await micropip.install(['https://jcmorin.dev/otio-wasm/opentimelineio-0.18.0.dev1-cp312-cp312-pyodide_2024_0_wasm32.whl', 'otio-svg-adapter']);
+    console.log("Installed OTIO python bindings and plugins");
+
+    // This is a hack. See https://github.com/pyodide/pyodide/pull/4836
+    pyodide._module.reportUndefinedSymbols();
+
+    window.pyodide = pyodide;
+  }
+
+  async function waitForPyodide() {
+    addRunDependency("pyodide");
+
+    if (window.pyodide) {
+      console.log("Pyodide already loaded");
+      removeRunDependency("pyodide");
+      return;
+    }
+
+    console.log("Waiting for pyodide");
+    await new Promise((resolve, reject) => {
+      let check = setInterval(() => {
+        if (window.pyodide) {
+          clearInterval(check);
+          resolve();
+        }
+      }, 50);
+    });
+    console.log("Pyodide loaded");
+    removeRunDependency("pyodide");
   }
 
   /**
@@ -82,8 +141,8 @@
       var Module = {
         // otioLoadUrl: "",
         // otioLoadString: "",
-        preRun: [exposeRavenFunctions],
-        postRun: [ravenPostRun],
+        preRun: [exposeRavenFunctions, initializePyodide],
+        postRun: [ravenPostRun, waitForPyodide],
         print: (function() {
             return function(text) {
                 text = Array.prototype.slice.call(arguments).join(' ');
