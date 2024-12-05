@@ -762,7 +762,7 @@ std::string OpenFileDialog() {
     return "";
 #else
     nfdchar_t* outPath = NULL;
-    nfdresult_t result = NFD_OpenDialog("otio", NULL, &outPath);
+    nfdresult_t result = NFD_OpenDialog("otio,otioz", NULL, &outPath);
     if (result == NFD_OKAY) {
         auto result = std::string(outPath);
         free(outPath);
