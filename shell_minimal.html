@@ -120,8 +120,15 @@
     await micropip.install(
       [
         'https://jcmorin.dev/otio-wasm/opentimelineio-0.18.0.dev1-cp312-cp312-pyodide_2024_0_wasm32.whl',
-        'otio-svg-adapter',
         'otio-aaf-adapter',
+        'otio-burnins-adapter',
+        'otio-xges-adapter',
+        'otio-ale-adapter',
+        'otio-hls-playlist-adapter',
+        'otio-fcpx-xml-adapter',
+        'otio-maya-sequencer-adapter',
+        'otio-cmx3600-adapter',
+        'otio-fcp-adapter',
       ]
     );
     console.log("Installed OTIO python bindings and plugins");
