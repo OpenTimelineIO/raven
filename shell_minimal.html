@@ -48,39 +48,60 @@
       // ... And free it when we're done.
       _free(stringOnWasmHeap);
     }
+
     // https://stackoverflow.com/a/69935189
     Module.LoadStringFromEvent = function (element_event) {
       const file_reader = new FileReader();
       let file_name = element_event.target.files[0].name;
 
-      file_reader.onload = (event) => {
+      file_reader.onload = (evt) => {
 
-        pyodide.registerJsModule("otio_js_data", {file_name: file_name});
+        pyodide.registerJsModule("otio_js_data", {file_name: file_name, data: evt.target.result});
 
+        console.log('file_name:', file_name);
         // Get adapter
-        var adapter = pyodide.runPython(`
-          from otio_js_data import file_name
+        let timeline_json = pyodide.runPython(`
+          import tempfile
+
+          from otio_js_data import file_name, data
           import opentimelineio
 
-          adapter = opentimelineio.adapters.from_filepath(file_name)
-          timeline = opentimelineio.adapters.read_from_string(adapter, adapter_name=adapter.name)
-          opentimelineio.adapters.write_to_string(timeline, adapter_name='otio_json')
-        `)
+          mode = 'w'
+          if not isinstance(data, str):
+              mode = 'wb'
 
-        console.log('adapter:', adapter)
+          with tempfile.NamedTemporaryFile(mode=mode, suffix="." + file_name.split(".")[-1]) as f:
+              if not isinstance(data, str):
+                  # Probably an ArrayBuffer. So convert to a memoryview
+                  # https://pyodide.org/en/stable/usage/type-conversions.html#buffers
+                  f.write(data.to_py())
+              else:
+                  f.write(data)
+
+              f.flush()
+              f.seek(0)
+
+              timeline = opentimelineio.adapters.read_from_file(f.name)
+              output = opentimelineio.adapters.write_to_string(timeline, adapter_name='otio_json', indent=0)
+          output
+        `);
 
         // This is annoying, but we need to allocate memory manually on the wasm heap
         // to avoid a stack overflow if you pass in a very large string.
-        var lengthBytes = lengthBytesUTF8(event.target.result) + 1;
+        var lengthBytes = lengthBytesUTF8(timeline_json) + 1;
         var stringOnWasmHeap = _malloc(lengthBytes);
-        stringToUTF8(event.target.result, stringOnWasmHeap, lengthBytes);
+        stringToUTF8(timeline_json, stringOnWasmHeap, lengthBytes);
 
         Module.ccall("js_LoadString", "number", ["number"], [stringOnWasmHeap]);
 
         // ... And free it when we're done.
         _free(stringOnWasmHeap);
       }
-      file_reader.readAsBinaryString(element_event.target.files[0]);
+      if (element_event.target.files[0].name.endsWith('.aaf')) {
+        file_reader.readAsArrayBuffer(element_event.target.files[0]);
+      } else {
+        file_reader.readAsBinaryString(element_event.target.files[0]);
+      }
     }
     Module.LoadUrl = Module.cwrap("js_LoadUrl", "number", ["string"]);
   }
@@ -96,7 +117,13 @@
 
     console.log("Installing OTIO python bindings and plugins");
     const micropip = pyodide.pyimport("micropip");
-    await micropip.install(['https://jcmorin.dev/otio-wasm/opentimelineio-0.18.0.dev1-cp312-cp312-pyodide_2024_0_wasm32.whl', 'otio-svg-adapter']);
+    await micropip.install(
+      [
+        'https://jcmorin.dev/otio-wasm/opentimelineio-0.18.0.dev1-cp312-cp312-pyodide_2024_0_wasm32.whl',
+        'otio-svg-adapter',
+        'otio-aaf-adapter',
+      ]
+    );
     console.log("Installed OTIO python bindings and plugins");
 
     // This is a hack. See https://github.com/pyodide/pyodide/pull/4836
