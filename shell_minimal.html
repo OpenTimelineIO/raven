@@ -102,57 +102,53 @@
   }
 
   async function initializePyodide() {
-    console.log("Loading pyodide");
-    let pyodide = await loadPyodide();
-    console.log("Loaded pyodide");
-  
-    console.log("Installing micropip");
-    await pyodide.loadPackage("micropip");
-    console.log("Installed micropip");
+    window.initializePyodidePromise = new Promise(async function(resolve, reject) {
+      try {
+        console.log("Loading pyodide");
+        let pyodide = await loadPyodide();
+        console.log("Loaded pyodide");
 
-    console.log("Installing OTIO python bindings and plugins");
-    const micropip = pyodide.pyimport("micropip");
-    await micropip.install(
-      [
-        'https://jcmorin.dev/otio-wasm/opentimelineio-0.18.0.dev1-cp312-cp312-pyodide_2024_0_wasm32.whl',
-        'otio-aaf-adapter',
-        'otio-burnins-adapter',
-        'otio-xges-adapter',
-        'otio-ale-adapter',
-        'otio-hls-playlist-adapter',
-        'otio-fcpx-xml-adapter',
-        'otio-maya-sequencer-adapter',
-        'otio-cmx3600-adapter',
-        'otio-fcp-adapter',
-      ]
-    );
-    console.log("Installed OTIO python bindings and plugins");
+        console.log("Installing micropip");
+        await pyodide.loadPackage("micropip");
+        console.log("Installed micropip");
 
-    // This is a hack. See https://github.com/pyodide/pyodide/pull/4836
-    pyodide._module.reportUndefinedSymbols();
+        console.log("Installing OTIO python bindings and plugins");
+        const micropip = pyodide.pyimport("micropip");
+        await micropip.install(
+          [
+            'https://jcmorin.dev/otio-wasm/opentimelineio-0.18.0.dev1-cp312-cp312-pyodide_2024_0_wasm32.whl',
+            'otio-aaf-adapter',
+            'otio-burnins-adapter',
+            'otio-xges-adapter',
+            'otio-ale-adapter',
+            'otio-hls-playlist-adapter',
+            'otio-fcpx-xml-adapter',
+            'otio-maya-sequencer-adapter',
+            'otio-cmx3600-adapter',
+            'otio-fcp-adapter',
+          ]
+        );
+        console.log("Installed OTIO python bindings and plugins");
 
-    window.pyodide = pyodide;
+        // This is a hack. See https://github.com/pyodide/pyodide/pull/4836
+        pyodide._module.reportUndefinedSymbols();
+
+        window.pyodide = pyodide;
+      } catch (e) {
+        console.error(e);
+        reject(e);
+      }
+      resolve();
+    });
   }
 
   async function waitForPyodide() {
     addRunDependency("pyodide");
 
-    if (window.pyodide) {
-      console.log("Pyodide already loaded");
-      removeRunDependency("pyodide");
-      return;
-    }
-
     console.log("Waiting for pyodide");
-    await new Promise((resolve, reject) => {
-      let check = setInterval(() => {
-        if (window.pyodide) {
-          clearInterval(check);
-          resolve();
-        }
-      }, 50);
-    });
+    await window.initializePyodidePromise;
     console.log("Pyodide loaded");
+
     removeRunDependency("pyodide");
   }
 
