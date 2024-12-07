@@ -55,15 +55,10 @@
       let file_name = element_event.target.files[0].name;
 
       file_reader.onload = (evt) => {
-
-        pyodide.registerJsModule("otio_js_data", {file_name: file_name, data: evt.target.result});
-
-        console.log('file_name:', file_name);
         // Get adapter
         let timeline_json = pyodide.runPython(`
           import tempfile
 
-          from otio_js_data import file_name, data
           import opentimelineio
 
           mode = 'w'
@@ -84,7 +79,7 @@
               timeline = opentimelineio.adapters.read_from_file(f.name)
               output = opentimelineio.adapters.write_to_string(timeline, adapter_name='otio_json', indent=0)
           output
-        `);
+        `, {locals: pyodide.toPy({data: evt.target.result, file_name})});
 
         // This is annoying, but we need to allocate memory manually on the wasm heap
         // to avoid a stack overflow if you pass in a very large string.
