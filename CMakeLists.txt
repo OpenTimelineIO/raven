@@ -44,6 +44,7 @@ else()
   target_sources(raven PUBLIC main_glfw.cpp)
 endif()
 
+set(BUILD_TESTING OFF)
 add_subdirectory("libs")
 
 include_directories(
