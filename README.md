@@ -34,7 +34,7 @@ This will also clone and initialize all of the submodules that this project depe
 Spin up your favourite terminal and follow these steps:
 
 ```shell
-  git clone --recursive git@github.com:OpenTimelineIO/raven.git
+  git clone --recursive https://github.com/OpenTimelineIO/raven.git
   cd raven
   mkdir build
   cd build
@@ -48,7 +48,7 @@ Spin up your favourite terminal and follow these steps:
 You will need to install the [Emscripten toolchain](https://emscripten.org) first.
 
 ```shell
-  git clone --recursive git@github.com:OpenTimelineIO/raven.git
+  git clone --recursive https://github.com/OpenTimelineIO/raven.git
   cd raven
   mkdir build-web
   cd build-web
