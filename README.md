@@ -26,15 +26,16 @@ Linux (Ubuntu, or similar):
 - A recent version of CMake
   - You can get this via `sudo snap install cmake` or by downloading from https://cmake.org/download/
 
-__Note__: Before building, please ensure that you clone this project with the `--recursive` flag. 
-This will also clone and initialize all of the submodules that this project depends on.
+__Note__: Before building, please ensure that you clone this project with the `--recursive` flag.
+This will also clone and initialize all of the submodules that this project depends on. Downloading a ZIP file from GitHub will not work.
 
 ## Building (macOS, Windows, Linux)
 
 Spin up your favourite terminal and follow these steps:
 
 ```shell
-  git submodule update --init --recursive
+  git clone --recursive https://github.com/OpenTimelineIO/raven.git
+  cd raven
   mkdir build
   cd build
   cmake ..
@@ -47,7 +48,8 @@ Spin up your favourite terminal and follow these steps:
 You will need to install the [Emscripten toolchain](https://emscripten.org) first.
 
 ```shell
-  git submodule update --init --recursive
+  git clone --recursive https://github.com/OpenTimelineIO/raven.git
+  cd raven
   mkdir build-web
   cd build-web
   emcmake cmake ..
@@ -70,11 +72,12 @@ Note: The WASM build of raven is missing some features - see the Help Wanted sec
 
 If you have trouble building, these hints might help...
 
-You might need to init/update submodules:
+If you cloned the repo without `--recursive` then you will need to init/update submodules:
 ```
-% git submodule init
-% git submodule update
+% git submodule update --init --recursive
 ```
+
+If you downloaded a ZIP archive from GitHub instead of cloning with git, then you are missing the submodules entirely. You need to use git clone instead of downloading a ZIP file.
 
 You might be missing some dependencies (see above).
 
@@ -168,4 +171,3 @@ Raven was made possible by these excellent libraries:
     - FreezeFrame:
     - UnknownSchema:
       - Can we show properties via SerializableObject's introspection?
-
