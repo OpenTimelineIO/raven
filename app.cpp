@@ -780,6 +780,13 @@ void MainGui() {
     ImGui::End();
 
     ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
+    visible = ImGui::Begin("Clips", NULL, window_flags);
+    if (visible) {
+        DrawClipsInspector();
+    }
+    ImGui::End();
+
+    ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
     visible = ImGui::Begin("Markers", NULL, window_flags);
     if (visible) {
         DrawMarkersInspector();
