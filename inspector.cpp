@@ -983,3 +983,79 @@ void DrawClipsInspector() {
     }
     ImGui::EndTable();
 }
+
+void DrawCompositionInspector() {
+    auto root = appState.timeline->tracks();
+    auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
+
+    std::function<void(otio::Composable*, otio::Composition*, int)> draw_composable;
+    draw_composable = [&](otio::Composable* composable, otio::Composition* parent, int depth) {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::Indent(depth * ImGui::GetTreeNodeToLabelSpacing());
+
+        bool open = false;
+        if (auto composition = dynamic_cast<otio::Composition*>(composable)) {
+            open = ImGui::TreeNodeEx(
+                composable,
+                ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen,
+                "%s", composable->name().c_str());
+        } else {
+            ImGui::TreeNodeEx(
+                composable,
+                ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth,
+                "%s", composable->name().c_str());
+        }
+
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(composable->schema_name().c_str());
+
+        ImGui::TableNextColumn();
+        if (auto item = dynamic_cast<otio::Item*>(composable)) {
+            auto start_time = item->trimmed_range().start_time();
+            ImGui::TextUnformatted(TimecodeStringFromTime(start_time).c_str());
+        } else {
+            ImGui::TextUnformatted("-");
+        }
+
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(TimecodeStringFromTime(composable->duration()).c_str());
+
+        if (ImGui::IsItemClicked()) {
+            auto t = parent->trimmed_range_of_child(composable)->start_time();
+            auto global_time = parent->transformed_time(t, root) + global_start;
+            appState.playhead = global_time;
+            SelectObject(composable);
+            appState.scroll_to_playhead = true;
+        }
+
+        if (open) {
+            if (auto composition = dynamic_cast<otio::Composition*>(composable)) {
+                for (const auto& child : composition->children()) {
+                    draw_composable(child, composition, depth + 1);
+                }
+            }
+            ImGui::TreePop();
+        }
+
+        ImGui::Unindent(depth * ImGui::GetTreeNodeToLabelSpacing());
+    };
+
+    if (ImGui::BeginTable("Composition",
+                          4,
+                          ImGuiTableFlags_NoSavedSettings |
+                          ImGuiTableFlags_Resizable |
+                          ImGuiTableFlags_Reorderable |
+                          ImGuiTableFlags_Hideable)) {
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Start Time", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_WidthFixed);
+
+        ImGui::TableHeadersRow();
+
+        draw_composable(root, nullptr, 0);
+
+        ImGui::EndTable();
+    }
+}
