@@ -988,11 +988,10 @@ void DrawCompositionInspector() {
     auto root = appState.timeline->tracks();
     auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
 
-    std::function<void(otio::Composable*, otio::Composition*, int)> draw_composable;
-    draw_composable = [&](otio::Composable* composable, otio::Composition* parent, int depth) {
+    std::function<void(otio::Composable*, otio::Composition*)> draw_composable;
+    draw_composable = [&](otio::Composable* composable, otio::Composition* parent) {
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
-        ImGui::Indent(depth * ImGui::GetTreeNodeToLabelSpacing());
 
         bool open = false;
         if (auto composition = dynamic_cast<otio::Composition*>(composable)) {
@@ -1036,13 +1035,11 @@ void DrawCompositionInspector() {
         if (open) {
             if (auto composition = dynamic_cast<otio::Composition*>(composable)) {
                 for (const auto& child : composition->children()) {
-                    draw_composable(child, composition, depth + 1);
+                    draw_composable(child, composition);
                 }
             }
             ImGui::TreePop();
         }
-
-        ImGui::Unindent(depth * ImGui::GetTreeNodeToLabelSpacing());
     };
 
     if (ImGui::BeginTable("Composition",
@@ -1058,7 +1055,7 @@ void DrawCompositionInspector() {
 
         ImGui::TableHeadersRow();
 
-        draw_composable(root, nullptr, 0);
+        draw_composable(root, nullptr);
 
         ImGui::EndTable();
     }
