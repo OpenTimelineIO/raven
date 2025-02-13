@@ -1007,6 +1007,18 @@ void DrawCompositionInspector() {
                 "%s", composable->name().c_str());
         }
 
+        if (ImGui::IsItemClicked()) {
+            if (parent == nullptr) {
+                appState.playhead = global_start;
+            } else {
+                auto t = parent->trimmed_range_of_child(composable)->start_time();
+                auto global_time = parent->transformed_time(t, root) + global_start;
+                appState.playhead = global_time;
+            }
+            SelectObject(composable);
+            appState.scroll_to_playhead = true;
+        }
+
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(composable->schema_name().c_str());
 
@@ -1020,14 +1032,6 @@ void DrawCompositionInspector() {
 
         ImGui::TableNextColumn();
         ImGui::TextUnformatted(TimecodeStringFromTime(composable->duration()).c_str());
-
-        if (ImGui::IsItemClicked()) {
-            auto t = parent->trimmed_range_of_child(composable)->start_time();
-            auto global_time = parent->transformed_time(t, root) + global_start;
-            appState.playhead = global_time;
-            SelectObject(composable);
-            appState.scroll_to_playhead = true;
-        }
 
         if (open) {
             if (auto composition = dynamic_cast<otio::Composition*>(composable)) {
