@@ -888,7 +888,7 @@ void DrawTreeInspector() {
                           ImGuiTableFlags_Hideable)) {
         ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed);
-        ImGui::TableSetupColumn("Start Time", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Start Time", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide);
         ImGui::TableSetupColumn("Global Start Time", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_WidthFixed);
 
