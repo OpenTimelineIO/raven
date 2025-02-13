@@ -928,62 +928,6 @@ void DrawEffectsInspector() {
     ImGui::EndTable();
 }
 
-void DrawClipsInspector() {
-    std::vector<otio::SerializableObject::Retainer<otio::Clip>> clips;
-
-    auto root = appState.timeline->tracks();
-    auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
-
-    for (const auto& child : appState.timeline->tracks()->find_children()) {
-        if (const auto& clip = dynamic_cast<otio::Clip*>(&*child)) {
-            clips.push_back(clip);
-        }
-    }
-
-    auto selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
-
-    if (ImGui::BeginTable("Clips",
-                          3,
-                          ImGuiTableFlags_NoSavedSettings |
-                          ImGuiTableFlags_Resizable |
-                          ImGuiTableFlags_Reorderable |
-                          ImGuiTableFlags_Hideable)) {
-        ImGui::TableSetupColumn("Clip Name", ImGuiTableColumnFlags_WidthStretch);
-        ImGui::TableSetupColumn("Source Range", ImGuiTableColumnFlags_WidthStretch);
-        ImGui::TableSetupColumn("Global Start Time", ImGuiTableColumnFlags_WidthFixed);
-
-        ImGui::TableHeadersRow();
-
-        for (const auto& clip : clips) {
-
-            ImGui::PushID(clip.value);
-            ImGui::TableNextRow();
-
-            // Clip Name
-            ImGui::TableNextColumn();
-            ImGui::TextUnformatted(clip->name().c_str());
-
-            // Source Range
-            ImGui::TableNextColumn();
-            auto source_range = clip->source_range();
-            ImGui::TextUnformatted(TimecodeStringFromTime(source_range->start_time()).c_str());
-
-            // Global Start Time
-            ImGui::TableNextColumn();
-            auto global_time = clip->transformed_time(source_range->start_time(), root) + global_start;
-            auto is_selected = (appState.selected_object == clip);
-            if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(), is_selected, selectable_flags)) {
-                SelectObject(clip);
-                appState.playhead = global_time;
-                appState.scroll_to_playhead = true;
-            }
-
-            ImGui::PopID();
-        }
-    }
-    ImGui::EndTable();
-}
-
 void DrawTreeInspector() {
     enum FilterOptions {
         All,
