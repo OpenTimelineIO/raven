@@ -985,11 +985,32 @@ void DrawClipsInspector() {
 }
 
 void DrawTreeInspector() {
+    enum FilterOptions {
+        All,
+        Clips,
+        Transitions,
+        Gaps
+    };
+
+    static const char* filter_options[] = { "All", "Clips", "Transitions", "Gaps" };
+    static FilterOptions current_filter = All;
+
+    ImGui::Combo("Filter", reinterpret_cast<int*>(&current_filter), filter_options, IM_ARRAYSIZE(filter_options));
+
     auto root = appState.timeline->tracks();
     auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
 
     std::function<void(otio::Composable*, otio::Composition*)> draw_composable;
     draw_composable = [&](otio::Composable* composable, otio::Composition* parent) {
+        bool is_leaf = dynamic_cast<otio::Composition*>(composable) == nullptr;
+
+        // Apply filter
+        if (is_leaf) {
+            if (current_filter == Clips && !dynamic_cast<otio::Clip*>(composable)) return;
+            if (current_filter == Transitions && !dynamic_cast<otio::Transition*>(composable)) return;
+            if (current_filter == Gaps && !dynamic_cast<otio::Gap*>(composable)) return;
+        }
+
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
 
