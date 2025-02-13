@@ -956,6 +956,8 @@ void DrawTreeInspector() {
         }
 
         ImGui::TableNextRow();
+        ImGui::PushID(composable);
+
         ImGui::TableNextColumn();
 
         bool open = false;
@@ -979,14 +981,24 @@ void DrawTreeInspector() {
             global_time = parent->transformed_time(t, root) + global_start;
         }
 
+        bool is_selected = (appState.selected_object == composable);
+
         if (ImGui::IsItemClicked()) {
             SelectObject(composable);
             appState.playhead = global_time;
             appState.scroll_to_playhead = true;
         }
 
+        if (is_selected) {
+            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_Header));
+        }
+
         ImGui::TableNextColumn();
-        ImGui::TextUnformatted(composable->schema_name().c_str());
+        if (ImGui::Selectable(composable->schema_name().c_str(), is_selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+            SelectObject(composable);
+            appState.playhead = global_time;
+            appState.scroll_to_playhead = true;
+        }
 
         ImGui::TableNextColumn();
         if (auto item = dynamic_cast<otio::Item*>(composable)) {
