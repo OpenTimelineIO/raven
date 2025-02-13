@@ -724,7 +724,7 @@ void MainGui() {
         ImGui::DockBuilderDockWindow("Inspector", dock_id_side);
         ImGui::DockBuilderDockWindow("JSON", dock_id_side);
         ImGui::DockBuilderDockWindow("Clips", dock_id_side);
-        ImGui::DockBuilderDockWindow("Composition Tree", dock_id_side);
+        ImGui::DockBuilderDockWindow("Tree", dock_id_side);
         ImGui::DockBuilderDockWindow("Markers", dock_id_side);
         ImGui::DockBuilderDockWindow("Effects", dock_id_side);
         ImGui::DockBuilderDockWindow("Settings", dock_id_side);
@@ -789,9 +789,9 @@ void MainGui() {
     ImGui::End();
 
     ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
-    visible = ImGui::Begin("Composition Tree", NULL, window_flags);
+    visible = ImGui::Begin("Tree", NULL, window_flags);
     if (visible) {
-        DrawCompositionInspector();
+        DrawTreeInspector();
     }
     ImGui::End();
 

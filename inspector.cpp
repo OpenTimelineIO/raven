@@ -984,7 +984,7 @@ void DrawClipsInspector() {
     ImGui::EndTable();
 }
 
-void DrawCompositionInspector() {
+void DrawTreeInspector() {
     auto root = appState.timeline->tracks();
     auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
 
@@ -1042,7 +1042,7 @@ void DrawCompositionInspector() {
         }
     };
 
-    if (ImGui::BeginTable("Composition",
+    if (ImGui::BeginTable("Tree",
                           4,
                           ImGuiTableFlags_NoSavedSettings |
                           ImGuiTableFlags_Resizable |

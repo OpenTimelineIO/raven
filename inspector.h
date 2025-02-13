@@ -3,6 +3,6 @@
 void DrawInspector();
 void DrawJSONInspector();
 void DrawClipsInspector();
-void DrawCompositionInspector();
+void DrawTreeInspector();
 void DrawMarkersInspector();
 void DrawEffectsInspector();
