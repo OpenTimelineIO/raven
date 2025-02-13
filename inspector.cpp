@@ -1027,15 +1027,17 @@ void DrawTreeInspector() {
                 "%s", composable->name().c_str());
         }
 
+        otio::RationalTime global_time;
+        if (parent == nullptr) {
+            global_time = global_start;
+        } else {
+            auto t = parent->trimmed_range_of_child(composable)->start_time();
+            global_time = parent->transformed_time(t, root) + global_start;
+        }
+
         if (ImGui::IsItemClicked()) {
-            if (parent == nullptr) {
-                appState.playhead = global_start;
-            } else {
-                auto t = parent->trimmed_range_of_child(composable)->start_time();
-                auto global_time = parent->transformed_time(t, root) + global_start;
-                appState.playhead = global_time;
-            }
             SelectObject(composable);
+            appState.playhead = global_time;
             appState.scroll_to_playhead = true;
         }
 
@@ -1051,6 +1053,9 @@ void DrawTreeInspector() {
         }
 
         ImGui::TableNextColumn();
+        ImGui::TextUnformatted(TimecodeStringFromTime(global_time).c_str());
+
+        ImGui::TableNextColumn();
         ImGui::TextUnformatted(TimecodeStringFromTime(composable->duration()).c_str());
 
         if (open) {
@@ -1064,7 +1069,7 @@ void DrawTreeInspector() {
     };
 
     if (ImGui::BeginTable("Tree",
-                          4,
+                          5,
                           ImGuiTableFlags_NoSavedSettings |
                           ImGuiTableFlags_Resizable |
                           ImGuiTableFlags_Reorderable |
@@ -1072,6 +1077,7 @@ void DrawTreeInspector() {
         ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Start Time", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Global Start Time", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_WidthFixed);
 
         ImGui::TableHeadersRow();
