@@ -71,12 +71,14 @@ const TextEditor::LanguageDefinition& OTIOLanguageDef()
 TextEditor jsonEditor;
 TextEditor::LanguageDefinition otioLangDef = OTIOLanguageDef();
 bool json_edited = false;
+std::string json_error_message;
 
 void UpdateJSONInspector() {
     jsonEditor.SetReadOnly(false);
     jsonEditor.SetLanguageDefinition(otioLangDef);
     jsonEditor.SetText(appState.selected_text);
     json_edited = false;
+    json_error_message = "";
 }
 
 void DrawJSONInspector() {
@@ -89,7 +91,14 @@ void DrawJSONInspector() {
             otio::ErrorStatus error_status;
             auto replacement_json = jsonEditor.GetText();
             auto replacement_object = otio::SerializableObject::from_json_string(replacement_json, &error_status);
-            if (replacement_object != nullptr && !otio::is_error(error_status)) {
+            if (is_error(error_status)) {
+                json_error_message = otio_error_string(error_status);
+                Message(json_error_message.c_str());
+            } else
+            if (replacement_object == nullptr) {
+                json_error_message = "Error parsing JSON: Nil object result.";
+                Message(json_error_message.c_str());
+            } else {
                 ReplaceObject(appState.selected_object, replacement_object);
                 SelectObject(replacement_object);
                 UpdateJSONInspector();
@@ -101,8 +110,11 @@ void DrawJSONInspector() {
         if (ImGui::Button("Revert")) {
             UpdateJSONInspector();
         }
-    }
 
+        ImGui::SameLine();
+
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), "%s", json_error_message.c_str());
+    }
     jsonEditor.Render("JSON");
 }
 
