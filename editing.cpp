@@ -55,6 +55,48 @@ void DeleteSelectedObject() {
     }
 }
 
+void ReplaceObject(otio::SerializableObject* old_object, otio::SerializableObject* new_object) {
+    if (old_object == appState.timeline) {
+        appState.timeline = dynamic_cast<otio::Timeline*>(new_object);
+        return;
+    }
+
+    if (const auto& old_composable = dynamic_cast<otio::Composable*>(old_object)) {
+        if (const auto& parent = old_composable->parent()) {
+            auto& children = parent->children();
+            auto it = std::find(children.begin(), children.end(), old_composable);
+            if (it != children.end()) {
+                int index = (int)std::distance(children.begin(), it);
+                parent->remove_child(index);
+                parent->insert_child(index, dynamic_cast<otio::Composable*>(new_object));
+            }
+        }
+        return;
+    }
+
+    if (const auto& old_marker = dynamic_cast<otio::Marker*>(old_object)) {
+        if (const auto& item = dynamic_cast<otio::Item*>(appState.selected_context)) {
+            auto& markers = item->markers();
+            auto it = std::find(markers.begin(), markers.end(), old_marker);
+            if (it != markers.end()) {
+                *it = dynamic_cast<otio::Marker*>(new_object);
+            }
+        }
+        return;
+    }
+
+    if (const auto& old_effect = dynamic_cast<otio::Effect*>(old_object)) {
+        if (const auto& item = dynamic_cast<otio::Item*>(appState.selected_context)) {
+            auto& effects = item->effects();
+            auto it = std::find(effects.begin(), effects.end(), old_effect);
+            if (it != effects.end()) {
+                *it = dynamic_cast<otio::Effect*>(new_object);
+            }
+        }
+        return;
+    }
+}
+
 void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) {
     auto playhead = appState.playhead;
 

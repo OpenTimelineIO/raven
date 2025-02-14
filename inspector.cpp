@@ -70,14 +70,39 @@ const TextEditor::LanguageDefinition& OTIOLanguageDef()
 
 TextEditor jsonEditor;
 TextEditor::LanguageDefinition otioLangDef = OTIOLanguageDef();
+bool json_edited = false;
 
 void UpdateJSONInspector() {
-    jsonEditor.SetReadOnly(true);
+    jsonEditor.SetReadOnly(false);
     jsonEditor.SetLanguageDefinition(otioLangDef);
     jsonEditor.SetText(appState.selected_text);
+    json_edited = false;
 }
 
 void DrawJSONInspector() {
+    if (jsonEditor.IsTextChanged()) {
+        json_edited = true;
+    }
+
+    if (json_edited) {
+        if (ImGui::Button("Apply")) {
+            otio::ErrorStatus error_status;
+            auto replacement_json = jsonEditor.GetText();
+            auto replacement_object = otio::SerializableObject::from_json_string(replacement_json, &error_status);
+            if (replacement_object != nullptr && !otio::is_error(error_status)) {
+                ReplaceObject(appState.selected_object, replacement_object);
+                SelectObject(replacement_object);
+                UpdateJSONInspector();
+            }
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Revert")) {
+            UpdateJSONInspector();
+        }
+    }
+
     jsonEditor.Render("JSON");
 }
 
