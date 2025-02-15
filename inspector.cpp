@@ -124,6 +124,11 @@ void DrawJSONInspector() {
         json_edited = true;
     }
 
+    auto available_size = ImGui::GetContentRegionAvail();
+    available_size.y -= ImGui::GetFrameHeightWithSpacing();
+    jsonEditor.Render("JSON",false, available_size);
+    json_rendered = true;
+
     if (json_edited) {
         DrawJSONApplyEditButtons();
     } else {
@@ -132,9 +137,6 @@ void DrawJSONInspector() {
         ImGui::EndDisabled();
     }
 
-    jsonEditor.Render("JSON");
-
-    json_rendered = true;
 }
 
 void DrawNonEditableTextField(const char* label, const char* format, ...) {
