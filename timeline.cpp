@@ -731,7 +731,7 @@ void DrawTrack(
     otio::ErrorStatus error_status;
     auto range_map = track->range_of_all_children(&error_status);
     if (otio::is_error(error_status)) {
-        Message(
+        ErrorMessage(
             "Error calculating timing: %s",
             otio_error_string(error_status).c_str());
         assert(false);

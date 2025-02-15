@@ -60,6 +60,17 @@ void Log(const char* format, ...) {
 
 // Display a message in the GUI (and to the terminal)
 void Message(const char* format, ...) {
+    appState.message_is_error = false;
+    va_list args;
+    va_start(args, format);
+    vsnprintf(appState.message, sizeof(appState.message), format, args);
+    va_end(args);
+    Log(appState.message);
+}
+
+// Display an error message in the GUI (and to the terminal)
+void ErrorMessage(const char* format, ...) {
+    appState.message_is_error = true;
     va_list args;
     va_start(args, format);
     vsnprintf(appState.message, sizeof(appState.message), format, args);
@@ -259,7 +270,7 @@ void LoadString(std::string json) {
     auto timeline = dynamic_cast<otio::Timeline*>(
         otio::Timeline::from_json_string(json, &error_status));
     if (!timeline || otio::is_error(error_status)) {
-        Message(
+        ErrorMessage(
             "Error loading JSON: %s",
             otio_error_string(error_status).c_str());
         return;
@@ -283,7 +294,7 @@ otio::Timeline* LoadOTIOFile(std::string path) {
     auto timeline = dynamic_cast<otio::Timeline*>(
         otio::Timeline::from_json_file(path, &error_status));
     if (!timeline || otio::is_error(error_status)) {
-        Message(
+        ErrorMessage(
             "Error loading \"%s\": %s",
             path.c_str(),
             otio_error_string(error_status).c_str());
@@ -299,28 +310,28 @@ otio::Timeline* LoadOTIOZFile(std::string path) {
 
     auto status = mz_zip_reader_open_file(zip_reader, path.c_str());
     if (status != MZ_OK) {
-        Message(
+        ErrorMessage(
             "Error opening \"%s\": %d",
             path.c_str(),
             status);
     } else {
         status = mz_zip_reader_locate_entry(zip_reader, "content.otio", 1);
         if (status != MZ_OK) {
-            Message(
+            ErrorMessage(
                 "Invalid OTIOZ: \"%s\": \"content.otio\" not found in archive.",
                 path.c_str());
         } else {
             mz_zip_file *file_info = NULL;
             status = mz_zip_reader_entry_get_info(zip_reader, &file_info);
             if (status != MZ_OK) {
-                Message(
+                ErrorMessage(
                     "Invalid OTIOZ: \"%s\": Error getting entry info: %d",
                     path.c_str(),
                     status);
             } else {
                 status = mz_zip_reader_entry_open(zip_reader);
                 if (status != MZ_OK) {
-                    Message(
+                    ErrorMessage(
                         "Invalid OTIOZ: \"%s\": Unable to open entry: %d",
                         path.c_str(),
                         status);
@@ -340,7 +351,7 @@ otio::Timeline* LoadOTIOZFile(std::string path) {
                         }
                     }
                     if (bytes_remaining != 0) {
-                        Message(
+                        ErrorMessage(
                             "Invalid OTIOZ: \"%s\": Error reading entry: %ld",
                             path.c_str(),
                             bytes_remaining);
@@ -394,14 +405,14 @@ void LoadFile(std::string path) {
     auto start = std::chrono::high_resolution_clock::now();
 
     if (!std::filesystem::exists(path)) {
-        Message(
+        ErrorMessage(
             "File not found \"%s\"",
             path.c_str());
         return;
     }
 
     if (!SupportedFileType(path)) {
-        Message(
+        ErrorMessage(
             "Unsuported file type \"%s\"",
             path.c_str());
         return;
@@ -413,7 +424,7 @@ void LoadFile(std::string path) {
     } else if (ext == "otioz") {
         timeline = LoadOTIOZFile(path);
     } else {
-        Message(
+        ErrorMessage(
             "Unsupported file type \"%s\"",
             ext.c_str());
         return;
@@ -445,7 +456,7 @@ void SaveFile(std::string path) {
     otio::ErrorStatus error_status;
     auto success = timeline->to_json_file(path, &error_status);
     if (!success || otio::is_error(error_status)) {
-        Message(
+        ErrorMessage(
             "Error saving \"%s\": %s",
             path.c_str(),
             otio_error_string(error_status).c_str());
@@ -487,7 +498,7 @@ void MainCleanup() { }
 // Accept and open a file path
 void FileDropCallback(int count, const char** filepaths) {
     if (count > 1){
-        Message("Cannot open multiple files.");
+        ErrorMessage("Cannot open multiple files.");
         return;
     }
 
@@ -498,7 +509,7 @@ void FileDropCallback(int count, const char** filepaths) {
     std::string file_path = filepaths[0];
 
     if (!SupportedFileType(file_path)){
-        Message("Unsupported file type: %s", file_path.c_str());
+        ErrorMessage("Unsupported file type: %s", file_path.c_str());
         return;
     }
 
@@ -770,7 +781,7 @@ std::string OpenFileDialog() {
     } else if (result == NFD_CANCEL) {
         return "";
     } else {
-        Message("Error: %s\n", NFD_GetError());
+        ErrorMessage("Error: %s\n", NFD_GetError());
     }
     return "";
 #endif
@@ -789,7 +800,7 @@ std::string SaveFileDialog() {
     } else if (result == NFD_CANCEL) {
         return "";
     } else {
-        Message("Error: %s\n", NFD_GetError());
+        ErrorMessage("Error: %s\n", NFD_GetError());
     }
     return "";
 #endif
@@ -943,7 +954,13 @@ void DrawToolbar(ImVec2 button_size) {
     ImGui::Text("\xef\x81\x9a"); // (i) icon
     ImGui::PopStyleColor();
     ImGui::SameLine();
-    ImGui::Text("%s", appState.message);
+    if (appState.message_is_error) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
+        ImGui::TextUnformatted(appState.message);
+        ImGui::PopStyleColor();
+    } else {
+        ImGui::TextUnformatted(appState.message);
+    }
 
 #ifdef THEME_EDITOR
     for (int i = 0; i < AppThemeCol_COUNT; i++) {

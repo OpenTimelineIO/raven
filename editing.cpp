@@ -120,7 +120,7 @@ void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) 
     auto global_start = timeline->global_start_time().value_or(otio::RationalTime());
     auto time = timeline->tracks()->transformed_time(playhead - global_start, item, &error_status);
     if (otio::is_error(error_status)) {
-        Message(
+        ErrorMessage(
             "Error transforming time: %s",
             otio_error_string(error_status).c_str());
         return;
@@ -183,7 +183,7 @@ void AddTrack(std::string kind) {
             stack->insert_child(insertion_index, new_track, &error_status);
         }
         if (otio::is_error(error_status)) {
-            Message(
+            ErrorMessage(
                 "Error inserting track: %s",
                 otio_error_string(error_status).c_str());
             return;
@@ -194,24 +194,24 @@ void AddTrack(std::string kind) {
 void FlattenTrackDown() {
     const auto& timeline = appState.timeline;
     if (!timeline) {
-        Message("Cannot flatten: No timeline.");
+        ErrorMessage("Cannot flatten: No timeline.");
         return;
     }
 
     if (appState.selected_object == NULL) {
-        Message("Cannot flatten: No Track is selected.");
+        ErrorMessage("Cannot flatten: No Track is selected.");
         return;
     }
 
     auto selected_track = dynamic_cast<otio::Track*>(appState.selected_object);
     if (selected_track == NULL) {
-        Message("Cannot flatten: Selected object is not a Track.");
+        ErrorMessage("Cannot flatten: Selected object is not a Track.");
         return;
     }
 
     otio::Stack* stack = dynamic_cast<otio::Stack*>(selected_track->parent());
     if (stack == NULL) {
-        Message("Cannot flatten: Parent of selected Track is not a Stack.");
+        ErrorMessage("Cannot flatten: Parent of selected Track is not a Stack.");
         return;
     }
 
@@ -222,16 +222,16 @@ void FlattenTrackDown() {
         selected_index = (int)std::distance(children.begin(), it);
     }
     if (selected_index < 0) {
-        Message("Cannot flatten: Cannot find selected Track in Stack.");
+        ErrorMessage("Cannot flatten: Cannot find selected Track in Stack.");
         return;
     }
     if (selected_index == 0) {
-        Message("Cannot flatten: Selected Track has nothing below it.");
+        ErrorMessage("Cannot flatten: Selected Track has nothing below it.");
         return;
     }
     auto track_below = dynamic_cast<otio::Track*>(children[selected_index - 1].value);
     if (track_below == NULL) {
-        Message(
+        ErrorMessage(
             "Cannot flatten: Item below selected Track is not a Track itself.");
         return;
     }
@@ -242,7 +242,7 @@ void FlattenTrackDown() {
     tracks.push_back(selected_track);
     auto flat_track = otio::flatten_stack(tracks, &error_status);
     if (!flat_track || is_error(error_status)) {
-        Message("Cannot flatten: %s.", otio_error_string(error_status).c_str());
+        ErrorMessage("Cannot flatten: %s.", otio_error_string(error_status).c_str());
         return;
     }
     int insertion_index = selected_index + 1;
@@ -250,7 +250,7 @@ void FlattenTrackDown() {
     stack->insert_child(insertion_index, flat_track, &error_status);
 
     if (otio::is_error(error_status)) {
-        Message(
+        ErrorMessage(
             "Error inserting track: %s",
             otio_error_string(error_status).c_str());
         return;
