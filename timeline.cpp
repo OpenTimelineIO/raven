@@ -1098,7 +1098,7 @@ bool DrawTransportControls(otio::Timeline* timeline) {
     ImGui::PushID("##TransportControls");
     ImGui::BeginGroup();
 
-    ImGui::Text("%s", start_string.c_str());
+    ImGui::TextUnformatted(start_string.c_str());
     ImGui::SameLine();
 
     ImGui::SetNextItemWidth(-270);
@@ -1114,7 +1114,7 @@ bool DrawTransportControls(otio::Timeline* timeline) {
     }
 
     ImGui::SameLine();
-    ImGui::Text("%s", end_string.c_str());
+    ImGui::TextUnformatted(end_string.c_str());
 
     ImGui::SameLine();
     ImGui::SetNextItemWidth(100);
@@ -1484,7 +1484,7 @@ void DrawTimeline(otio::Timeline* timeline) {
         // do this at the very end, so the playhead can overlay everything
         ImGui::TableNextRow(ImGuiTableRowFlags_None, 1);
         ImGui::TableNextColumn();
-        // ImGui::Text("%s", playhead_string.c_str());
+        // ImGui::TextUnformatted(playhead_string.c_str());
         ImGui::TableNextColumn();
         playhead_x = DrawPlayhead(
             start,
