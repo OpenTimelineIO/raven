@@ -70,6 +70,7 @@ const TextEditor::LanguageDefinition& OTIOLanguageDef()
 
 TextEditor jsonEditor;
 TextEditor::LanguageDefinition otioLangDef = OTIOLanguageDef();
+bool json_rendered = false;
 bool json_edited = false;
 std::string json_error_message;
 
@@ -77,45 +78,63 @@ void UpdateJSONInspector() {
     jsonEditor.SetReadOnly(false);
     jsonEditor.SetLanguageDefinition(otioLangDef);
     jsonEditor.SetText(appState.selected_text);
+    json_rendered = false;
     json_edited = false;
     json_error_message = "";
 }
 
+void DrawJSONApplyEditButtons() {
+    if (ImGui::Button("Apply")) {
+        otio::ErrorStatus error_status;
+        auto replacement_json = jsonEditor.GetText();
+        auto replacement_object = otio::SerializableObject::from_json_string(replacement_json, &error_status);
+        if (is_error(error_status)) {
+            json_error_message = otio_error_string(error_status);
+            Message(json_error_message.c_str());
+        } else
+        if (replacement_object == nullptr) {
+            json_error_message = "Error parsing JSON: Nil object result.";
+            Message(json_error_message.c_str());
+        } else {
+            ReplaceObject(appState.selected_object, replacement_object);
+            SelectObject(replacement_object);
+            UpdateJSONInspector();
+        }
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Revert")) {
+        UpdateJSONInspector();
+    }
+
+    // If there's an error message, display it in red.
+    if (json_error_message != "") {
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), "%s", json_error_message.c_str());
+    }
+}
+
 void DrawJSONInspector() {
-    if (jsonEditor.IsTextChanged()) {
+    // Check if the text was edited this frame.
+    // Note that IsTextChanged() is true only until Render is called.
+    // We have to also check if Render was called since the text
+    // was last set via SetText() inside UpdateJSONInspector().
+    if (json_rendered && jsonEditor.IsTextChanged()) {
         json_edited = true;
     }
 
     if (json_edited) {
-        if (ImGui::Button("Apply")) {
-            otio::ErrorStatus error_status;
-            auto replacement_json = jsonEditor.GetText();
-            auto replacement_object = otio::SerializableObject::from_json_string(replacement_json, &error_status);
-            if (is_error(error_status)) {
-                json_error_message = otio_error_string(error_status);
-                Message(json_error_message.c_str());
-            } else
-            if (replacement_object == nullptr) {
-                json_error_message = "Error parsing JSON: Nil object result.";
-                Message(json_error_message.c_str());
-            } else {
-                ReplaceObject(appState.selected_object, replacement_object);
-                SelectObject(replacement_object);
-                UpdateJSONInspector();
-            }
-        }
-
-        ImGui::SameLine();
-
-        if (ImGui::Button("Revert")) {
-            UpdateJSONInspector();
-        }
-
-        ImGui::SameLine();
-
-        ImGui::TextColored(ImVec4(1, 0, 0, 1), "%s", json_error_message.c_str());
+        DrawJSONApplyEditButtons();
+    } else {
+        ImGui::BeginDisabled();
+        DrawJSONApplyEditButtons();
+        ImGui::EndDisabled();
     }
+
     jsonEditor.Render("JSON");
+
+    json_rendered = true;
 }
 
 void DrawNonEditableTextField(const char* label, const char* format, ...) {
