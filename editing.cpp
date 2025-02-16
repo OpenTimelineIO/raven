@@ -55,46 +55,84 @@ void DeleteSelectedObject() {
     }
 }
 
-void ReplaceObject(otio::SerializableObject* old_object, otio::SerializableObject* new_object) {
+bool ReplaceObject(otio::SerializableObject* old_object, otio::SerializableObject* new_object) {
     if (old_object == appState.timeline) {
         appState.timeline = dynamic_cast<otio::Timeline*>(new_object);
-        return;
+        return true;
     }
 
     if (const auto& old_composable = dynamic_cast<otio::Composable*>(old_object)) {
-        if (const auto& parent = old_composable->parent()) {
-            auto& children = parent->children();
-            auto it = std::find(children.begin(), children.end(), old_composable);
-            if (it != children.end()) {
-                int index = (int)std::distance(children.begin(), it);
-                parent->remove_child(index);
-                parent->insert_child(index, dynamic_cast<otio::Composable*>(new_object));
-            }
+        auto new_composable = dynamic_cast<otio::Composable*>(new_object);
+        if (new_composable == nullptr) {
+            ErrorMessage("Cannot replace %s with %s (must be Composable)",
+                         old_composable->schema_name().c_str(),
+                         new_object->schema_name().c_str());
+            return false;
         }
-        return;
+
+        const auto& parent = old_composable->parent();
+        if (parent == nullptr) {
+            ErrorMessage("Cannot replace Composable with nil parent.");
+            return false;
+        }
+
+        auto& children = parent->children();
+        auto it = std::find(children.begin(), children.end(), old_composable);
+        if (it != children.end()) {
+            int index = (int)std::distance(children.begin(), it);
+            parent->remove_child(index);
+            parent->insert_child(index, new_composable);
+        }
+        return true;
     }
 
     if (const auto& old_marker = dynamic_cast<otio::Marker*>(old_object)) {
-        if (const auto& item = dynamic_cast<otio::Item*>(appState.selected_context)) {
-            auto& markers = item->markers();
-            auto it = std::find(markers.begin(), markers.end(), old_marker);
-            if (it != markers.end()) {
-                *it = dynamic_cast<otio::Marker*>(new_object);
-            }
+        auto new_marker = dynamic_cast<otio::Marker*>(new_object);
+        if (new_marker == nullptr) {
+            ErrorMessage("Cannot replace %s with %s",
+                         old_marker->schema_name().c_str(),
+                         new_object->schema_name().c_str());
+            return false;
         }
-        return;
+
+        const auto& item = dynamic_cast<otio::Item*>(appState.selected_context);
+        if (item == nullptr) {
+            ErrorMessage("Cannot replace Marker without parent item.");
+            return false;
+        }
+
+        auto& markers = item->markers();
+        auto it = std::find(markers.begin(), markers.end(), old_marker);
+        if (it != markers.end()) {
+            *it = dynamic_cast<otio::Marker*>(new_object);
+        }
+        return true;
     }
 
     if (const auto& old_effect = dynamic_cast<otio::Effect*>(old_object)) {
-        if (const auto& item = dynamic_cast<otio::Item*>(appState.selected_context)) {
-            auto& effects = item->effects();
-            auto it = std::find(effects.begin(), effects.end(), old_effect);
-            if (it != effects.end()) {
-                *it = dynamic_cast<otio::Effect*>(new_object);
-            }
+        auto new_effect = dynamic_cast<otio::Effect*>(new_object);
+        if (new_effect == nullptr) {
+            ErrorMessage("Cannot replace %s with %s",
+                         old_effect->schema_name().c_str(),
+                         new_object->schema_name().c_str());
+            return false;
         }
-        return;
+        const auto& item = dynamic_cast<otio::Item*>(appState.selected_context);
+        if (item == nullptr) {
+            ErrorMessage("Cannot replace Effect without parent item.");
+            return false;
+        }
+
+        auto& effects = item->effects();
+        auto it = std::find(effects.begin(), effects.end(), old_effect);
+        if (it != effects.end()) {
+            *it = new_effect;
+        }
+        return true;
     }
+
+    ErrorMessage("Cannot replace %s.", old_object->schema_name().c_str());
+    return false;
 }
 
 void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) {

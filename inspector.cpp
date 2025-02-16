@@ -137,10 +137,12 @@ void DrawJSONApplyEditButtons() {
         if (replacement_object == nullptr) {
             SetJSONErrorMessage("Error parsing JSON: Nil object result.");
         } else {
-            ReplaceObject(appState.selected_object, replacement_object);
-            SelectObject(replacement_object);
-            UpdateJSONInspector();
-            Message("Edits applied.");
+            auto success = ReplaceObject(appState.selected_object, replacement_object);
+            if (success) {
+                SelectObject(replacement_object);
+                UpdateJSONInspector();
+                Message("Edits applied.");
+            }
         }
     }
 
