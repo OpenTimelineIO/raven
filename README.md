@@ -108,7 +108,7 @@ Raven was made possible by these excellent libraries:
     - [App bundle](https://stackoverflow.com/questions/53560288/how-to-create-a-macos-app-bundle-with-cmake)
     - Code signing?
   - Linux
-    - CI is building, does it actually run?
+    - Needs more user testing
   - Emscripten
     - Where can we host this? (needs specific HTTP headers? See `serve.py`)
     - Needs file open/save dialog
@@ -119,8 +119,6 @@ Raven was made possible by these excellent libraries:
       - Is there an equivalent to `ImGui_ImplGlfw_WaitForEvent()` that works with SDL2 + Emscripten?
   - Easily downloadable pre-built binaries
 - JSON Inspector:
-  - Edit JSON to replace selected object?
-    - This would let you explore & understand how changes affect the composition
   - When loading a very large OTIO, the JSON inspector can double the load time (full feature film ~45 seconds)
 - Multiple selection, copy, paste, undo, redo
 - Various operations from `otiotool`
