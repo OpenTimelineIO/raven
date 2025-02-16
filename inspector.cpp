@@ -70,15 +70,112 @@ const TextEditor::LanguageDefinition& OTIOLanguageDef()
 
 TextEditor jsonEditor;
 TextEditor::LanguageDefinition otioLangDef = OTIOLanguageDef();
+bool json_rendered = false;
+bool json_edited = false;
+std::string json_error_message;
+int json_error_line = -1;
 
 void UpdateJSONInspector() {
-    jsonEditor.SetReadOnly(true);
+    jsonEditor.SetReadOnly(false);
     jsonEditor.SetLanguageDefinition(otioLangDef);
     jsonEditor.SetText(appState.selected_text);
+    jsonEditor.SetErrorMarkers({});
+    json_rendered = false;
+    json_edited = false;
+    json_error_message = "";
+    json_error_line = -1;
+}
+
+void SetJSONErrorMessage(std::string message) {
+    // Look for a pattern like "(line 123, column 45)" or
+    // "near line 54" in the error message and extract the line number.
+    std::regex line_number_regex("[ (]line ([0-9]+)");
+    std::smatch match;
+    if (std::regex_search(message, match, line_number_regex)) {
+        json_error_line = std::stoi(match[1]);
+    } else {
+        json_error_line = -1;
+    }
+
+    // Messages can be quite long, so let's line wrap
+    // the message at 80 characters, preserving words.
+    std::string wrapped_message;
+    int line_length = 0;
+    for (char c : message) {
+        if (c == '\n') {
+            line_length = 0;
+        } else {
+            line_length++;
+        }
+        if (line_length > 80 && c == ' ') {
+            wrapped_message += '\n';
+            line_length = 0;
+        }
+        wrapped_message += c;
+    }
+
+    if (json_error_line >= 0) {
+        jsonEditor.SetErrorMarkers({ { json_error_line, wrapped_message } });
+    } else {
+        jsonEditor.SetErrorMarkers({});
+    }
+
+    json_error_message = wrapped_message;
+
+    ErrorMessage("%s", json_error_message.c_str());
+}
+
+void DrawJSONApplyEditButtons() {
+    if (ImGui::Button("Apply")) {
+        otio::ErrorStatus error_status;
+        auto replacement_json = jsonEditor.GetText();
+        auto replacement_object = otio::SerializableObject::from_json_string(replacement_json, &error_status);
+        if (is_error(error_status)) {
+            auto message = otio_error_string(error_status);
+            SetJSONErrorMessage(message);
+        } else
+        if (replacement_object == nullptr) {
+            SetJSONErrorMessage("Error parsing JSON: Nil object result.");
+        } else {
+            auto success = ReplaceObject(appState.selected_object, replacement_object);
+            if (success) {
+                SelectObject(replacement_object);
+                UpdateJSONInspector();
+                Message("Edits applied.");
+            }
+        }
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Revert")) {
+        UpdateJSONInspector();
+        Message("Edits reverted.");
+    }
 }
 
 void DrawJSONInspector() {
-    jsonEditor.Render("JSON");
+    // Check if the text was edited this frame.
+    // Note that IsTextChanged() is true only until Render is called.
+    // We have to also check if Render was called since the text
+    // was last set via SetText() inside UpdateJSONInspector().
+    if (json_rendered && jsonEditor.IsTextChanged()) {
+        json_edited = true;
+    }
+
+    auto available_size = ImGui::GetContentRegionAvail();
+    available_size.y -= ImGui::GetFrameHeightWithSpacing();
+    jsonEditor.Render("JSON",false, available_size);
+    json_rendered = true;
+
+    if (json_edited) {
+        DrawJSONApplyEditButtons();
+    } else {
+        ImGui::BeginDisabled();
+        DrawJSONApplyEditButtons();
+        ImGui::EndDisabled();
+    }
+
 }
 
 void DrawNonEditableTextField(const char* label, const char* format, ...) {
@@ -184,7 +281,7 @@ bool DrawTimeRange(
 
     bool changed = false;
 
-    ImGui::Text("%s", label);
+    ImGui::TextUnformatted(label);
     ImGui::Indent();
 
     char buf[100];

@@ -4,6 +4,7 @@
 #include <opentimelineio/track.h>
 namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
 
+bool ReplaceObject(otio::SerializableObject* old_object, otio::SerializableObject* new_object);
 void DeleteSelectedObject();
 void AddMarkerAtPlayhead(
     otio::Item* item = NULL,
