@@ -15,6 +15,8 @@
 #include <opentimelineio/transition.h>
 #include <opentimelineio/track.h>
 
+#include <cmath>
+
 // counters to measure visibility-check performance optimization
 static int __tracks_rendered;
 static int __items_rendered;
@@ -128,18 +130,16 @@ void DrawItem(
     // Don't skip invisible item if it is the item we have just selected
     if (!ImGui::IsItemVisible() 
         && appState.selected_object == item
-        && (appState.scroll_left || appState.scroll_right)) {
+        && appState.scroll_key) {
 
-        otio::Item* selected_item = dynamic_cast<otio::Item*>(appState.selected_object);
-        if (appState.scroll_right) {
-            ImGui::SetScrollX( ImGui::GetScrollX() + 
-                               selected_item->range_in_parent().duration().to_seconds() * scale);
-            appState.scroll_right = false;
+        if (appState.scroll_up_down) {
+            ImGui::ScrollToItem(ImGuiScrollFlags_AlwaysCenterY);
+        } else{
+            ImGui::ScrollToItem();
         }
-        if (appState.scroll_left) {
-            ImGui::SetScrollX(selected_item->range_in_parent().start_time().to_seconds() * scale);
-            appState.scroll_left = false;
-        }
+        
+        appState.scroll_key = false;
+        appState.scroll_up_down = false;
     }
     if (!ImGui::IsItemVisible()) {
         // exit early if this item is off-screen
@@ -321,18 +321,16 @@ void DrawTransition(
     // Don't skip invisible item if it is the item we have just selected
     if (!ImGui::IsItemVisible() 
         && appState.selected_object == transition 
-        && (appState.scroll_left || appState.scroll_right)) {
-
-        otio::Transition* selected_item = dynamic_cast<otio::Transition*>(appState.selected_object);
-        if (appState.scroll_right) {
-            ImGui::SetScrollX( ImGui::GetScrollX() + 
-                               selected_item->range_in_parent()->duration().to_seconds() * scale);
-            appState.scroll_right = false;
+        && appState.scroll_key) {
+        
+        if (appState.scroll_up_down) {
+            ImGui::ScrollToItem(ImGuiScrollFlags_AlwaysCenterY);
+        } else{
+            ImGui::ScrollToItem();
         }
-        if (appState.scroll_left) {
-            ImGui::SetScrollX( selected_item->range_in_parent()->start_time().to_seconds() * scale);
-            appState.scroll_left = false;
-        }
+        
+        appState.scroll_key = false;
+        appState.scroll_up_down = false;
     }
     
     if (!ImGui::IsRectVisible(p0, p1)) {
@@ -1558,7 +1556,7 @@ void DrawTimeline(otio::Timeline* timeline) {
                             if (*it == appState.selected_object) {
                                 std::advance(it, 1);
                                 SelectObject(*it);
-                                appState.scroll_right = true;
+                                appState.scroll_key = true;
                                 break;
                             }
                         }
@@ -1579,7 +1577,7 @@ void DrawTimeline(otio::Timeline* timeline) {
                                 }
                                 std::advance(it, -1);
                                 SelectObject(*it);
-                                appState.scroll_left = true;
+                                appState.scroll_key = true;
                                 break;
                             }
                         }
@@ -1607,7 +1605,9 @@ void DrawTimeline(otio::Timeline* timeline) {
 
                             if (tracks){
                                 // Loop through tracks until we find the current one
+                                int track_count = 0;
                                 for(auto it = tracks->children().begin(); it != tracks->children().end(); it++ ){
+                                    track_count++;
                                     otio::Composable* track = *it;
                                     if (track == parent) {
                                         // Down Arrow and Video or Up Arrow and Audio
@@ -1645,6 +1645,9 @@ void DrawTimeline(otio::Timeline* timeline) {
                                         // select it
                                         if (next_track->child_at_time(start_time)){
                                             SelectObject(next_track->child_at_time(start_time));
+                                            if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow)) appState.scroll_key = true;
+                                            if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow)) appState.scroll_key = true;
+                                            appState.scroll_up_down = true;
                                             break;
                                         }
                                     }
