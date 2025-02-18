@@ -40,6 +40,7 @@ void CALLBACK MessageFiberProc(LPVOID lpFiberParameter)
             if (msg.message == WM_QUIT)
                 g_done = true;
         }
+
         SwitchToFiber(g_mainFiber);
     }
 }
@@ -137,11 +138,29 @@ int main(int argc, char** argv)
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    int cooldown_counter = 0;
     while (!g_done)
     {
         // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
         SwitchToFiber(g_messageFiber);
+
+        // This application doesn't do any animation, so instead
+        // of rendering all the time, we block waiting for events.
+        // However, ImGui sometimes needs to render several frames
+        // in a row to fully handle an input event and it's follow-on
+        // effects (e.g. responding to a click which scrolls the timeline)
+        // so we use cooldown_counter to ensure at least 5 frames are
+        // rendered before we block again.
+
+        // NOTE: When compiled in Debug mode blocking doesn't always work for some reason.
+
+        if(cooldown_counter <= 0){
+            cooldown_counter = 5;
+            WaitMessage();
+        }else{
+            cooldown_counter--;
+        }
 
         if (g_done)
             break;
