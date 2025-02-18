@@ -40,7 +40,6 @@ void CALLBACK MessageFiberProc(LPVOID lpFiberParameter)
             if (msg.message == WM_QUIT)
                 g_done = true;
         }
-
         SwitchToFiber(g_mainFiber);
     }
 }
@@ -155,7 +154,7 @@ int main(int argc, char** argv)
 
         // NOTE: When compiled in Debug mode blocking doesn't always work for some reason.
 
-        if(cooldown_counter <= 0){
+        if (cooldown_counter <= 0){
             cooldown_counter = 5;
             WaitMessage();
         }else{
