@@ -44,6 +44,22 @@ void CALLBACK MessageFiberProc(LPVOID lpFiberParameter)
     }
 }
 
+// Allows sleep at fine granularity with no stuttering, and not pegging CPU to 100%
+void PowerConserve( float Seconds ) {
+    // Determine time to wait.
+    static HANDLE Timer = CreateWaitableTimer( NULL, FALSE, NULL );
+    LARGE_INTEGER WaitTime;
+    WaitTime.QuadPart = (LONGLONG)(Seconds * -10000000);
+
+    if ( WaitTime.QuadPart >= 0 )
+        return; // Give up the rest of the frame.
+
+    if ( !SetWaitableTimer( Timer, &WaitTime, 0, NULL, NULL, FALSE ) )
+        return;
+
+    DWORD Result = MsgWaitForMultipleObjects ( 1, &Timer, FALSE, INFINITE, QS_ALLINPUT );
+}
+
 // Main code
 int main(int argc, char** argv)
 {
@@ -111,6 +127,21 @@ int main(int argc, char** argv)
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
 
+    // Get display settings for drawing frame rate
+    DEVMODE lpDevMode;
+    memset(&lpDevMode, 0, sizeof(DEVMODE));
+    lpDevMode.dmSize = sizeof(DEVMODE);
+    lpDevMode.dmDriverExtra = 0;
+    unsigned int refresh_rate;
+
+    // NULL value indicates the display device used by the calling thread.
+    if(EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &lpDevMode) == 0){
+        // default value if we can't access the settings
+        refresh_rate = 60;
+    } else {
+        refresh_rate = lpDevMode.dmDisplayFrequency;
+    }
+
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
@@ -152,8 +183,7 @@ int main(int argc, char** argv)
         // so we use cooldown_counter to ensure at least 5 frames are
         // rendered before we block again.
 
-        // NOTE: When compiled in Debug mode blocking doesn't always work for some reason.
-
+        PowerConserve(((float)1.0/refresh_rate));
         if (cooldown_counter <= 0){
             cooldown_counter = 5;
             WaitMessage();
