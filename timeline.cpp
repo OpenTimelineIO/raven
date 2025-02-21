@@ -1324,6 +1324,132 @@ void DrawTrackSplitter(const char* str_id, float splitter_size) {
     ImGui::Dummy(ImVec2(splitter_size, splitter_size));
 }
 
+void HandleKeyboardNavigation() {
+    // selected_item is used by both left and right key logic
+    auto selected_item = dynamic_cast<otio::Composable*>(appState.selected_object);
+
+    if (ImGui::IsWindowFocused()){
+
+        // Right arrow
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_RightArrow)) {
+            if (selected_item) {
+                // Loop through selected items parent track to find the next item
+                auto parent = selected_item->parent();
+                if (parent && parent->schema_name() == "Track"){
+                    for(auto it = parent->children().begin(); it != parent->children().end(); it++ ){
+                        // If last item then do nothing
+                        if (std::next(it) == parent->children().end()) {
+                            break;
+                        }
+                        if (*it == appState.selected_object) {
+                            std::advance(it, 1);
+                            SelectObject(*it);
+                            appState.scroll_key = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Left Arrow
+        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_LeftArrow)) {
+            if (selected_item){
+                // Loop through selected items parent track to find the previous item
+                auto parent = selected_item->parent();
+                if (parent && parent->schema_name() =="Track"){
+                    for(auto it = parent->children().begin(); it != parent->children().end(); it++ ){
+                        if (*it == appState.selected_object) {
+                            // If first item do nothing
+                            if (it == parent->children().begin()) {
+                                break;
+                            }
+                            std::advance(it, -1);
+                            SelectObject(*it);
+                            appState.scroll_key = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // The Stacks of video and audio Tracks go in opposite directions
+        // therefore the logic for the for the Up Arrow on Video tracks is
+        // the same as the logic for Down Arrow on Audio tracks and vice versa
+        if (selected_item && selected_item->parent()){
+            auto parent = selected_item->parent();
+            auto selected_track = dynamic_cast<otio::Track*>(parent);
+            if (selected_track){
+                std::string selected_track_type = selected_track->kind();
+
+                if ((ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow)) ||
+                    (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow))) {
+                    // Only run if the right type is selected
+                    std::string selected_type = appState.selected_object->schema_name();
+                    if (selected_type == "Clip" || selected_type == "Gap" || selected_type == "Transition") {
+                        otio::RationalTime start_time = parent->range_of_child(selected_item).start_time();
+                        auto tracks = dynamic_cast<otio::Stack*>(parent->parent());
+
+                        if (tracks){
+                            // Loop through tracks until we find the current one
+                            int track_count = 0;
+                            for(auto it = tracks->children().begin(); it != tracks->children().end(); it++ ){
+                                track_count++;
+                                otio::Composable* track = *it;
+                                if (track == parent) {
+                                    // Down Arrow and Video or Up Arrow and Audio
+                                    if ((ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow) && selected_track_type == "Video") ||
+                                        (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow) && selected_track_type == "Audio")) {
+                                        // If first item then do nothing
+                                        if (it == tracks->children().begin()) {
+                                            break;
+                                        }
+                                        // Select the next track up
+                                        std::advance(it, -1);
+
+                                    // Up Arrow and Video or Down Arrow and Audio
+                                    } else if ((ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow) && selected_track_type == "Video") ||
+                                            (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow) && selected_track_type == "Audio")) {
+                                        // If last item then do nothing
+                                        if (std::next(it) == tracks->children().end()) {
+                                            break;
+                                        }
+                                        // Select the next track up
+                                        std::advance(it, 1);
+                                    } else{
+                                        break;
+                                    }
+
+                                    otio::Composable* next_it = *it;
+                                    otio::Track* next_track = dynamic_cast<otio::Track*>(next_it);
+
+                                    // Only iterate over tracks of the same kind
+                                    if(next_track->kind() != selected_track_type){
+                                        break;
+                                    }
+
+                                    // If there is an iten that overlaps with the current selection's start time
+                                    // select it
+                                    // TODO: Moving up and down jumps to the start of the clip which is not ideal.
+                                    //       Maybe find the clip with the largest overlap, then fall bag to an overlapping gap
+                                    if (next_track->child_at_time(start_time)){
+                                        SelectObject(next_track->child_at_time(start_time));
+                                        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow)) appState.scroll_key = true;
+                                        if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow)) appState.scroll_key = true;
+                                        appState.scroll_up_down = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void DrawTimeline(otio::Timeline* timeline) {
     // ImGuiStyle& style = ImGui::GetStyle();
     // ImGuiIO& io = ImGui::GetIO();
@@ -1538,126 +1664,7 @@ void DrawTimeline(otio::Timeline* timeline) {
             appState.scroll_to_playhead = false;
         }
 
-        // selected_item is used by both left and right key logic
-        auto selected_item = dynamic_cast<otio::Composable*>(appState.selected_object);
-
-        if (ImGui::IsWindowFocused()){
-            // Right arrow
-            if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_RightArrow)) {
-                if (selected_item) {
-                    // Loop through selected items parent track to find the next item
-                    auto parent = selected_item->parent();
-                    if (parent && parent->schema_name() == "Track"){
-                        for(auto it = parent->children().begin(); it != parent->children().end(); it++ ){
-                            // If last item then do nothing
-                            if (std::next(it) == parent->children().end()) {
-                                break;
-                            }
-                            if (*it == appState.selected_object) {
-                                std::advance(it, 1);
-                                SelectObject(*it);
-                                appState.scroll_key = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            // Left Arrow
-            if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_LeftArrow)) {
-                if (selected_item){
-                    // Loop through selected items parent track to find the previous item
-                    auto parent = selected_item->parent();
-                    if (parent && parent->schema_name() =="Track"){
-                        for(auto it = parent->children().begin(); it != parent->children().end(); it++ ){
-                            if (*it == appState.selected_object) {
-                                // If first item do nothing
-                                if (it == parent->children().begin()) {
-                                    break;
-                                }
-                                std::advance(it, -1);
-                                SelectObject(*it);
-                                appState.scroll_key = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // The Stacks of video and audio Tracks go in opposite directions
-            // therefore the logic for the for the Up Arrow on Video tracks is
-            // the same as the logic for Down Arrow on Audio tracks and vice versa
-            if (selected_item && selected_item->parent()){
-                auto parent = selected_item->parent();
-                auto selected_track = dynamic_cast<otio::Track*>(parent);
-                if (selected_track){
-                    std::string selected_track_type = selected_track->kind();
-
-                    if ((ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow)) ||
-                        (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow))) {
-
-                        // Only run if the right type is selected
-                        std::string selected_type = appState.selected_object->schema_name();
-                        if (selected_type == "Clip" || selected_type == "Gap" || selected_type == "Transition") {
-                            otio::RationalTime start_time = parent->range_of_child(selected_item).start_time();
-                            auto tracks = dynamic_cast<otio::Stack*>(parent->parent());
-
-                            if (tracks){
-                                // Loop through tracks until we find the current one
-                                int track_count = 0;
-                                for(auto it = tracks->children().begin(); it != tracks->children().end(); it++ ){
-                                    track_count++;
-                                    otio::Composable* track = *it;
-                                    if (track == parent) {
-                                        // Down Arrow and Video or Up Arrow and Audio
-                                        if ((ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow) && selected_track_type == "Video") ||
-                                            (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow) && selected_track_type == "Audio")) {
-                                            // If first item then do nothing
-                                            if (it == tracks->children().begin()) {
-                                                break;
-                                            }
-                                            // Select the next track up
-                                            std::advance(it, -1);
-
-                                        // Up Arrow and Video or Down Arrow and Audio
-                                        } else if ((ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow) && selected_track_type == "Video") ||
-                                                (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow) && selected_track_type == "Audio")) {
-                                            // If last item then do nothing
-                                            if (std::next(it) == tracks->children().end()) {
-                                                break;
-                                            }
-                                            // Select the next track up
-                                            std::advance(it, 1);
-                                        } else{
-                                            break;
-                                        }
-
-                                        otio::Composable* next_it = *it;
-                                        otio::Track* next_track = dynamic_cast<otio::Track*>(next_it);
-
-                                        // Only iterate over tracks of the same kind
-                                        if(next_track->kind() != selected_track_type){
-                                            break;
-                                        }
-
-                                        // If there is an iten that overlaps with the current selection's start time
-                                        // select it
-                                        if (next_track->child_at_time(start_time)){
-                                            SelectObject(next_track->child_at_time(start_time));
-                                            if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_DownArrow)) appState.scroll_key = true;
-                                            if (ImGui::IsKeyPressed(ImGuiKey::ImGuiKey_UpArrow)) appState.scroll_key = true;
-                                            appState.scroll_up_down = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        HandleKeyboardNavigation();
 
         // This is helpful when debugging visibility performance optimization
         // ImGui::SetTooltip("Tracks rendered: %d\nItems rendered: %d",
