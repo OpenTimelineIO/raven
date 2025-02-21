@@ -1393,9 +1393,7 @@ void HandleKeyboardNavigation() {
 
                         if (tracks){
                             // Loop through tracks until we find the current one
-                            int track_count = 0;
                             for(auto it = tracks->children().begin(); it != tracks->children().end(); it++ ){
-                                track_count++;
                                 otio::Composable* track = *it;
                                 if (track == parent) {
                                     // Down Arrow and Video or Up Arrow and Audio
