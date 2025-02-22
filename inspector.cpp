@@ -775,8 +775,8 @@ void DrawMarkersInspector() {
             if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
                                   is_selected,
                                   selectable_flags)) {
-                appState.playhead = global_time;
                 SelectObject(marker, parent);
+                appState.playhead = global_time;
                 appState.scroll_to_playhead = true;
             }
 
@@ -867,9 +867,8 @@ void DrawEffectsInspector() {
             if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
                                     is_selected,
                                     selectable_flags)) {
-                printf("DEBUG: clicked %s\n", TimecodeStringFromTime(global_time).c_str());
-                appState.playhead = global_time;
                 SelectObject(effect, parent);
+                appState.playhead = global_time;
                 appState.scroll_to_playhead = true;
             }
 
@@ -892,4 +891,120 @@ void DrawEffectsInspector() {
         }
     }
     ImGui::EndTable();
+}
+
+void DrawTreeInspector() {
+    enum FilterOptions {
+        All,
+        Clips,
+        Transitions,
+        Gaps
+    };
+
+    static const char* filter_options[] = { "All", "Clips", "Transitions", "Gaps" };
+    static FilterOptions current_filter = All;
+
+    ImGui::Combo("Filter", reinterpret_cast<int*>(&current_filter), filter_options, IM_ARRAYSIZE(filter_options));
+
+    auto root = appState.timeline->tracks();
+    auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
+
+    std::function<void(otio::Composable*, otio::Composition*)> draw_composable;
+    draw_composable = [&](otio::Composable* composable, otio::Composition* parent) {
+        bool is_leaf = dynamic_cast<otio::Composition*>(composable) == nullptr;
+
+        // Apply filter
+        if (is_leaf) {
+            if (current_filter == Clips && !dynamic_cast<otio::Clip*>(composable)) return;
+            if (current_filter == Transitions && !dynamic_cast<otio::Transition*>(composable)) return;
+            if (current_filter == Gaps && !dynamic_cast<otio::Gap*>(composable)) return;
+        }
+
+        ImGui::TableNextRow();
+        ImGui::PushID(composable);
+
+        ImGui::TableNextColumn();
+
+        bool open = false;
+        if (auto composition = dynamic_cast<otio::Composition*>(composable)) {
+            open = ImGui::TreeNodeEx(
+                composable,
+                ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen,
+                "%s", composable->name().c_str());
+        } else {
+            ImGui::TreeNodeEx(
+                composable,
+                ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth,
+                "%s", composable->name().c_str());
+        }
+
+        otio::RationalTime global_time;
+        if (parent == nullptr) {
+            global_time = global_start;
+        } else {
+            auto t = parent->trimmed_range_of_child(composable)->start_time();
+            global_time = parent->transformed_time(t, root) + global_start;
+        }
+
+        bool is_selected = (appState.selected_object == composable);
+
+        if (ImGui::IsItemClicked()) {
+            SelectObject(composable);
+            appState.playhead = global_time;
+            appState.scroll_to_playhead = true;
+        }
+
+        if (is_selected) {
+            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_Header));
+        }
+
+        ImGui::TableNextColumn();
+        if (ImGui::Selectable(composable->schema_name().c_str(), is_selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+            SelectObject(composable);
+            appState.playhead = global_time;
+            appState.scroll_to_playhead = true;
+        }
+
+        ImGui::TableNextColumn();
+        if (auto item = dynamic_cast<otio::Item*>(composable)) {
+            auto start_time = item->trimmed_range().start_time();
+            ImGui::TextUnformatted(TimecodeStringFromTime(start_time).c_str());
+        } else {
+            ImGui::TextUnformatted("-");
+        }
+
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(TimecodeStringFromTime(global_time).c_str());
+
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(TimecodeStringFromTime(composable->duration()).c_str());
+
+        if (open) {
+            if (auto composition = dynamic_cast<otio::Composition*>(composable)) {
+                for (const auto& child : composition->children()) {
+                    draw_composable(child, composition);
+                }
+            }
+            ImGui::TreePop();
+        }
+    };
+
+    if (ImGui::BeginTable("Tree",
+                          5,
+                          ImGuiTableFlags_NoSavedSettings |
+                          ImGuiTableFlags_Resizable |
+                          ImGuiTableFlags_Reorderable |
+                          ImGuiTableFlags_Hideable)) {
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Start Time", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide);
+        ImGui::TableSetupColumn("Global Start Time", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_WidthFixed);
+
+        ImGui::TableHeadersRow();
+
+        draw_composable(root, nullptr);
+
+        ImGui::EndTable();
+    }
 }
