@@ -868,8 +868,9 @@ void DrawEffectsInspector() {
         {
             for (int row = effects_clipper.DisplayStart; row < effects_clipper.DisplayEnd; row++)
             {
-                auto effect = pairs.at(row).first;
-                auto parent = pairs.at(row).second;
+                auto pair = pairs.at(row);
+                auto effect = pair.first;
+                auto parent = pair.second;
 
                 ImGui::PushID(effect.value);
 
