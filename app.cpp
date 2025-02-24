@@ -377,7 +377,12 @@ otio::Timeline* LoadOTIOZFile(std::string path) {
 }
 
 std::string FileExtension(std::string path) {
-    return path.substr(path.find_last_of(".") + 1);
+    size_t period_position = path.find_last_of(".");
+    if (period_position != path.npos) {
+        return path.substr(period_position + 1);
+    } else {
+        return std::string("");
+    }
 }
 
 std::string LowerCase(std::string str) {
@@ -450,6 +455,20 @@ void SaveFile(std::string path) {
     auto timeline = appState.timeline;
     if (!timeline)
         return;
+
+    // Append .otio extension if missing
+    // Currently only supports saving as a .otio and not a .otioz
+    if (LowerCase(FileExtension(path)) == "")
+        path += ".otio";
+
+    // Incorrect file extension
+    if (LowerCase(FileExtension(path)) != "otio") {
+        ErrorMessage(
+            "Error saving \"%s\": Unsupported file type",
+            path.c_str());
+
+        return;
+    }
 
     auto start = std::chrono::high_resolution_clock::now();
 
