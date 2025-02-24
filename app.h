@@ -92,6 +92,8 @@ struct AppState {
     float track_height = 30.0f; // current track height (pixels)
     otio::RationalTime playhead;
     bool scroll_to_playhead = false; // temporary flag, only true until next frame
+    bool scroll_key = false; // temporary flag, only true until next frame
+    bool scroll_up_down; // temporary flag, only true until next frame
     otio::TimeRange
         playhead_limit; // min/max limit for moving the playhead, auto-calculated
     float zebra_factor = 0.1; // opacity of the per-frame zebra stripes
