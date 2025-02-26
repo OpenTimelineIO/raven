@@ -8,6 +8,7 @@
 #include "imgui_internal.h"
 
 #include <opentimelineio/timeline.h>
+#include <opentimelineio/serializableObjectWithMetadata.h>
 namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
 
 enum AppThemeCol_ {
@@ -83,7 +84,8 @@ struct AppState {
 
     // This holds the main timeline object.
     // Pretty much everything drills into this one entry point.
-    otio::SerializableObject::Retainer<otio::Timeline> timeline;
+    //otio::SerializableObject::Retainer<otio::Timeline> timeline;
+    otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata> root;
 
     // Timeline display settings
     float timeline_width = 100.0f; // automatically calculated (pixels)

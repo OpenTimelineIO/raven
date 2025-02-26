@@ -46,7 +46,7 @@ void TopLevelTimeRangeMap(
     std::map<otio::Composable*, otio::TimeRange>& range_map,
     otio::Item* context) {
     auto zero = otio::RationalTime();
-    auto top = appState.timeline->tracks();
+    auto top = dynamic_cast<otio::Timeline*>(appState.root.value)->tracks();
     auto offset = context->transformed_time(zero, top);
 
     for (auto& pair : range_map) {
