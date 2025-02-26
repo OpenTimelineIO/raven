@@ -44,6 +44,7 @@ else()
   target_sources(raven PUBLIC main_glfw.cpp)
 endif()
 
+set(BUILD_TESTING OFF)
 add_subdirectory("libs")
 
 include_directories(
@@ -66,6 +67,24 @@ if(NOT EMSCRIPTEN AND NOT WIN32)
   add_subdirectory("libs/glfw")
 endif()
 
+# minizip-ng
+set(BUILD_SHARED_LIBS OFF)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+set(MZ_FETCH_LIBS ON)
+set(MZ_ZLIB ON)
+# OTIOZ doesn't need any of these
+set(MZ_BZIP2 OFF)
+set(MZ_LZMA OFF)
+set(MZ_ZSTD OFF)
+set(MZ_LIBCOMP OFF)
+set(MZ_PKCRYPT OFF)
+set(MZ_WZAES OFF)
+set(MZ_OPENSSL OFF)
+set(MZ_BCRYPT OFF)
+set(MZ_LIBBSD OFF)
+set(MZ_ICONV OFF)
+add_subdirectory("libs/minizip-ng")
+
 if(NOT EMSCRIPTEN)
   add_custom_command(
       OUTPUT "${PROJECT_SOURCE_DIR}/fonts/embedded_font.inc"
@@ -81,6 +100,7 @@ target_compile_definitions(raven
 target_link_libraries(raven PUBLIC
     OTIO::opentimelineio
     IMGUI
+    MINIZIP::minizip
 )
 
 if (APPLE)

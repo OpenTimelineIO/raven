@@ -55,6 +55,86 @@ void DeleteSelectedObject() {
     }
 }
 
+bool ReplaceObject(otio::SerializableObject* old_object, otio::SerializableObject* new_object) {
+    if (old_object == appState.timeline) {
+        appState.timeline = dynamic_cast<otio::Timeline*>(new_object);
+        return true;
+    }
+
+    if (const auto& old_composable = dynamic_cast<otio::Composable*>(old_object)) {
+        auto new_composable = dynamic_cast<otio::Composable*>(new_object);
+        if (new_composable == nullptr) {
+            ErrorMessage("Cannot replace %s with %s (must be Composable)",
+                         old_composable->schema_name().c_str(),
+                         new_object->schema_name().c_str());
+            return false;
+        }
+
+        const auto& parent = old_composable->parent();
+        if (parent == nullptr) {
+            ErrorMessage("Cannot replace Composable with nil parent.");
+            return false;
+        }
+
+        auto& children = parent->children();
+        auto it = std::find(children.begin(), children.end(), old_composable);
+        if (it != children.end()) {
+            int index = (int)std::distance(children.begin(), it);
+            parent->remove_child(index);
+            parent->insert_child(index, new_composable);
+        }
+        return true;
+    }
+
+    if (const auto& old_marker = dynamic_cast<otio::Marker*>(old_object)) {
+        auto new_marker = dynamic_cast<otio::Marker*>(new_object);
+        if (new_marker == nullptr) {
+            ErrorMessage("Cannot replace %s with %s",
+                         old_marker->schema_name().c_str(),
+                         new_object->schema_name().c_str());
+            return false;
+        }
+
+        const auto& item = dynamic_cast<otio::Item*>(appState.selected_context);
+        if (item == nullptr) {
+            ErrorMessage("Cannot replace Marker without parent item.");
+            return false;
+        }
+
+        auto& markers = item->markers();
+        auto it = std::find(markers.begin(), markers.end(), old_marker);
+        if (it != markers.end()) {
+            *it = dynamic_cast<otio::Marker*>(new_object);
+        }
+        return true;
+    }
+
+    if (const auto& old_effect = dynamic_cast<otio::Effect*>(old_object)) {
+        auto new_effect = dynamic_cast<otio::Effect*>(new_object);
+        if (new_effect == nullptr) {
+            ErrorMessage("Cannot replace %s with %s",
+                         old_effect->schema_name().c_str(),
+                         new_object->schema_name().c_str());
+            return false;
+        }
+        const auto& item = dynamic_cast<otio::Item*>(appState.selected_context);
+        if (item == nullptr) {
+            ErrorMessage("Cannot replace Effect without parent item.");
+            return false;
+        }
+
+        auto& effects = item->effects();
+        auto it = std::find(effects.begin(), effects.end(), old_effect);
+        if (it != effects.end()) {
+            *it = new_effect;
+        }
+        return true;
+    }
+
+    ErrorMessage("Cannot replace %s.", old_object->schema_name().c_str());
+    return false;
+}
+
 void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) {
     auto playhead = appState.playhead;
     
@@ -84,7 +164,7 @@ void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) 
     auto global_start = timeline->global_start_time().value_or(otio::RationalTime());
     auto time = timeline->tracks()->transformed_time(playhead - global_start, item, &error_status);
     if (otio::is_error(error_status)) {
-        Message(
+        ErrorMessage(
             "Error transforming time: %s",
             otio_error_string(error_status).c_str());
         return;
@@ -152,7 +232,7 @@ void AddTrack(std::string kind) {
             stack->insert_child(insertion_index, new_track, &error_status);
         }
         if (otio::is_error(error_status)) {
-            Message(
+            ErrorMessage(
                 "Error inserting track: %s",
                 otio_error_string(error_status).c_str());
             return;
@@ -163,24 +243,24 @@ void AddTrack(std::string kind) {
 void FlattenTrackDown() {
     const auto& timeline = appState.root;
     if (!timeline) {
-        Message("Cannot flatten: No timeline.");
+        ErrorMessage("Cannot flatten: No timeline.");
         return;
     }
 
     if (appState.selected_object == NULL) {
-        Message("Cannot flatten: No Track is selected.");
+        ErrorMessage("Cannot flatten: No Track is selected.");
         return;
     }
 
     auto selected_track = dynamic_cast<otio::Track*>(appState.selected_object);
     if (selected_track == NULL) {
-        Message("Cannot flatten: Selected object is not a Track.");
+        ErrorMessage("Cannot flatten: Selected object is not a Track.");
         return;
     }
 
     otio::Stack* stack = dynamic_cast<otio::Stack*>(selected_track->parent());
     if (stack == NULL) {
-        Message("Cannot flatten: Parent of selected Track is not a Stack.");
+        ErrorMessage("Cannot flatten: Parent of selected Track is not a Stack.");
         return;
     }
 
@@ -191,16 +271,16 @@ void FlattenTrackDown() {
         selected_index = (int)std::distance(children.begin(), it);
     }
     if (selected_index < 0) {
-        Message("Cannot flatten: Cannot find selected Track in Stack.");
+        ErrorMessage("Cannot flatten: Cannot find selected Track in Stack.");
         return;
     }
     if (selected_index == 0) {
-        Message("Cannot flatten: Selected Track has nothing below it.");
+        ErrorMessage("Cannot flatten: Selected Track has nothing below it.");
         return;
     }
     auto track_below = dynamic_cast<otio::Track*>(children[selected_index - 1].value);
     if (track_below == NULL) {
-        Message(
+        ErrorMessage(
             "Cannot flatten: Item below selected Track is not a Track itself.");
         return;
     }
@@ -211,7 +291,7 @@ void FlattenTrackDown() {
     tracks.push_back(selected_track);
     auto flat_track = otio::flatten_stack(tracks, &error_status);
     if (!flat_track || is_error(error_status)) {
-        Message("Cannot flatten: %s.", otio_error_string(error_status).c_str());
+        ErrorMessage("Cannot flatten: %s.", otio_error_string(error_status).c_str());
         return;
     }
     int insertion_index = selected_index + 1;
@@ -219,7 +299,7 @@ void FlattenTrackDown() {
     stack->insert_child(insertion_index, flat_track, &error_status);
 
     if (otio::is_error(error_status)) {
-        Message(
+        ErrorMessage(
             "Error inserting track: %s",
             otio_error_string(error_status).c_str());
         return;

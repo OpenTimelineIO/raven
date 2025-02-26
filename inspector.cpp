@@ -70,15 +70,112 @@ const TextEditor::LanguageDefinition& OTIOLanguageDef()
 
 TextEditor jsonEditor;
 TextEditor::LanguageDefinition otioLangDef = OTIOLanguageDef();
+bool json_rendered = false;
+bool json_edited = false;
+std::string json_error_message;
+int json_error_line = -1;
 
 void UpdateJSONInspector() {
-    jsonEditor.SetReadOnly(true);
+    jsonEditor.SetReadOnly(false);
     jsonEditor.SetLanguageDefinition(otioLangDef);
     jsonEditor.SetText(appState.selected_text);
+    jsonEditor.SetErrorMarkers({});
+    json_rendered = false;
+    json_edited = false;
+    json_error_message = "";
+    json_error_line = -1;
+}
+
+void SetJSONErrorMessage(std::string message) {
+    // Look for a pattern like "(line 123, column 45)" or
+    // "near line 54" in the error message and extract the line number.
+    std::regex line_number_regex("[ (]line ([0-9]+)");
+    std::smatch match;
+    if (std::regex_search(message, match, line_number_regex)) {
+        json_error_line = std::stoi(match[1]);
+    } else {
+        json_error_line = -1;
+    }
+
+    // Messages can be quite long, so let's line wrap
+    // the message at 80 characters, preserving words.
+    std::string wrapped_message;
+    int line_length = 0;
+    for (char c : message) {
+        if (c == '\n') {
+            line_length = 0;
+        } else {
+            line_length++;
+        }
+        if (line_length > 80 && c == ' ') {
+            wrapped_message += '\n';
+            line_length = 0;
+        }
+        wrapped_message += c;
+    }
+
+    if (json_error_line >= 0) {
+        jsonEditor.SetErrorMarkers({ { json_error_line, wrapped_message } });
+    } else {
+        jsonEditor.SetErrorMarkers({});
+    }
+
+    json_error_message = wrapped_message;
+
+    ErrorMessage("%s", json_error_message.c_str());
+}
+
+void DrawJSONApplyEditButtons() {
+    if (ImGui::Button("Apply")) {
+        otio::ErrorStatus error_status;
+        auto replacement_json = jsonEditor.GetText();
+        auto replacement_object = otio::SerializableObject::from_json_string(replacement_json, &error_status);
+        if (is_error(error_status)) {
+            auto message = otio_error_string(error_status);
+            SetJSONErrorMessage(message);
+        } else
+        if (replacement_object == nullptr) {
+            SetJSONErrorMessage("Error parsing JSON: Nil object result.");
+        } else {
+            auto success = ReplaceObject(appState.selected_object, replacement_object);
+            if (success) {
+                SelectObject(replacement_object);
+                UpdateJSONInspector();
+                Message("Edits applied.");
+            }
+        }
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Revert")) {
+        UpdateJSONInspector();
+        Message("Edits reverted.");
+    }
 }
 
 void DrawJSONInspector() {
-    jsonEditor.Render("JSON");
+    // Check if the text was edited this frame.
+    // Note that IsTextChanged() is true only until Render is called.
+    // We have to also check if Render was called since the text
+    // was last set via SetText() inside UpdateJSONInspector().
+    if (json_rendered && jsonEditor.IsTextChanged()) {
+        json_edited = true;
+    }
+
+    auto available_size = ImGui::GetContentRegionAvail();
+    available_size.y -= ImGui::GetFrameHeightWithSpacing();
+    jsonEditor.Render("JSON",false, available_size);
+    json_rendered = true;
+
+    if (json_edited) {
+        DrawJSONApplyEditButtons();
+    } else {
+        ImGui::BeginDisabled();
+        DrawJSONApplyEditButtons();
+        ImGui::EndDisabled();
+    }
+
 }
 
 void DrawNonEditableTextField(const char* label, const char* format, ...) {
@@ -184,7 +281,7 @@ bool DrawTimeRange(
 
     bool changed = false;
 
-    ImGui::Text("%s", label);
+    ImGui::TextUnformatted(label);
     ImGui::Indent();
 
     char buf[100];
@@ -649,8 +746,11 @@ void DrawMarkersInspector() {
                           ImGuiTableFlags_NoSavedSettings |
                           ImGuiTableFlags_Resizable |
                           ImGuiTableFlags_Reorderable |
-                          ImGuiTableFlags_Hideable))
+                          ImGuiTableFlags_Hideable |
+                          ImGuiTableFlags_RowBg |
+                          ImGuiTableFlags_ScrollY))
     {
+        ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
         ImGui::TableSetupColumn("Local Time", ImGuiTableColumnFlags_DefaultHide | ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Global Time", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_DefaultHide | ImGuiTableColumnFlags_WidthFixed);
@@ -659,59 +759,67 @@ void DrawMarkersInspector() {
 
         ImGui::TableHeadersRow();
 
-        for (const auto& pair : pairs)
+        ImGuiListClipper marker_clipper;
+
+        marker_clipper.Begin(pairs.size());
+
+        while(marker_clipper.Step())
         {
-            auto marker = pair.first;
-            auto parent = pair.second;
+            for (int row = marker_clipper.DisplayStart; row < marker_clipper.DisplayEnd; row++)
+            {
+                auto pair = pairs.at(row);
+                auto marker = pair.first;
+                auto parent = pair.second;
 
-            ImGui::PushID(marker.value);
-            ImGui::TableNextRow();
+                ImGui::PushID(marker.value);
+                ImGui::TableNextRow();
 
-            // Local Time
-            ImGui::TableNextColumn();
+                // Local Time
+                ImGui::TableNextColumn();
 
-            auto range = marker->marked_range();
-            ImGui::TextUnformatted(TimecodeStringFromTime(range.start_time()).c_str());
+                auto range = marker->marked_range();
+                ImGui::TextUnformatted(TimecodeStringFromTime(range.start_time()).c_str());
 
-            // Global Time
-            ImGui::TableNextColumn();
+                // Global Time
+                ImGui::TableNextColumn();
 
-            auto global_time = parent->transformed_time(range.start_time(), root) + global_start;
+                auto global_time = parent->transformed_time(range.start_time(), root) + global_start;
 
-            // Make this row selectable & jump the playhead when clicked
-            auto is_selected =
-                (appState.selected_object == marker) ||
-                (appState.selected_object == parent);
-            if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
-                                  is_selected,
-                                  selectable_flags)) {
-                appState.playhead = global_time;
-                SelectObject(marker, parent);
-                appState.scroll_to_playhead = true;
+                // Make this row selectable & jump the playhead when clicked
+                auto is_selected =
+                    (appState.selected_object == marker) ||
+                    (appState.selected_object == parent);
+                if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
+                                    is_selected,
+                                    selectable_flags)) {
+                    appState.playhead = global_time;
+                    SelectObject(marker, parent);
+                    appState.scroll_to_playhead = true;
+                }
+
+                // Duration
+                ImGui::TableNextColumn();
+
+                auto duration = range.duration();
+                ImGui::TextUnformatted(TimecodeStringFromTime(duration).c_str());
+
+                // Color + Name
+                ImGui::TableNextColumn();
+
+                ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(marker->color()));
+                ImGui::TextUnformatted("\xef\x80\xab");
+                ImGui::PopStyleColor();
+                ImGui::SameLine();
+
+                ImGui::TextUnformatted(marker->name().c_str());
+
+                // Item
+                ImGui::TableNextColumn();
+
+                ImGui::TextUnformatted(parent->name().c_str());
+
+                ImGui::PopID();
             }
-
-            // Duration
-            ImGui::TableNextColumn();
-
-            auto duration = range.duration();
-            ImGui::TextUnformatted(TimecodeStringFromTime(duration).c_str());
-
-            // Color + Name
-            ImGui::TableNextColumn();
-
-            ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(marker->color()));
-            ImGui::TextUnformatted("\xef\x80\xab");
-            ImGui::PopStyleColor();
-            ImGui::SameLine();
-
-            ImGui::TextUnformatted(marker->name().c_str());
-
-            // Item
-            ImGui::TableNextColumn();
-
-            ImGui::TextUnformatted(parent->name().c_str());
-
-            ImGui::PopID();
         }
     }
     ImGui::EndTable();
@@ -754,8 +862,11 @@ void DrawEffectsInspector() {
                           ImGuiTableFlags_NoSavedSettings |
                           ImGuiTableFlags_Resizable |
                           ImGuiTableFlags_Reorderable |
-                          ImGuiTableFlags_Hideable))
+                          ImGuiTableFlags_Hideable |
+                          ImGuiTableFlags_RowBg |
+                          ImGuiTableFlags_ScrollY))
     {
+        ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
         ImGui::TableSetupColumn("Global Time", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableSetupColumn("Effect", ImGuiTableColumnFlags_WidthStretch);
@@ -763,49 +874,55 @@ void DrawEffectsInspector() {
 
         ImGui::TableHeadersRow();
 
-        for (const auto& pair : pairs)
+        ImGuiListClipper effects_clipper;
+
+        effects_clipper.Begin(pairs.size());
+
+        while (effects_clipper.Step())
         {
-            auto effect = pair.first;
-            auto parent = pair.second;
+            for (int row = effects_clipper.DisplayStart; row < effects_clipper.DisplayEnd; row++)
+            {
+                auto pair = pairs.at(row);
+                auto effect = pair.first;
+                auto parent = pair.second;
 
-            ImGui::PushID(effect.value);
-            ImGui::TableNextRow();
+                ImGui::PushID(effect.value);
 
-            // Global Time
-            ImGui::TableNextColumn();
+                ImGui::TableNextRow();
 
-            auto range = parent->trimmed_range();
-            auto global_time = parent->transformed_time(range.start_time(), root) + global_start;
+                // Global Time
+                ImGui::TableNextColumn();
 
-            // Make this row selectable & jump the playhead when clicked
-            auto is_selected =
-                (appState.selected_object == effect) ||
-                (appState.selected_object == parent);
-            if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
+                auto range = parent->trimmed_range();
+                auto global_time = parent->transformed_time(range.start_time(), root) + global_start;
+
+                // Make this row selectable & jump the playhead when clicked
+                auto is_selected =
+                    (appState.selected_object == effect) ||
+                    (appState.selected_object == parent);
+                if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
                                     is_selected,
                                     selectable_flags)) {
-                printf("DEBUG: clicked %s\n", TimecodeStringFromTime(global_time).c_str());
-                appState.playhead = global_time;
-                SelectObject(effect, parent);
-                appState.scroll_to_playhead = true;
+                    //printf("DEBUG: clicked %s\n", TimecodeStringFromTime(global_time).c_str());
+                    appState.playhead = global_time;
+                    SelectObject(effect, parent);
+                    appState.scroll_to_playhead = true;
+                }
+
+                // Name
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted(effect->name().c_str());
+
+                // Effect
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted(effect->effect_name().c_str());
+
+                // Item
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted(parent->name().c_str());
+
+                ImGui::PopID();
             }
-
-            // Name
-            ImGui::TableNextColumn();
-
-            ImGui::TextUnformatted(effect->name().c_str());
-
-            // Effect
-            ImGui::TableNextColumn();
-
-            ImGui::TextUnformatted(effect->effect_name().c_str());
-
-            // Item
-            ImGui::TableNextColumn();
-
-            ImGui::TextUnformatted(parent->name().c_str());
-
-            ImGui::PopID();
         }
     }
     ImGui::EndTable();

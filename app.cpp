@@ -1,6 +1,8 @@
 // Raven NLE
 
+#include <cstddef>
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,10 +17,15 @@
 #include "nfd.h"
 #endif
 
+#include "mz.h"
+#include "mz_zip.h"
+#include "mz_strm.h"
+#include "mz_zip_rw.h"
+
 #include "fonts/embedded_font.inc"
 
 #include <chrono>
-#include <iostream>
+#include <filesystem>
 
 #include <opentimelineio/clip.h>
 
@@ -55,6 +62,17 @@ void Log(const char* format, ...) {
 
 // Display a message in the GUI (and to the terminal)
 void Message(const char* format, ...) {
+    appState.message_is_error = false;
+    va_list args;
+    va_start(args, format);
+    vsnprintf(appState.message, sizeof(appState.message), format, args);
+    va_end(args);
+    Log(appState.message);
+}
+
+// Display an error message in the GUI (and to the terminal)
+void ErrorMessage(const char* format, ...) {
+    appState.message_is_error = true;
     va_list args;
     va_start(args, format);
     vsnprintf(appState.message, sizeof(appState.message), format, args);
@@ -254,7 +272,7 @@ void LoadString(std::string json) {
     auto timeline = dynamic_cast<otio::Timeline*>(
         otio::Timeline::from_json_string(json, &error_status));
     if (!timeline || otio::is_error(error_status)) {
-        Message(
+        ErrorMessage(
             "Error loading JSON: %s",
             otio_error_string(error_status).c_str());
         return;
@@ -273,16 +291,125 @@ void LoadString(std::string json) {
         elapsed_seconds);
 }
 
-void LoadFile(std::string path) {
-    auto start = std::chrono::high_resolution_clock::now();
-
+otio::Timeline* LoadOTIOFile(std::string path) {
     otio::ErrorStatus error_status;
+
     auto root = otio::Timeline::from_json_file(path, &error_status);
     if (!root || otio::is_error(error_status)) {
         Message(
             "Error loading \"%s\": %s",
             path.c_str(),
             otio_error_string(error_status).c_str());
+        return nullptr;
+    }
+    return timeline;
+}
+
+otio::Timeline* LoadOTIOZFile(std::string path) {
+    otio::Timeline* timeline = nullptr;
+
+    void *zip_reader = mz_zip_reader_create();
+
+    auto status = mz_zip_reader_open_file(zip_reader, path.c_str());
+    if (status != MZ_OK) {
+        ErrorMessage(
+            "Error opening \"%s\": %d",
+            path.c_str(),
+            status);
+    } else {
+        status = mz_zip_reader_locate_entry(zip_reader, "content.otio", 1);
+        if (status != MZ_OK) {
+            ErrorMessage(
+                "Invalid OTIOZ: \"%s\": \"content.otio\" not found in archive.",
+                path.c_str());
+        } else {
+            mz_zip_file *file_info = NULL;
+            status = mz_zip_reader_entry_get_info(zip_reader, &file_info);
+            if (status != MZ_OK) {
+                ErrorMessage(
+                    "Invalid OTIOZ: \"%s\": Error getting entry info: %d",
+                    path.c_str(),
+                    status);
+            } else {
+                status = mz_zip_reader_entry_open(zip_reader);
+                if (status != MZ_OK) {
+                    ErrorMessage(
+                        "Invalid OTIOZ: \"%s\": Unable to open entry: %d",
+                        path.c_str(),
+                        status);
+                } else {
+                    char* buf = (char*)malloc(file_info->uncompressed_size + 1);
+                    char* buf_cursor = buf;
+                    int64_t bytes_remaining = file_info->uncompressed_size;
+                    int32_t bytes_read = 0;
+                    while (bytes_remaining > 0) {
+                        int32_t chunk_size = bytes_remaining < INT32_MAX ? bytes_remaining : INT32_MAX;
+                        bytes_read = mz_zip_reader_entry_read(zip_reader, buf_cursor, chunk_size);
+                        if (bytes_read > 0) {
+                            bytes_remaining -= bytes_read;
+                            buf_cursor += bytes_read;
+                        } else {
+                            break;
+                        }
+                    }
+                    if (bytes_remaining != 0) {
+                        ErrorMessage(
+                            "Invalid OTIOZ: \"%s\": Error reading entry: %ld",
+                            path.c_str(),
+                            bytes_remaining);
+                    } else {
+                        // Add a null terminator
+                        buf[file_info->uncompressed_size] = '\0';
+                        std::string json(buf);
+                        timeline = dynamic_cast<otio::Timeline*>(
+                            otio::Timeline::from_json_string(json));
+                    }
+                    free(buf);
+                    mz_zip_reader_entry_close(zip_reader);
+                }
+            }
+        }
+
+        mz_zip_reader_close(zip_reader);
+    }
+
+    mz_zip_reader_delete(&zip_reader);
+
+    return timeline;
+}
+
+std::string FileExtension(std::string path) {
+    return path.substr(path.find_last_of(".") + 1);
+}
+
+std::string LowerCase(std::string str) {
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); }); // 🙄
+    return str;
+}
+
+// Validate that a file has the .otio or .otioz extension
+bool SupportedFileType(const std::string& filepath) {
+    size_t last_dot = filepath.find_last_of('.');
+
+    // If no dot is found, it's not a valid file
+    if (last_dot == std::string::npos) {
+        return false;
+    }
+
+    // Get and check the extension
+    std::string extension = filepath.substr(last_dot + 1);
+    return extension == "otio" || extension == "otioz";
+}
+
+void LoadFile(std::string path) {
+    otio::Timeline* timeline = nullptr;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    if (!std::filesystem::exists(path)) {
+        ErrorMessage(
+            "File not found \"%s\"",
+            path.c_str());
         return;
     }
 
@@ -328,7 +455,7 @@ void SaveFile(std::string path) {
     otio::ErrorStatus error_status;
     auto success = timeline->to_json_file(path, &error_status);
     if (!success || otio::is_error(error_status)) {
-        Message(
+        ErrorMessage(
             "Error saving \"%s\": %s",
             path.c_str(),
             otio_error_string(error_status).c_str());
@@ -355,34 +482,22 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
 
     LoadFonts();
 
+    // Load an empty timeline if no file is provided
+    // or if loading the file fails for some reason.
+    auto tl = new otio::Timeline();
+    LoadTimeline(tl);
+
     if (argc > 1) {
         LoadFile(argv[1]);
-    } else {
-        auto tl = new otio::Timeline();
-        LoadTimeline(tl);
     }
 }
 
 void MainCleanup() { }
 
-// Validate that a file has the .otio extension
-bool is_valid_file(const std::string& filepath) {
-    size_t last_dot = filepath.find_last_of('.');
-    
-    // If no dot is found, it's not a valid file
-    if (last_dot == std::string::npos) {
-        return false;
-    }
-
-    // Get and check the extension
-    std::string extension = filepath.substr(last_dot + 1);
-    return extension == "otio";
-}
-
 // Accept and open a file path
 void FileDropCallback(int count, const char** filepaths) {
     if (count > 1){
-        Message("Cannot open multiple files.");
+        ErrorMessage("Cannot open multiple files.");
         return;
     }
 
@@ -392,14 +507,13 @@ void FileDropCallback(int count, const char** filepaths) {
 
     std::string file_path = filepaths[0];
 
-    if (!is_valid_file(file_path)){
-        Message("Invalid file: %s", file_path.c_str());
+    if (!SupportedFileType(file_path)){
+        ErrorMessage("Unsupported file type: %s", file_path.c_str());
         return;
     }
 
     // Loading is done in DrawDroppedFilesPrompt()
     prompt_dropped_file = file_path;
-
 }
 
 // Make a button using the fancy icon font
@@ -666,7 +780,7 @@ std::string OpenFileDialog() {
     return "";
 #else
     nfdchar_t* outPath = NULL;
-    nfdresult_t result = NFD_OpenDialog("otio", NULL, &outPath);
+    nfdresult_t result = NFD_OpenDialog("otio,otioz", NULL, &outPath);
     if (result == NFD_OKAY) {
         auto result = std::string(outPath);
         free(outPath);
@@ -674,7 +788,7 @@ std::string OpenFileDialog() {
     } else if (result == NFD_CANCEL) {
         return "";
     } else {
-        Message("Error: %s\n", NFD_GetError());
+        ErrorMessage("Error: %s\n", NFD_GetError());
     }
     return "";
 #endif
@@ -693,7 +807,7 @@ std::string SaveFileDialog() {
     } else if (result == NFD_CANCEL) {
         return "";
     } else {
-        Message("Error: %s\n", NFD_GetError());
+        ErrorMessage("Error: %s\n", NFD_GetError());
     }
     return "";
 #endif
@@ -847,7 +961,13 @@ void DrawToolbar(ImVec2 button_size) {
     ImGui::Text("\xef\x81\x9a"); // (i) icon
     ImGui::PopStyleColor();
     ImGui::SameLine();
-    ImGui::Text("%s", appState.message);
+    if (appState.message_is_error) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
+        ImGui::TextUnformatted(appState.message);
+        ImGui::PopStyleColor();
+    } else {
+        ImGui::TextUnformatted(appState.message);
+    }
 
 #ifdef THEME_EDITOR
     for (int i = 0; i < AppThemeCol_COUNT; i++) {
@@ -891,7 +1011,7 @@ void DrawDroppedFilesPrompt() {
     // Modal window for confirmation
     if (ImGui::BeginPopupModal("Open File?", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("Open file \n%s?", prompt_dropped_file.c_str());
-        
+
         if (ImGui::Button("Yes")) {
             LoadFile(prompt_dropped_file);
             prompt_dropped_file = "";

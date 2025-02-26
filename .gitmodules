@@ -16,3 +16,6 @@
 [submodule "libs/ImGuiColorTextEdit"]
 	path = libs/ImGuiColorTextEdit
 	url = https://github.com/jminor/ImGuiColorTextEdit.git
+[submodule "libs/minizip-ng"]
+	path = libs/minizip-ng
+	url = https://github.com/zlib-ng/minizip-ng.git

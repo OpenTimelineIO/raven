@@ -92,6 +92,8 @@ struct AppState {
     float track_height = 30.0f; // current track height (pixels)
     otio::RationalTime playhead;
     bool scroll_to_playhead = false; // temporary flag, only true until next frame
+    bool scroll_key = false; // temporary flag, only true until next frame
+    bool scroll_up_down; // temporary flag, only true until next frame
     otio::TimeRange
         playhead_limit; // min/max limit for moving the playhead, auto-calculated
     float zebra_factor = 0.1; // opacity of the per-frame zebra stripes
@@ -111,6 +113,7 @@ struct AppState {
     // objects which don't track their parent
     std::string selected_text; // displayed in the JSON inspector
     char message[1024]; // single-line message displayed in main window
+    bool message_is_error = false;
 
     // Toggles for Dear ImGui windows
     bool show_main_window = true;
@@ -126,6 +129,7 @@ extern ImFont* gFont;
 
 void Log(const char* format, ...);
 void Message(const char* format, ...);
+void ErrorMessage(const char* format, ...);
 std::string Format(const char* format, ...);
 
 void LoadString(std::string json);
