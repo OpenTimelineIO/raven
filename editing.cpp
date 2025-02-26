@@ -8,8 +8,8 @@
 #include <stdlib.h>
 
 void DeleteSelectedObject() {
-    if (appState.selected_object == appState.timeline) {
-        appState.timeline = NULL;
+    if (appState.selected_object == appState.root) {
+        appState.root = NULL;
         SelectObject(NULL);
         return;
     }
@@ -56,8 +56,8 @@ void DeleteSelectedObject() {
 }
 
 bool ReplaceObject(otio::SerializableObject* old_object, otio::SerializableObject* new_object) {
-    if (old_object == appState.timeline) {
-        appState.timeline = dynamic_cast<otio::Timeline*>(new_object);
+    if (old_object == appState.root) {
+        appState.root = dynamic_cast<otio::SerializableObjectWithMetadata*>(new_object);
         return true;
     }
 
@@ -138,9 +138,15 @@ bool ReplaceObject(otio::SerializableObject* old_object, otio::SerializableObjec
 void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) {
     auto playhead = appState.playhead;
 
-    const auto& timeline = appState.timeline;
-    if (!timeline)
+    if (!appState.root){
         return;
+    }
+
+    if (appState.root->schema_name() != "Timeline"){
+        return;
+    }
+
+    const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
 
     // Default to the selected item, or the top-level timeline.
     if (item == NULL) {
@@ -171,9 +177,15 @@ void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) 
 }
 
 void AddTrack(std::string kind) {
-    const auto& timeline = appState.timeline;
-    if (!timeline)
+    if (!appState.root){
         return;
+    }
+
+    if (appState.root->schema_name() != "Timeline") {
+        return;
+    }
+
+    const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
 
     // Fall back to the top level stack.
     int insertion_index = -1;
@@ -230,7 +242,16 @@ void AddTrack(std::string kind) {
 }
 
 void FlattenTrackDown() {
-    const auto& timeline = appState.timeline;
+    if (!appState.root){
+        return;
+    }
+
+    if (appState.root->schema_name() != "Timeline") {
+        return;
+    }
+
+    const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
+
     if (!timeline) {
         ErrorMessage("Cannot flatten: No timeline.");
         return;
