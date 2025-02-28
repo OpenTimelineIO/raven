@@ -377,12 +377,7 @@ otio::Timeline* LoadOTIOZFile(std::string path) {
 }
 
 std::string FileExtension(std::string path) {
-    size_t period_position = path.find_last_of(".");
-    if (period_position != path.npos) {
-        return path.substr(period_position + 1);
-    } else {
-        return std::string("");
-    }
+    return std::filesystem::path(path).extension().generic_string();
 }
 
 std::string LowerCase(std::string str) {
@@ -424,9 +419,9 @@ void LoadFile(std::string path) {
     }
 
     auto ext = LowerCase(FileExtension(path));
-    if (ext == "otio") {
+    if (ext == ".otio") {
         timeline = LoadOTIOFile(path);
-    } else if (ext == "otioz") {
+    } else if (ext == ".otioz") {
         timeline = LoadOTIOZFile(path);
     } else {
         ErrorMessage(
@@ -462,7 +457,7 @@ void SaveFile(std::string path) {
         path += ".otio";
 
     // Incorrect file extension
-    if (LowerCase(FileExtension(path)) != "otio") {
+    if (LowerCase(FileExtension(path)) != ".otio") {
         ErrorMessage(
             "Error saving \"%s\": Unsupported file type",
             path.c_str());
