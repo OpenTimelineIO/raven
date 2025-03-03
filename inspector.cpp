@@ -746,8 +746,11 @@ void DrawMarkersInspector() {
                           ImGuiTableFlags_NoSavedSettings |
                           ImGuiTableFlags_Resizable |
                           ImGuiTableFlags_Reorderable |
-                          ImGuiTableFlags_Hideable))
+                          ImGuiTableFlags_Hideable |
+                          ImGuiTableFlags_RowBg |
+                          ImGuiTableFlags_ScrollY))
     {
+        ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
         ImGui::TableSetupColumn("Local Time", ImGuiTableColumnFlags_DefaultHide | ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Global Time", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_DefaultHide | ImGuiTableColumnFlags_WidthFixed);
@@ -756,59 +759,67 @@ void DrawMarkersInspector() {
 
         ImGui::TableHeadersRow();
 
-        for (const auto& pair : pairs)
+        ImGuiListClipper marker_clipper;
+
+        marker_clipper.Begin(pairs.size());
+
+        while(marker_clipper.Step())
         {
-            auto marker = pair.first;
-            auto parent = pair.second;
+            for (int row = marker_clipper.DisplayStart; row < marker_clipper.DisplayEnd; row++)
+            {
+                auto pair = pairs.at(row);
+                auto marker = pair.first;
+                auto parent = pair.second;
 
-            ImGui::PushID(marker.value);
-            ImGui::TableNextRow();
+                ImGui::PushID(marker.value);
+                ImGui::TableNextRow();
 
-            // Local Time
-            ImGui::TableNextColumn();
+                // Local Time
+                ImGui::TableNextColumn();
 
-            auto range = marker->marked_range();
-            ImGui::TextUnformatted(TimecodeStringFromTime(range.start_time()).c_str());
+                auto range = marker->marked_range();
+                ImGui::TextUnformatted(TimecodeStringFromTime(range.start_time()).c_str());
 
-            // Global Time
-            ImGui::TableNextColumn();
+                // Global Time
+                ImGui::TableNextColumn();
 
-            auto global_time = parent->transformed_time(range.start_time(), root) + global_start;
+                auto global_time = parent->transformed_time(range.start_time(), root) + global_start;
 
-            // Make this row selectable & jump the playhead when clicked
-            auto is_selected =
-                (appState.selected_object == marker) ||
-                (appState.selected_object == parent);
-            if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
-                                  is_selected,
-                                  selectable_flags)) {
-                appState.playhead = global_time;
-                SelectObject(marker, parent);
-                appState.scroll_to_playhead = true;
+                // Make this row selectable & jump the playhead when clicked
+                auto is_selected =
+                    (appState.selected_object == marker) ||
+                    (appState.selected_object == parent);
+                if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
+                                    is_selected,
+                                    selectable_flags)) {
+                    appState.playhead = global_time;
+                    SelectObject(marker, parent);
+                    appState.scroll_to_playhead = true;
+                }
+
+                // Duration
+                ImGui::TableNextColumn();
+
+                auto duration = range.duration();
+                ImGui::TextUnformatted(TimecodeStringFromTime(duration).c_str());
+
+                // Color + Name
+                ImGui::TableNextColumn();
+
+                ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(marker->color()));
+                ImGui::TextUnformatted("\xef\x80\xab");
+                ImGui::PopStyleColor();
+                ImGui::SameLine();
+
+                ImGui::TextUnformatted(marker->name().c_str());
+
+                // Item
+                ImGui::TableNextColumn();
+
+                ImGui::TextUnformatted(parent->name().c_str());
+
+                ImGui::PopID();
             }
-
-            // Duration
-            ImGui::TableNextColumn();
-
-            auto duration = range.duration();
-            ImGui::TextUnformatted(TimecodeStringFromTime(duration).c_str());
-
-            // Color + Name
-            ImGui::TableNextColumn();
-
-            ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(marker->color()));
-            ImGui::TextUnformatted("\xef\x80\xab");
-            ImGui::PopStyleColor();
-            ImGui::SameLine();
-
-            ImGui::TextUnformatted(marker->name().c_str());
-
-            // Item
-            ImGui::TableNextColumn();
-
-            ImGui::TextUnformatted(parent->name().c_str());
-
-            ImGui::PopID();
         }
     }
     ImGui::EndTable();
@@ -851,8 +862,11 @@ void DrawEffectsInspector() {
                           ImGuiTableFlags_NoSavedSettings |
                           ImGuiTableFlags_Resizable |
                           ImGuiTableFlags_Reorderable |
-                          ImGuiTableFlags_Hideable))
+                          ImGuiTableFlags_Hideable |
+                          ImGuiTableFlags_RowBg |
+                          ImGuiTableFlags_ScrollY))
     {
+        ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
         ImGui::TableSetupColumn("Global Time", ImGuiTableColumnFlags_WidthFixed);
         ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableSetupColumn("Effect", ImGuiTableColumnFlags_WidthStretch);
@@ -860,49 +874,55 @@ void DrawEffectsInspector() {
 
         ImGui::TableHeadersRow();
 
-        for (const auto& pair : pairs)
+        ImGuiListClipper effects_clipper;
+
+        effects_clipper.Begin(pairs.size());
+
+        while (effects_clipper.Step())
         {
-            auto effect = pair.first;
-            auto parent = pair.second;
+            for (int row = effects_clipper.DisplayStart; row < effects_clipper.DisplayEnd; row++)
+            {
+                auto pair = pairs.at(row);
+                auto effect = pair.first;
+                auto parent = pair.second;
 
-            ImGui::PushID(effect.value);
-            ImGui::TableNextRow();
+                ImGui::PushID(effect.value);
 
-            // Global Time
-            ImGui::TableNextColumn();
+                ImGui::TableNextRow();
 
-            auto range = parent->trimmed_range();
-            auto global_time = parent->transformed_time(range.start_time(), root) + global_start;
+                // Global Time
+                ImGui::TableNextColumn();
 
-            // Make this row selectable & jump the playhead when clicked
-            auto is_selected =
-                (appState.selected_object == effect) ||
-                (appState.selected_object == parent);
-            if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
+                auto range = parent->trimmed_range();
+                auto global_time = parent->transformed_time(range.start_time(), root) + global_start;
+
+                // Make this row selectable & jump the playhead when clicked
+                auto is_selected =
+                    (appState.selected_object == effect) ||
+                    (appState.selected_object == parent);
+                if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
                                     is_selected,
                                     selectable_flags)) {
-                printf("DEBUG: clicked %s\n", TimecodeStringFromTime(global_time).c_str());
-                appState.playhead = global_time;
-                SelectObject(effect, parent);
-                appState.scroll_to_playhead = true;
+                    //printf("DEBUG: clicked %s\n", TimecodeStringFromTime(global_time).c_str());
+                    appState.playhead = global_time;
+                    SelectObject(effect, parent);
+                    appState.scroll_to_playhead = true;
+                }
+
+                // Name
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted(effect->name().c_str());
+
+                // Effect
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted(effect->effect_name().c_str());
+
+                // Item
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted(parent->name().c_str());
+
+                ImGui::PopID();
             }
-
-            // Name
-            ImGui::TableNextColumn();
-
-            ImGui::TextUnformatted(effect->name().c_str());
-
-            // Effect
-            ImGui::TableNextColumn();
-
-            ImGui::TextUnformatted(effect->effect_name().c_str());
-
-            // Item
-            ImGui::TableNextColumn();
-
-            ImGui::TextUnformatted(parent->name().c_str());
-
-            ImGui::PopID();
         }
     }
     ImGui::EndTable();

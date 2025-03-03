@@ -379,7 +379,7 @@ otio::SerializableObjectWithMetadata* LoadOTIOZFile(std::string path) {
 }
 
 std::string FileExtension(std::string path) {
-    return path.substr(path.find_last_of(".") + 1);
+    return std::filesystem::path(path).extension().generic_string();
 }
 
 std::string LowerCase(std::string str) {
@@ -421,9 +421,9 @@ void LoadFile(std::string path) {
     }
 
     auto ext = LowerCase(FileExtension(path));
-    if (ext == "otio") {
+    if (ext == ".otio") {
         root = LoadOTIOFile(path);
-    } else if (ext == "otioz") {
+    } else if (ext == ".otioz") {
         root = LoadOTIOZFile(path);
     } else {
         ErrorMessage(
@@ -470,6 +470,20 @@ void SaveFile(std::string path) {
     auto root = appState.root;
     if (!root)
         return;
+
+    // Append .otio extension if missing
+    // Currently only supports saving as a .otio and not a .otioz
+    if (LowerCase(FileExtension(path)) == "")
+        path += ".otio";
+
+    // Incorrect file extension
+    if (LowerCase(FileExtension(path)) != ".otio") {
+        ErrorMessage(
+            "Error saving \"%s\": Unsupported file type",
+            path.c_str());
+
+        return;
+    }
 
     auto start = std::chrono::high_resolution_clock::now();
 
