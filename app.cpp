@@ -433,6 +433,12 @@ bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
     } else if (auto serializable_collection = dynamic_cast<otio::SerializableCollection*>(root)) {
         appState.root = serializable_collection;
         SelectObject(serializable_collection);
+    } else if (auto track = dynamic_cast<otio::Track*>(root)) {
+        appState.root = track;
+        SelectObject(track);
+    } else if (auto stack = dynamic_cast<otio::Stack*>(root)) {
+        appState.root = stack;
+        SelectObject(stack);
     }
     else {
         return false;
