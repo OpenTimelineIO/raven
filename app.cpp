@@ -410,35 +410,27 @@ bool SupportedFileType(const std::string& filepath) {
 // These mostly set the root object to the right type and trigger the Inspector
 // to load but can also intiate custom UI loading (see LoadTimeline)
 bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
-    if (root->schema_name() == "Timeline") {
-        auto timeline = dynamic_cast<otio::Timeline*>(root);
+    if (auto timeline = dynamic_cast<otio::Timeline*>(root)) {
         LoadTimeline(timeline);
-    } else if (root->schema_name() == "Clip") {
-        auto clip = dynamic_cast<otio::Clip*>(root);
+    } else if (auto clip = dynamic_cast<otio::Clip*>(root)) {
         appState.root = clip;
         SelectObject(clip);
-    } else if (root->schema_name() == "Gap") {
-        auto gap = dynamic_cast<otio::Gap*>(root);
+    } else if (auto gap = dynamic_cast<otio::Gap*>(root)) {
         appState.root = gap;
         SelectObject(gap);
-    } else if (root->schema_name() == "Transition") {
-        auto transition = dynamic_cast<otio::Transition*>(root);
+    } else if (auto transition = dynamic_cast<otio::Transition*>(root)) {
         appState.root = transition;
         SelectObject(transition);
-    } else if (root->schema_name() == "Effect") {
-        auto effect = dynamic_cast<otio::Effect*>(root);
+    } else if (auto effect = dynamic_cast<otio::Effect*>(root)) {
         appState.root = effect;
         SelectObject(effect);
-    } else if (root->schema_name() == "MediaReference") {
-        auto media_reference = dynamic_cast<otio::MediaReference*>(root);
+    } else if (auto media_reference = dynamic_cast<otio::MediaReference*>(root)) {
         appState.root = media_reference;
         SelectObject(media_reference);
-    } else if (root->schema_name() == "Marker") {
-        auto marker = dynamic_cast<otio::Marker*>(root);
+    } else if (auto marker = dynamic_cast<otio::Marker*>(root)) {
         appState.root = marker;
         SelectObject(marker);
-    } else if (root->schema_name() == "SerializableCollection") {
-        auto serializable_collection = dynamic_cast<otio::SerializableCollection*>(root);
+    } else if (auto serializable_collection = dynamic_cast<otio::SerializableCollection*>(root)) {
         appState.root = serializable_collection;
         SelectObject(serializable_collection);
     }
