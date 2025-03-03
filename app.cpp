@@ -23,6 +23,11 @@
 #include "mz_zip_rw.h"
 
 #include <opentimelineio/clip.h>
+#include <opentimelineio/gap.h>
+#include <opentimelineio/transition.h>
+#include <opentimelineio/effect.h>
+#include <opentimelineio/marker.h>
+#include <opentimelineio/serializableCollection.h>
 
 #include "fonts/embedded_font.inc"
 
@@ -401,6 +406,49 @@ bool SupportedFileType(const std::string& filepath) {
     return extension == "otio" || extension == "otioz";
 }
 
+// Load root object based on its schema type
+// These mostly set the root object to the right type and trigger the Inspector
+// to load but can also intiate custom UI loading (see LoadTimeline)
+bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
+    if (root->schema_name() == "Timeline") {
+        auto timeline = dynamic_cast<otio::Timeline*>(root);
+        LoadTimeline(timeline);
+    } else if (root->schema_name() == "Clip") {
+        auto clip = dynamic_cast<otio::Clip*>(root);
+        appState.root = clip;
+        SelectObject(clip);
+    } else if (root->schema_name() == "Gap") {
+        auto gap = dynamic_cast<otio::Gap*>(root);
+        appState.root = gap;
+        SelectObject(gap);
+    } else if (root->schema_name() == "Transition") {
+        auto transition = dynamic_cast<otio::Transition*>(root);
+        appState.root = transition;
+        SelectObject(transition);
+    } else if (root->schema_name() == "Effect") {
+        auto effect = dynamic_cast<otio::Effect*>(root);
+        appState.root = effect;
+        SelectObject(effect);
+    } else if (root->schema_name() == "MediaReference") {
+        auto media_reference = dynamic_cast<otio::MediaReference*>(root);
+        appState.root = media_reference;
+        SelectObject(media_reference);
+    } else if (root->schema_name() == "Marker") {
+        auto marker = dynamic_cast<otio::Marker*>(root);
+        appState.root = marker;
+        SelectObject(marker);
+    } else if (root->schema_name() == "SerializableCollection") {
+        auto serializable_collection = dynamic_cast<otio::SerializableCollection*>(root);
+        appState.root = serializable_collection;
+        SelectObject(serializable_collection);
+    }
+    else {
+        return false;
+    }
+
+    return true;
+}
+
 void LoadFile(std::string path) {
     otio::SerializableObjectWithMetadata* root = nullptr;
 
@@ -435,25 +483,14 @@ void LoadFile(std::string path) {
     if (!root)
         return;
 
-    if (root->schema_name() == "Timeline") {
-        auto timeline = dynamic_cast<otio::Timeline*>(root);
-        LoadTimeline(timeline);
-        //file_name = timeline->name();
-    } else if (root->schema_name() == "Clip") {
-        auto clip = dynamic_cast<otio::Clip*>(root);
-        //file_name = clip->name();
-        appState.root = clip;
-
-        auto timeline = new otio::Timeline();
-        SelectObject(clip);
-    } else{
+    if (!LoadRoot(root)) {
         Message(
             "Error loading \"%s\": Unsupported root schema: %s",
             path.c_str(),
             root->schema_name().c_str()
         );
         return;
-}
+    }
 
     appState.file_path = path;
 
