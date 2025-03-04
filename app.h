@@ -115,6 +115,9 @@ struct AppState {
     char message[1024]; // single-line message displayed in main window
     bool message_is_error = false;
 
+    // Search
+    std::string curent_selected_marker_color;
+
     // Toggles for Dear ImGui windows
     bool show_main_window = true;
     bool show_style_editor = false;
