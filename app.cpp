@@ -300,16 +300,17 @@ otio::SerializableObjectWithMetadata* LoadOTIOFile(std::string path) {
     otio::ErrorStatus error_status;
     auto root = dynamic_cast<otio::SerializableObjectWithMetadata*>(
         otio::SerializableObjectWithMetadata::from_json_file(path, &error_status));
-    if (!root) {
-        ErrorMessage(
-            "Error loading \"%s\": Unable to extract OTIO data from input",
-            path.c_str());
-        return nullptr;
-    } else if (otio::is_error(error_status)) {
+
+    if (otio::is_error(error_status)) {
         ErrorMessage(
             "Error loading \"%s\": %s",
             path.c_str(),
             otio_error_string(error_status).c_str());
+        return nullptr;
+    } else if (!root) {
+        ErrorMessage(
+            "Error loading \"%s\": Unable to extract OTIO data from input",
+            path.c_str());
         return nullptr;
     }
     return root;
@@ -374,18 +375,18 @@ otio::SerializableObjectWithMetadata* LoadOTIOZFile(std::string path) {
                         otio::ErrorStatus error_status;
                         root = dynamic_cast<otio::SerializableObjectWithMetadata*>(
                             otio::SerializableObjectWithMetadata::from_json_string(json, &error_status));
-                        if (!root) {
-                            ErrorMessage(
-                                "Invalid OTIOZ: \"%s\": Unable to extract OTIO data from input",
-                                path.c_str());
-                        } else if (otio::is_error(error_status)) {
+                        if (otio::is_error(error_status)) {
                             ErrorMessage(
                                 "Invalid OTIOZ: \"%s\": %s",
                                 path.c_str(),
                                 otio_error_string(error_status).c_str());
-                                // Set root to nullptr rather than returning so we can still clean up
-                                // the zip reader
+                            // Set root to nullptr rather than returning so we can still clean up
+                            // the zip reader
                             root = nullptr;
+                        } else if (!root) {
+                            ErrorMessage(
+                                "Invalid OTIOZ: \"%s\": Unable to extract OTIO data from input",
+                                path.c_str());
                         }
                     }
                     free(buf);
