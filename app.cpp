@@ -300,7 +300,12 @@ otio::SerializableObjectWithMetadata* LoadOTIOFile(std::string path) {
     otio::ErrorStatus error_status;
     auto root = dynamic_cast<otio::SerializableObjectWithMetadata*>(
         otio::SerializableObjectWithMetadata::from_json_file(path, &error_status));
-    if (!root || otio::is_error(error_status)) {
+    if (!root) {
+        ErrorMessage(
+            "Error loading \"%s\": Unable to extract OTIO data from input",
+            path.c_str());
+        return nullptr;
+    } else if (otio::is_error(error_status)) {
         ErrorMessage(
             "Error loading \"%s\": %s",
             path.c_str(),
@@ -366,8 +371,22 @@ otio::SerializableObjectWithMetadata* LoadOTIOZFile(std::string path) {
                         // Add a null terminator
                         buf[file_info->uncompressed_size] = '\0';
                         std::string json(buf);
+                        otio::ErrorStatus error_status;
                         root = dynamic_cast<otio::SerializableObjectWithMetadata*>(
-                            otio::SerializableObjectWithMetadata::from_json_string(json));
+                            otio::SerializableObjectWithMetadata::from_json_string(json, &error_status));
+                        if (!root) {
+                            ErrorMessage(
+                                "Invalid OTIOZ: \"%s\": Unable to extract OTIO data from input",
+                                path.c_str());
+                        } else if (otio::is_error(error_status)) {
+                            ErrorMessage(
+                                "Invalid OTIOZ: \"%s\": %s",
+                                path.c_str(),
+                                otio_error_string(error_status).c_str());
+                                // Set root to nullptr rather than returning so we can still clean up
+                                // the zip reader
+                            root = nullptr;
+                        }
                     }
                     free(buf);
                     mz_zip_reader_entry_close(zip_reader);
@@ -407,41 +426,28 @@ bool SupportedFileType(const std::string& filepath) {
 }
 
 // Load root object based on its schema type
-// These mostly set the root object to the right type and trigger the Inspector
-// to load but can also intiate custom UI loading (see LoadTimeline)
+//
+// Most objects won't need any special UI rendering and only need to trigger the
+// Inspector tab, however, we have a mechanism here to allow custom UI loading
+// if required (see LoadTimeline).
+//
+// It is important to note we rely on inheritance order here so if you are
+// adding a new bit of UI loading make sure the subcalss comees before the
+// superclass in the if/else chain. E.g. LoadLinearTimeWarp would have to come
+// before LoadEffect as LinearTimeWarp inherits from Effect.
+
 bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
     if (auto timeline = dynamic_cast<otio::Timeline*>(root)) {
         LoadTimeline(timeline);
-    } else if (auto clip = dynamic_cast<otio::Clip*>(root)) {
-        appState.root = clip;
-        SelectObject(clip);
-    } else if (auto gap = dynamic_cast<otio::Gap*>(root)) {
-        appState.root = gap;
-        SelectObject(gap);
-    } else if (auto transition = dynamic_cast<otio::Transition*>(root)) {
-        appState.root = transition;
-        SelectObject(transition);
-    } else if (auto effect = dynamic_cast<otio::Effect*>(root)) {
-        appState.root = effect;
-        SelectObject(effect);
-    } else if (auto media_reference = dynamic_cast<otio::MediaReference*>(root)) {
-        appState.root = media_reference;
-        SelectObject(media_reference);
-    } else if (auto marker = dynamic_cast<otio::Marker*>(root)) {
-        appState.root = marker;
-        SelectObject(marker);
+    } else if (auto composable = dynamic_cast<otio::Composable*>(root)) {
+        appState.root = composable;
+        SelectObject(composable);
     } else if (auto serializable_collection = dynamic_cast<otio::SerializableCollection*>(root)) {
         appState.root = serializable_collection;
         SelectObject(serializable_collection);
-    } else if (auto track = dynamic_cast<otio::Track*>(root)) {
-        appState.root = track;
-        SelectObject(track);
-    } else if (auto stack = dynamic_cast<otio::Stack*>(root)) {
-        appState.root = stack;
-        SelectObject(stack);
-    }
-    else {
-        return false;
+    } else {
+        appState.root = root;
+        SelectObject(root);
     }
 
     return true;
