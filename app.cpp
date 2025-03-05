@@ -436,6 +436,7 @@ void LoadFile(std::string path) {
     LoadTimeline(timeline);
 
     appState.file_path = path;
+    appState.marker_filter_state.reload = true;
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = (end - start);

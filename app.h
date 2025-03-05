@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
+#include <opentimelineio/marker.h>
 #include <opentimelineio/timeline.h>
 namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
 
@@ -76,6 +77,17 @@ struct AppTheme {
     ImU32 colors[AppThemeCol_COUNT];
 };
 
+typedef std::pair<otio::SerializableObject::Retainer<otio::Marker>, otio::SerializableObject::Retainer<otio::Item>> marker_parent_pair;
+
+struct MarkerFilterState {
+    bool color_change;
+    std::string filter_text;
+    bool name_check;
+    bool item_check;
+    std::vector<marker_parent_pair> pairs;
+    bool reload = false;
+};
+
 // Struct that holds the application's state
 struct AppState {
     // What file did we load?
@@ -116,7 +128,8 @@ struct AppState {
     bool message_is_error = false;
 
     // Search
-    std::string curent_selected_marker_color;
+    MarkerFilterState marker_filter_state;
+    std::string filter_marker_color;
 
     // Toggles for Dear ImGui windows
     bool show_main_window = true;

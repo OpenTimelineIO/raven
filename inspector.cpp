@@ -712,7 +712,7 @@ void DrawMarkersInspector() {
 
     // Colour box
     if (ImGui::Button("X##color")){
-        appState.curent_selected_marker_color = "";
+        appState.filter_marker_color = "";
     }
 
     ImGui::SameLine();
@@ -722,19 +722,20 @@ void DrawMarkersInspector() {
 
     int current_index = -1;
     for (int i = 0; i < num_color_choices; i++) {
-        if (appState.curent_selected_marker_color == color_choices[i]) {
+        if (appState.filter_marker_color == color_choices[i]) {
             current_index = i;
             break;
         }
     }
     if (ImGui::Combo("Color", &current_index, color_choices, num_color_choices)) {
         if (current_index >= 0 && current_index < num_color_choices) {
-            appState.curent_selected_marker_color = color_choices[current_index];
+            appState.filter_marker_color = color_choices[current_index];
+            appState.marker_filter_state.color_change = true;
         }
     }
 
     ImGui::SameLine();
-    ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(appState.curent_selected_marker_color));
+    ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(appState.filter_marker_color));
     ImGui::TextUnformatted("\xef\x80\xab");
     ImGui::PopStyleColor();
 
@@ -760,47 +761,61 @@ void DrawMarkersInspector() {
     ImGui::Checkbox("Item##filter", &item_check);
 
     // Build marker list based on filtering
-    typedef std::pair<otio::SerializableObject::Retainer<otio::Marker>, otio::SerializableObject::Retainer<otio::Item>> marker_parent_pair;
-    std::vector<marker_parent_pair> pairs;
-
     auto root = appState.timeline->tracks();
     auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
 
-    for (const auto& marker : root->markers()) {
-        if (appState.curent_selected_marker_color != ""){
-            if (marker->color() != appState.curent_selected_marker_color){
-                continue;
+    if (appState.marker_filter_state.color_change ||
+        appState.marker_filter_state.filter_text != marker_filter.InputBuf ||
+        appState.marker_filter_state.name_check != name_check ||
+        appState.marker_filter_state.item_check != item_check ||
+        appState.marker_filter_state.reload){
+
+        std::vector<marker_parent_pair> pairs;
+
+        for (const auto& marker : root->markers()) {
+            if (appState.filter_marker_color != ""){
+                if (marker->color() != appState.filter_marker_color){
+                    continue;
+                }
+            }
+            if ((marker_filter.PassFilter(marker->name().c_str()) && name_check) ||
+                (marker_filter.PassFilter(root->name().c_str()) && item_check) ||
+                (!name_check && ! item_check)) {
+                pairs.push_back(marker_parent_pair(marker, root));
             }
         }
-        if ((marker_filter.PassFilter(marker->name().c_str()) && name_check) ||
-            (marker_filter.PassFilter(root->name().c_str()) && item_check) ||
-            (!name_check && ! item_check)) {
-            pairs.push_back(marker_parent_pair(marker, root));
-        }
-    }
 
-    for (const auto& child :
-         appState.timeline->tracks()->find_children())
-    {
-        if (const auto& item = dynamic_cast<otio::Item*>(&*child))
+        for (const auto& child :
+            appState.timeline->tracks()->find_children())
         {
-            for (const auto& marker : item->markers()) {
-                if (appState.curent_selected_marker_color != ""){
-                    if (marker->color() != appState.curent_selected_marker_color){
-                        continue;
+            if (const auto& item = dynamic_cast<otio::Item*>(&*child))
+            {
+                for (const auto& marker : item->markers()) {
+                    if (appState.filter_marker_color != ""){
+                        if (marker->color() != appState.filter_marker_color){
+                            continue;
+                        }
+                    }
+                    if ((marker_filter.PassFilter(marker->name().c_str()) && name_check) ||
+                        (marker_filter.PassFilter(item->name().c_str()) && item_check) ||
+                        (!name_check && ! item_check)) {
+                        pairs.push_back(marker_parent_pair(marker, item));
                     }
                 }
-                if ((marker_filter.PassFilter(marker->name().c_str()) && name_check) ||
-                    (marker_filter.PassFilter(item->name().c_str()) && item_check) ||
-                    (!name_check && ! item_check)) {
-                    pairs.push_back(marker_parent_pair(marker, item));
-                }
             }
         }
+
+        // Update state
+        appState.marker_filter_state.color_change = false;
+        appState.marker_filter_state.filter_text = marker_filter.InputBuf;
+        appState.marker_filter_state.name_check = name_check;
+        appState.marker_filter_state.item_check = item_check;
+        appState.marker_filter_state.pairs = pairs;
+        appState.marker_filter_state.reload = false;
     }
 
     // Count of filtered items
-    ImGui::Text("Count: %d", pairs.size());
+    ImGui::Text("Count: %d", appState.marker_filter_state.pairs.size());
 
     // Draw list
     auto selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
@@ -826,13 +841,13 @@ void DrawMarkersInspector() {
 
         ImGuiListClipper marker_clipper;
 
-        marker_clipper.Begin(pairs.size());
+        marker_clipper.Begin(appState.marker_filter_state.pairs.size());
 
         while(marker_clipper.Step())
         {
             for (int row = marker_clipper.DisplayStart; row < marker_clipper.DisplayEnd; row++)
             {
-                auto pair = pairs.at(row);
+                auto pair = appState.marker_filter_state.pairs.at(row);
                 auto marker = pair.first;
                 auto parent = pair.second;
 
