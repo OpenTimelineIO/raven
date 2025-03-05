@@ -711,19 +711,14 @@ void DrawMarkersInspector() {
     char tmp_str[1000];
 
     // Colour box
-    bool color_clicked = false;
-    if (ImGui::Button("X##color"))
-        color_clicked = true;
-    if (color_clicked)
-    {
+    if (ImGui::Button("X##color")){
         appState.curent_selected_marker_color = "";
-        color_clicked = false;
     }
+
     ImGui::SameLine();
 
     const char** color_choices = marker_color_names;
     int num_color_choices = IM_ARRAYSIZE(marker_color_names);
-    std::string current_color_name;
 
     int current_index = -1;
     for (int i = 0; i < num_color_choices; i++) {
@@ -743,20 +738,28 @@ void DrawMarkersInspector() {
     ImGui::TextUnformatted("\xef\x80\xab");
     ImGui::PopStyleColor();
 
+    // Filter box
     static ImGuiTextFilter marker_filter;
 
-    bool filter_clicked = false;
-    if (ImGui::Button("X##search"))
-        filter_clicked = true;
-    if (filter_clicked)
-    {
+    if (ImGui::Button("X##filter")) {
         marker_filter.Clear();
-        filter_clicked = false;
     }
+
+    ImGui::SameLine();
+    marker_filter.Draw("Filter (inc,-exc)");
+
+    // "Filter By" selection
+    ImGui::TextUnformatted("Filter By:");
     ImGui::SameLine();
 
-    marker_filter.Draw("Search (inc,-exc)");
+    static bool name_check = true;
+    ImGui::Checkbox("Name##filter", &name_check);
+    ImGui::SameLine();
 
+    static bool item_check = false;
+    ImGui::Checkbox("Item##filter", &item_check);
+
+    // Build marker list based on filtering
     typedef std::pair<otio::SerializableObject::Retainer<otio::Marker>, otio::SerializableObject::Retainer<otio::Item>> marker_parent_pair;
     std::vector<marker_parent_pair> pairs;
 
@@ -769,8 +772,9 @@ void DrawMarkersInspector() {
                 continue;
             }
         }
-        if (marker_filter.PassFilter(marker->name().c_str()) ||
-            marker_filter.PassFilter(root->name().c_str())) {
+        if ((marker_filter.PassFilter(marker->name().c_str()) && name_check) ||
+            (marker_filter.PassFilter(root->name().c_str()) && item_check) ||
+            (!name_check && ! item_check)) {
             pairs.push_back(marker_parent_pair(marker, root));
         }
     }
@@ -786,14 +790,19 @@ void DrawMarkersInspector() {
                         continue;
                     }
                 }
-                if (marker_filter.PassFilter(marker->name().c_str()) ||
-                    marker_filter.PassFilter(item->name().c_str())) {
+                if ((marker_filter.PassFilter(marker->name().c_str()) && name_check) ||
+                    (marker_filter.PassFilter(item->name().c_str()) && item_check) ||
+                    (!name_check && ! item_check)) {
                     pairs.push_back(marker_parent_pair(marker, item));
                 }
             }
         }
     }
 
+    // Count of filtered items
+    ImGui::Text("Count: %d", pairs.size());
+
+    // Draw list
     auto selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
 
     if (ImGui::BeginTable("Markers",
