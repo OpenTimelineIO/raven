@@ -894,11 +894,42 @@ void DrawEffectsInspector() {
     typedef std::pair<otio::SerializableObject::Retainer<otio::Effect>, otio::SerializableObject::Retainer<otio::Item>> effect_parent_pair;
     std::vector<effect_parent_pair> pairs;
 
+    // Filter box
+    static ImGuiTextFilter effect_filter;
+
+    if (ImGui::Button("X##filter")) {
+        effect_filter.Clear();
+    }
+
+    ImGui::SameLine();
+    effect_filter.Draw("Filter (inc,-exc)");
+
+    // "Filter By" selection
+    ImGui::TextUnformatted("Filter By:");
+    ImGui::SameLine();
+
+    static bool name_check = true;
+    ImGui::Checkbox("Name##filter", &name_check);
+    ImGui::SameLine();
+
+    static bool effect_check = true;
+    ImGui::Checkbox("Effect##filter", &effect_check);
+    ImGui::SameLine();
+
+    static bool item_check = false;
+    ImGui::Checkbox("Item##filter", &item_check);
+
+
     auto root = appState.timeline->tracks();
     auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
 
     for (const auto& effect : root->effects()) {
-        pairs.push_back(effect_parent_pair(effect, root));
+        if ((!name_check && !effect_check && !item_check) ||
+            (effect_filter.PassFilter(effect->name().c_str()) && name_check) ||
+            (effect_filter.PassFilter(effect->effect_name().c_str()) && effect_check) ||
+            (effect_filter.PassFilter(root->name().c_str()) && item_check)) {
+            pairs.push_back(effect_parent_pair(effect, root));
+        }
     }
 
     for (const auto& child :
@@ -907,10 +938,18 @@ void DrawEffectsInspector() {
         if (const auto& item = dynamic_cast<otio::Item*>(&*child))
         {
             for (const auto& effect : item->effects()) {
-                pairs.push_back(effect_parent_pair(effect, item));
+                if ((!name_check && !effect_check && !item_check) ||
+                    (effect_filter.PassFilter(effect->name().c_str()) && name_check) ||
+                    (effect_filter.PassFilter(effect->effect_name().c_str()) && effect_check) ||
+                    (effect_filter.PassFilter(item->name().c_str()) && item_check)){
+                    pairs.push_back(effect_parent_pair(effect, item));
+                }
             }
         }
     }
+
+    // Count of filtered items
+    ImGui::Text("Count: %d", pairs.size());
 
     auto selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
 
