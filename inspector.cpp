@@ -992,20 +992,20 @@ void DrawTreeInspector() {
             global_time = parent->transformed_time(t, tree_root) + global_start;
         }
 
-        bool is_selected = (appState.selected_object == composable);
-
-        if (ImGui::IsItemClicked()) {
-            SelectObject(composable);
-            appState.playhead = global_time;
-            appState.scroll_to_playhead = true;
-        }
-
+        // Highlight the row if the object is selected, or if it is the context object
+        // For example, if the selected object is a marker, the context object is the item containing that marker.
+        bool is_selected = (appState.selected_object == composable || appState.selected_context == composable);
         if (is_selected) {
             ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_Header));
         }
 
+        // The next column is the schema name
+        // We use that column to make the entire row selectable (via SpanAllColumns)
+        // instead of only the 1st column with the tree node.
         ImGui::TableNextColumn();
-        if (ImGui::Selectable(composable->schema_name().c_str(), is_selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+        bool just_clicked = ImGui::IsItemClicked();
+        bool just_selected = ImGui::Selectable(composable->schema_name().c_str(), is_selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap);
+        if (just_clicked || just_selected) {
             SelectObject(composable);
             appState.playhead = global_time;
             appState.scroll_to_playhead = true;
