@@ -9,6 +9,7 @@
 
 #include <opentimelineio/anyDictionary.h>
 #include <opentimelineio/clip.h>
+#include <opentimelineio/composition.h>
 #include <opentimelineio/effect.h>
 #include <opentimelineio/gap.h>
 #include <opentimelineio/linearTimeWarp.h>
@@ -936,13 +937,23 @@ void DrawTreeInspector() {
         Gaps
     };
 
+    otio::Composition* tree_root = nullptr;
+    otio::RationalTime global_start = otio::RationalTime();
+
+    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+        tree_root = timeline->tracks();
+        auto global_start = timeline->global_start_time().value_or(otio::RationalTime());
+    }else if (auto composition = dynamic_cast<otio::Composition*>(appState.root.value)) {
+        tree_root = composition;
+    }else{
+        ImGui::Text("Root is not a Timeline or Composition");
+        return;
+    }
+
     static const char* filter_options[] = { "All", "Clips", "Transitions", "Gaps" };
     static FilterOptions current_filter = All;
 
     ImGui::Combo("Filter", reinterpret_cast<int*>(&current_filter), filter_options, IM_ARRAYSIZE(filter_options));
-
-    auto root = appState.timeline->tracks();
-    auto global_start = appState.timeline->global_start_time().value_or(otio::RationalTime());
 
     std::function<void(otio::Composable*, otio::Composition*)> draw_composable;
     draw_composable = [&](otio::Composable* composable, otio::Composition* parent) {
@@ -978,7 +989,7 @@ void DrawTreeInspector() {
             global_time = global_start;
         } else {
             auto t = parent->trimmed_range_of_child(composable)->start_time();
-            global_time = parent->transformed_time(t, root) + global_start;
+            global_time = parent->transformed_time(t, tree_root) + global_start;
         }
 
         bool is_selected = (appState.selected_object == composable);
@@ -1038,7 +1049,7 @@ void DrawTreeInspector() {
 
         ImGui::TableHeadersRow();
 
-        draw_composable(root, nullptr);
+        draw_composable(tree_root, nullptr);
 
         ImGui::EndTable();
     }
