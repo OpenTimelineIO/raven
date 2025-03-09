@@ -15,6 +15,8 @@
 
 #ifndef EMSCRIPTEN
 #include "nfd.h"
+#else
+#include <emscripten.h>
 #endif
 
 #include "mz.h"
@@ -866,6 +868,13 @@ void SaveTheme() {
 
 std::string OpenFileDialog() {
 #ifdef EMSCRIPTEN
+    // https://stackoverflow.com/a/69935189
+    EM_ASM(
+        var file_selector = document.createElement('input');
+        file_selector.setAttribute('type', 'file');
+        file_selector.setAttribute('onchange','Module.LoadStringFromEvent(event)');
+        file_selector.click();
+    );
     return "";
 #else
     nfdchar_t* outPath = NULL;
@@ -910,11 +919,13 @@ void DrawMenu() {
                 if (path != "")
                     LoadFile(path);
             }
+#ifndef EMSCRIPTEN
             if (ImGui::MenuItem("Save As...")) {
                 auto path = SaveFileDialog();
                 if (path != "")
                     SaveFile(path);
             }
+#endif
             if (ImGui::MenuItem("Revert")) {
                 LoadFile(appState.file_path);
             }
