@@ -9,6 +9,7 @@
 
 #include <opentimelineio/anyDictionary.h>
 #include <opentimelineio/clip.h>
+#include <opentimelineio/composition.h>
 #include <opentimelineio/effect.h>
 #include <opentimelineio/gap.h>
 #include <opentimelineio/linearTimeWarp.h>
@@ -926,4 +927,130 @@ void DrawEffectsInspector() {
         }
     }
     ImGui::EndTable();
+}
+
+void DrawTreeInspector() {
+    enum FilterOptions {
+        All,
+        Clips,
+        Transitions,
+        Gaps
+    };
+
+    otio::Composition* tree_root = nullptr;
+    otio::RationalTime global_start = otio::RationalTime();
+
+    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+        tree_root = timeline->tracks();
+        auto global_start = timeline->global_start_time().value_or(otio::RationalTime());
+    }else if (auto composition = dynamic_cast<otio::Composition*>(appState.root.value)) {
+        tree_root = composition;
+    }else{
+        ImGui::Text("Root is not a Timeline or Composition");
+        return;
+    }
+
+    static const char* filter_options[] = { "All", "Clips", "Transitions", "Gaps" };
+    static FilterOptions current_filter = All;
+
+    ImGui::Combo("Filter", reinterpret_cast<int*>(&current_filter), filter_options, IM_ARRAYSIZE(filter_options));
+
+    std::function<void(otio::Composable*, otio::Composition*)> draw_composable;
+    draw_composable = [&](otio::Composable* composable, otio::Composition* parent) {
+        bool is_leaf = dynamic_cast<otio::Composition*>(composable) == nullptr;
+
+        // Apply filter
+        if (is_leaf) {
+            if (current_filter == Clips && !dynamic_cast<otio::Clip*>(composable)) return;
+            if (current_filter == Transitions && !dynamic_cast<otio::Transition*>(composable)) return;
+            if (current_filter == Gaps && !dynamic_cast<otio::Gap*>(composable)) return;
+        }
+
+        ImGui::TableNextRow();
+        ImGui::PushID(composable);
+
+        ImGui::TableNextColumn();
+
+        bool open = false;
+        if (auto composition = dynamic_cast<otio::Composition*>(composable)) {
+            open = ImGui::TreeNodeEx(
+                composable,
+                ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen,
+                "%s", composable->name().c_str());
+        } else {
+            ImGui::TreeNodeEx(
+                composable,
+                ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth,
+                "%s", composable->name().c_str());
+        }
+
+        otio::RationalTime global_time;
+        if (parent == nullptr) {
+            global_time = global_start;
+        } else {
+            auto t = parent->trimmed_range_of_child(composable)->start_time();
+            global_time = parent->transformed_time(t, tree_root) + global_start;
+        }
+
+        // Highlight the row if the object is selected, or if it is the context object
+        // For example, if the selected object is a marker, the context object is the item containing that marker.
+        bool is_selected = (appState.selected_object == composable || appState.selected_context == composable);
+        if (is_selected) {
+            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_Header));
+        }
+
+        // The next column is the schema name
+        // We use that column to make the entire row selectable (via SpanAllColumns)
+        // instead of only the 1st column with the tree node.
+        ImGui::TableNextColumn();
+        bool just_clicked = ImGui::IsItemClicked();
+        bool just_selected = ImGui::Selectable(composable->schema_name().c_str(), is_selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap);
+        if (just_clicked || just_selected) {
+            SelectObject(composable);
+            appState.playhead = global_time;
+            appState.scroll_to_playhead = true;
+        }
+
+        ImGui::TableNextColumn();
+        if (auto item = dynamic_cast<otio::Item*>(composable)) {
+            auto start_time = item->trimmed_range().start_time();
+            ImGui::TextUnformatted(TimecodeStringFromTime(start_time).c_str());
+        } else {
+            ImGui::TextUnformatted("-");
+        }
+
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(TimecodeStringFromTime(global_time).c_str());
+
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(TimecodeStringFromTime(composable->duration()).c_str());
+
+        if (open) {
+            if (auto composition = dynamic_cast<otio::Composition*>(composable)) {
+                for (const auto& child : composition->children()) {
+                    draw_composable(child, composition);
+                }
+            }
+            ImGui::TreePop();
+        }
+    };
+
+    if (ImGui::BeginTable("Tree",
+                          5,
+                          ImGuiTableFlags_NoSavedSettings |
+                          ImGuiTableFlags_Resizable |
+                          ImGuiTableFlags_Reorderable |
+                          ImGuiTableFlags_Hideable)) {
+        ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Start Time", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide);
+        ImGui::TableSetupColumn("Global Start Time", ImGuiTableColumnFlags_WidthFixed);
+        ImGui::TableSetupColumn("Duration", ImGuiTableColumnFlags_WidthFixed);
+
+        ImGui::TableHeadersRow();
+
+        draw_composable(tree_root, nullptr);
+
+        ImGui::EndTable();
+    }
 }
