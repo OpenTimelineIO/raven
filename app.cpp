@@ -757,9 +757,8 @@ void MainGui() {
 
         ImGui::EndChild();
 
-        if (appState.root && appState.root->schema_name() == "Timeline"){
-            appState.scroll_to_playhead = true;
-            if (DrawTransportControls(dynamic_cast<otio::Timeline*>(appState.root.value))) {
+        if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+            if (DrawTransportControls(timeline)) {
                 appState.scroll_to_playhead = true;
             }
         }
