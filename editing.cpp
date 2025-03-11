@@ -240,15 +240,11 @@ void AddTrack(std::string kind) {
 }
 
 void FlattenTrackDown() {
-    if (!appState.root){
+    if (!appState.root) {
         return;
     }
 
     const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
-    if (!timeline) {
-        return;
-    }
-
     if (!timeline) {
         ErrorMessage("Cannot flatten: No timeline.");
         return;
