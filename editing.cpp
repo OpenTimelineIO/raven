@@ -142,11 +142,10 @@ void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) 
         return;
     }
 
-    if (appState.root->schema_name() != "Timeline"){
+    const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
+    if (!timeline){
         return;
     }
-
-    const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
 
     // Default to the selected item, or the top-level timeline.
     if (item == NULL) {
@@ -181,11 +180,10 @@ void AddTrack(std::string kind) {
         return;
     }
 
-    if (appState.root->schema_name() != "Timeline") {
+    const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
+    if (!timeline) {
         return;
     }
-
-    const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
 
     // Fall back to the top level stack.
     int insertion_index = -1;
@@ -242,16 +240,11 @@ void AddTrack(std::string kind) {
 }
 
 void FlattenTrackDown() {
-    if (!appState.root){
-        return;
-    }
-
-    if (appState.root->schema_name() != "Timeline") {
+    if (!appState.root) {
         return;
     }
 
     const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
-
     if (!timeline) {
         ErrorMessage("Cannot flatten: No timeline.");
         return;

@@ -717,9 +717,7 @@ void DrawMarkersInspector() {
     auto root = new otio::Stack();
     auto global_start = otio::RationalTime(0.0);
 
-    if (appState.root->schema_name() == "Timeline"){
-        const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
-
+    if (const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
         root = timeline->tracks();
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
@@ -833,9 +831,7 @@ void DrawEffectsInspector() {
     auto root = new otio::Stack();
     auto global_start = otio::RationalTime(0.0);
 
-    if (appState.root->schema_name() == "Timeline"){
-        const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
-
+    if (const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
         root = timeline->tracks();
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 

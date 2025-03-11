@@ -605,8 +605,8 @@ void DrawRoot() {
     if (!appState.root){
         return;
     }
-    if (appState.root->schema_name() == "Timeline") {
-        DrawTimeline(dynamic_cast<otio::Timeline*>(appState.root.value));
+    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+        DrawTimeline(timeline);
     }
 }
 
@@ -757,9 +757,8 @@ void MainGui() {
 
         ImGui::EndChild();
 
-        if (appState.root && appState.root->schema_name() == "Timeline"){
-            appState.scroll_to_playhead = true;
-            if (DrawTransportControls(dynamic_cast<otio::Timeline*>(appState.root.value))) {
+        if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+            if (DrawTransportControls(timeline)) {
                 appState.scroll_to_playhead = true;
             }
         }
@@ -1151,8 +1150,7 @@ void SnapPlayhead() {
 }
 
 void DetectPlayheadLimits() {
-    if (appState.root->schema_name() == "Timeline"){
-        const auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
+    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
         appState.playhead_limit = otio::TimeRange(
             timeline->global_start_time().value_or(otio::RationalTime()),
             timeline->duration());
@@ -1163,8 +1161,7 @@ void FitZoomWholeTimeline() {
     if (!appState.root){
         return;
     }
-    if (appState.root->schema_name() == "Timeline"){
-        const auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
+    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
         appState.scale = appState.timeline_width / timeline->duration().to_seconds();
     }
 }
