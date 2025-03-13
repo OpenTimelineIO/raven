@@ -78,21 +78,16 @@ struct AppTheme {
 };
 
 struct TabData {
+    // This holds the main timeline object.
+    // Pretty much everything drills into this one entry point.
     otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata> root;
     bool opened = true;
     float scale = 100.0f; // zoom scale, measured in pixels per second
+    std::string file_path; // What file did we load?
 };
 
 // Struct that holds the application's state
 struct AppState {
-    // What file did we load?
-    std::string file_path;
-
-    // This holds the main timeline object.
-    // Pretty much everything drills into this one entry point.
-    //otio::SerializableObject::Retainer<otio::Timeline> timeline;
-    //otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata> root;
-
     std::vector<TabData*> tabs;
     TabData* active_tab;
     bool new_tab_opened = false;

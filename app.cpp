@@ -293,7 +293,7 @@ void LoadString(std::string json) {
 
     LoadTimeline(timeline);
 
-    appState.file_path = timeline->name().c_str();
+    appState.active_tab->file_path = timeline->name().c_str();
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = (end - start);
@@ -507,7 +507,7 @@ void LoadFile(std::string path) {
         return;
     }
 
-    appState.file_path = path;
+    appState.active_tab->file_path = path;
     appState.new_tab_opened = true;
 
     auto end = std::chrono::high_resolution_clock::now();
@@ -625,7 +625,7 @@ void MainGui() {
     AppUpdate();
 
     char window_title[1024];
-    auto filename = appState.file_path.substr(appState.file_path.find_last_of("/\\") + 1);
+    auto filename = appState.active_tab->file_path.substr(appState.active_tab->file_path.find_last_of("/\\") + 1);
     if (filename != "") {
         snprintf(
             window_title,
@@ -769,7 +769,13 @@ void MainGui() {
                     tab_bar_flags = ImGuiTabItemFlags_SetSelected;
                     appState.new_tab_opened = false;
                 }
-                if (tab->opened && ImGui::BeginTabItem((std::to_string(count)).c_str(), &tab->opened, tab_bar_flags)){
+                std::string tab_name;
+                if(tab->root.value->name().empty()){
+                    tab_name = tab->file_path.substr(tab->file_path.find_last_of("/\\") + 1);;
+                } else{
+                    tab_name = tab->root.value->name();
+                }
+                if (tab->opened && ImGui::BeginTabItem(tab_name.c_str(), &tab->opened, tab_bar_flags)){
                     appState.active_tab = tab;
 
                     // Wrap the timeline so we can control how much room is left below it
@@ -945,7 +951,7 @@ void DrawMenu() {
                     SaveFile(path);
             }
             if (ImGui::MenuItem("Revert")) {
-                LoadFile(appState.file_path);
+                LoadFile(appState.active_tab->file_path);
             }
             if (ImGui::MenuItem("Close", NULL, false, GetActiveRoot())) {
                 appState.tabs.clear();
