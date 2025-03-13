@@ -257,13 +257,21 @@ void ApplyAppStyle() {
 #include "theme.inc"
 }
 
+otio::SerializableObjectWithMetadata* GetActiveRoot()
+{
+    if (appState.tabs.size() > 0) {
+        return appState.active_tab->root.value;
+    } else {
+        return nullptr;
+    }
+}
+
 std::string otio_error_string(otio::ErrorStatus const& error_status) {
     return otio::ErrorStatus::outcome_to_string(error_status.outcome) + ": "
         + error_status.details;
 }
 
 void LoadTimeline(otio::Timeline* timeline) {
-    appState.root = timeline;
     DetectPlayheadLimits();
     appState.playhead = appState.playhead_limit.start_time();
     FitZoomWholeTimeline();
@@ -438,16 +446,19 @@ bool SupportedFileType(const std::string& filepath) {
 // before LoadEffect as LinearTimeWarp inherits from Effect.
 
 bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
-    if (auto timeline = dynamic_cast<otio::Timeline*>(root)) {
+    TabData* tab = new TabData();
+    tab->root = root;
+    appState.tabs.push_back(tab);
+    appState.active_tab = tab;
+
+    if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
         LoadTimeline(timeline);
-    } else if (auto composable = dynamic_cast<otio::Composable*>(root)) {
-        appState.root = composable;
+    } else if (auto composable = dynamic_cast<otio::Composable*>(GetActiveRoot())) {
         SelectObject(composable);
-    } else if (auto serializable_collection = dynamic_cast<otio::SerializableCollection*>(root)) {
-        appState.root = serializable_collection;
+    } else if (auto serializable_collection = dynamic_cast<otio::SerializableCollection*>(GetActiveRoot())) {
         SelectObject(serializable_collection);
     } else {
-        appState.root = root;
+        appState.root = GetActiveRoot();
         SelectObject(root);
     }
 
@@ -498,6 +509,7 @@ void LoadFile(std::string path) {
     }
 
     appState.file_path = path;
+    appState.new_tab_opened = true;
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = (end - start);
@@ -509,7 +521,7 @@ void LoadFile(std::string path) {
 }
 
 void SaveFile(std::string path) {
-    auto root = appState.root;
+    auto root = GetActiveRoot();
     if (!root)
         return;
 
@@ -562,7 +574,7 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
     // Load an empty timeline if no file is provided
     // or if loading the file fails for some reason.
     auto tl = new otio::Timeline();
-    LoadTimeline(tl);
+    LoadRoot(tl);
 
     if (argc > 1) {
         LoadFile(argv[1]);
@@ -601,11 +613,11 @@ bool IconButton(const char* label, const ImVec2 size = ImVec2(0, 0)) {
 
 void AppUpdate() { }
 
-void DrawRoot() {
-    if (!appState.root){
+void DrawRoot(otio::SerializableObjectWithMetadata* root) {
+    if (!root){
         return;
     }
-    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+    if (auto timeline = dynamic_cast<otio::Timeline*>(root)) {
         DrawTimeline(timeline);
     }
 }
@@ -735,6 +747,7 @@ void MainGui() {
         ImVec2(0.0f, 0.0f),
         ImGuiDockNodeFlags_AutoHideTabBar);
 
+
     ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
     int window_flags = ImGuiWindowFlags_NoCollapse | 0;
     bool visible = ImGui::Begin("Timeline", NULL, window_flags);
@@ -748,16 +761,34 @@ void MainGui() {
 
         ImGui::Separator();
 
-        // Wrap the timeline so we can control how much room is left below it
-        ImVec2 contentSize = ImGui::GetContentRegionAvail();
-        contentSize.y -= ImGui::GetTextLineHeightWithSpacing() + 7;
-        ImGui::BeginChild("##TimelineContainer", contentSize);
+        if (ImGui::BeginTabBar("OpenTimelines")) {
+            int count = 0;
+            for (auto tab : appState.tabs){
+                count++;
+                ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+                if (tab == appState.tabs.back() && appState.new_tab_opened){
+                    tab_bar_flags = ImGuiTabItemFlags_SetSelected;
+                    appState.new_tab_opened = false;
+                }
+                if (tab->opened && ImGui::BeginTabItem((std::to_string(count)).c_str(), &tab->opened, tab_bar_flags)){
+                    appState.active_tab = tab;
 
-        DrawRoot();
+                    // Wrap the timeline so we can control how much room is left below it
+                    ImVec2 contentSize = ImGui::GetContentRegionAvail();
+                    contentSize.y -= ImGui::GetTextLineHeightWithSpacing() + 7;
+                    ImGui::BeginChild("##TimelineContainer", contentSize);
 
-        ImGui::EndChild();
+                    DrawRoot(tab->root.value);
 
-        if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+                    ImGui::EndChild();
+
+                    ImGui::EndTabItem();
+                }
+            }
+            ImGui::EndTabBar();
+        }
+
+        if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
             if (DrawTransportControls(timeline)) {
                 appState.scroll_to_playhead = true;
             }
@@ -782,7 +813,7 @@ void MainGui() {
     ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
     visible = ImGui::Begin("Tree", NULL, window_flags);
     if (visible) {
-        DrawTreeInspector();
+        //DrawTreeInspector();
     }
     ImGui::End();
 
@@ -917,7 +948,7 @@ void DrawMenu() {
             if (ImGui::MenuItem("Revert")) {
                 LoadFile(appState.file_path);
             }
-            if (ImGui::MenuItem("Close", NULL, false, appState.root)) {
+            if (ImGui::MenuItem("Close", NULL, false, GetActiveRoot())) {
                 appState.root = NULL;
                 SelectObject(NULL);
             }
@@ -1150,7 +1181,7 @@ void SnapPlayhead() {
 }
 
 void DetectPlayheadLimits() {
-    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+    if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
         appState.playhead_limit = otio::TimeRange(
             timeline->global_start_time().value_or(otio::RationalTime()),
             timeline->duration());
@@ -1158,10 +1189,10 @@ void DetectPlayheadLimits() {
 }
 
 void FitZoomWholeTimeline() {
-    if (!appState.root){
+    if (!GetActiveRoot()){
         return;
     }
-    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+    if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
         appState.scale = appState.timeline_width / timeline->duration().to_seconds();
     }
 }

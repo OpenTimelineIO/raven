@@ -77,6 +77,11 @@ struct AppTheme {
     ImU32 colors[AppThemeCol_COUNT];
 };
 
+struct TabData {
+    otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata> root;
+    bool opened = true;
+};
+
 // Struct that holds the application's state
 struct AppState {
     // What file did we load?
@@ -86,6 +91,10 @@ struct AppState {
     // Pretty much everything drills into this one entry point.
     //otio::SerializableObject::Retainer<otio::Timeline> timeline;
     otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata> root;
+
+    std::vector<TabData*> tabs;
+    TabData* active_tab;
+    bool new_tab_opened = false;
 
     // Timeline display settings
     float timeline_width = 100.0f; // automatically calculated (pixels)
@@ -135,6 +144,8 @@ void ErrorMessage(const char* format, ...);
 std::string Format(const char* format, ...);
 
 void LoadString(std::string json);
+
+otio::SerializableObjectWithMetadata* GetActiveRoot();
 
 std::string otio_error_string(otio::ErrorStatus const& error_status);
 
