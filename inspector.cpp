@@ -1029,6 +1029,7 @@ void DrawTreeInspector() {
             }
             ImGui::TreePop();
         }
+        ImGui::PopID();
     };
 
     if (ImGui::BeginTable("Tree",

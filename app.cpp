@@ -812,7 +812,7 @@ void MainGui() {
     ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
     visible = ImGui::Begin("Tree", NULL, window_flags);
     if (visible) {
-        //DrawTreeInspector();
+        DrawTreeInspector();
     }
     ImGui::End();
 
