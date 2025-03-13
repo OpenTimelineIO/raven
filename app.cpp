@@ -257,13 +257,21 @@ void ApplyAppStyle() {
 #include "theme.inc"
 }
 
+otio::SerializableObjectWithMetadata* GetActiveRoot()
+{
+    if (appState.tabs.size() > 0) {
+        return appState.active_tab->root.value;
+    } else {
+        return nullptr;
+    }
+}
+
 std::string otio_error_string(otio::ErrorStatus const& error_status) {
     return otio::ErrorStatus::outcome_to_string(error_status.outcome) + ": "
         + error_status.details;
 }
 
 void LoadTimeline(otio::Timeline* timeline) {
-    appState.root = timeline;
     DetectPlayheadLimits();
     appState.playhead = appState.playhead_limit.start_time();
     FitZoomWholeTimeline();
@@ -285,7 +293,7 @@ void LoadString(std::string json) {
 
     LoadTimeline(timeline);
 
-    appState.file_path = timeline->name().c_str();
+    appState.active_tab->file_path = timeline->name().c_str();
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = (end - start);
@@ -438,16 +446,18 @@ bool SupportedFileType(const std::string& filepath) {
 // before LoadEffect as LinearTimeWarp inherits from Effect.
 
 bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
-    if (auto timeline = dynamic_cast<otio::Timeline*>(root)) {
+    TabData* tab = new TabData();
+    tab->root = root;
+    appState.tabs.push_back(tab);
+    appState.active_tab = tab;
+
+    if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
         LoadTimeline(timeline);
-    } else if (auto composable = dynamic_cast<otio::Composable*>(root)) {
-        appState.root = composable;
+    } else if (auto composable = dynamic_cast<otio::Composable*>(GetActiveRoot())) {
         SelectObject(composable);
-    } else if (auto serializable_collection = dynamic_cast<otio::SerializableCollection*>(root)) {
-        appState.root = serializable_collection;
+    } else if (auto serializable_collection = dynamic_cast<otio::SerializableCollection*>(GetActiveRoot())) {
         SelectObject(serializable_collection);
     } else {
-        appState.root = root;
         SelectObject(root);
     }
 
@@ -497,7 +507,7 @@ void LoadFile(std::string path) {
         return;
     }
 
-    appState.file_path = path;
+    appState.active_tab->file_path = path;
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = (end - start);
@@ -509,7 +519,7 @@ void LoadFile(std::string path) {
 }
 
 void SaveFile(std::string path) {
-    auto root = appState.root;
+    auto root = GetActiveRoot();
     if (!root)
         return;
 
@@ -562,7 +572,7 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
     // Load an empty timeline if no file is provided
     // or if loading the file fails for some reason.
     auto tl = new otio::Timeline();
-    LoadTimeline(tl);
+    LoadRoot(tl);
 
     if (argc > 1) {
         LoadFile(argv[1]);
@@ -601,11 +611,11 @@ bool IconButton(const char* label, const ImVec2 size = ImVec2(0, 0)) {
 
 void AppUpdate() { }
 
-void DrawRoot() {
-    if (!appState.root){
+void DrawRoot(otio::SerializableObjectWithMetadata* root) {
+    if (!root){
         return;
     }
-    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+    if (auto timeline = dynamic_cast<otio::Timeline*>(root)) {
         DrawTimeline(timeline);
     }
 }
@@ -614,7 +624,7 @@ void MainGui() {
     AppUpdate();
 
     char window_title[1024];
-    auto filename = appState.file_path.substr(appState.file_path.find_last_of("/\\") + 1);
+    auto filename = appState.active_tab->file_path.substr(appState.active_tab->file_path.find_last_of("/\\") + 1);
     if (filename != "") {
         snprintf(
             window_title,
@@ -735,6 +745,7 @@ void MainGui() {
         ImVec2(0.0f, 0.0f),
         ImGuiDockNodeFlags_AutoHideTabBar);
 
+
     ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
     int window_flags = ImGuiWindowFlags_NoCollapse | 0;
     bool visible = ImGui::Begin("Timeline", NULL, window_flags);
@@ -748,16 +759,36 @@ void MainGui() {
 
         ImGui::Separator();
 
-        // Wrap the timeline so we can control how much room is left below it
-        ImVec2 contentSize = ImGui::GetContentRegionAvail();
-        contentSize.y -= ImGui::GetTextLineHeightWithSpacing() + 7;
-        ImGui::BeginChild("##TimelineContainer", contentSize);
+        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
 
-        DrawRoot();
+        if (ImGui::BeginTabBar("OpenTimelines", tab_bar_flags)) {
+            int count = 0;
+            for (auto tab : appState.tabs){
+                std::string tab_name;
+                if(tab->root.value->name().empty()){
+                    tab_name = tab->file_path.substr(tab->file_path.find_last_of("/\\") + 1);;
+                } else{
+                    tab_name = tab->root.value->name();
+                }
+                if (tab->opened && ImGui::BeginTabItem(tab_name.c_str(), &tab->opened)){
+                    appState.active_tab = tab;
 
-        ImGui::EndChild();
+                    // Wrap the timeline so we can control how much room is left below it
+                    ImVec2 contentSize = ImGui::GetContentRegionAvail();
+                    contentSize.y -= ImGui::GetTextLineHeightWithSpacing() + 7;
+                    ImGui::BeginChild("##TimelineContainer", contentSize);
 
-        if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+                    DrawRoot(tab->root.value);
+
+                    ImGui::EndChild();
+
+                    ImGui::EndTabItem();
+                }
+            }
+            ImGui::EndTabBar();
+        }
+
+        if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
             if (DrawTransportControls(timeline)) {
                 appState.scroll_to_playhead = true;
             }
@@ -915,10 +946,11 @@ void DrawMenu() {
                     SaveFile(path);
             }
             if (ImGui::MenuItem("Revert")) {
-                LoadFile(appState.file_path);
+                LoadFile(appState.active_tab->file_path);
             }
-            if (ImGui::MenuItem("Close", NULL, false, appState.root)) {
-                appState.root = NULL;
+            if (ImGui::MenuItem("Close", NULL, false, GetActiveRoot())) {
+                appState.tabs.clear();
+                appState.active_tab = NULL;
                 SelectObject(NULL);
             }
 #ifndef EMSCRIPTEN
@@ -1150,7 +1182,7 @@ void SnapPlayhead() {
 }
 
 void DetectPlayheadLimits() {
-    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+    if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
         appState.playhead_limit = otio::TimeRange(
             timeline->global_start_time().value_or(otio::RationalTime()),
             timeline->duration());
@@ -1158,11 +1190,11 @@ void DetectPlayheadLimits() {
 }
 
 void FitZoomWholeTimeline() {
-    if (!appState.root){
+    if (!GetActiveRoot()){
         return;
     }
-    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
-        appState.scale = appState.timeline_width / timeline->duration().to_seconds();
+    if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
+        appState.active_tab->scale = appState.timeline_width / timeline->duration().to_seconds();
     }
 }
 // GUI utility to add dynamic height to GUI elements

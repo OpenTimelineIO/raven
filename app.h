@@ -77,19 +77,22 @@ struct AppTheme {
     ImU32 colors[AppThemeCol_COUNT];
 };
 
-// Struct that holds the application's state
-struct AppState {
-    // What file did we load?
-    std::string file_path;
-
+struct TabData {
     // This holds the main timeline object.
     // Pretty much everything drills into this one entry point.
-    //otio::SerializableObject::Retainer<otio::Timeline> timeline;
     otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata> root;
+    bool opened = true;
+    float scale = 100.0f; // zoom scale, measured in pixels per second
+    std::string file_path; // What file did we load?
+};
+
+// Struct that holds the application's state
+struct AppState {
+    std::vector<TabData*> tabs;
+    TabData* active_tab;
 
     // Timeline display settings
-    float timeline_width = 100.0f; // automatically calculated (pixels)
-    float scale = 100.0f; // zoom scale, measured in pixels per second
+    float timeline_width = 100.0f; // automatically calculated (pixels)   
     float default_track_height = 30.0f; // (pixels)
     float track_height = 30.0f; // current track height (pixels)
     otio::RationalTime playhead;
@@ -135,6 +138,8 @@ void ErrorMessage(const char* format, ...);
 std::string Format(const char* format, ...);
 
 void LoadString(std::string json);
+
+otio::SerializableObjectWithMetadata* GetActiveRoot();
 
 std::string otio_error_string(otio::ErrorStatus const& error_status);
 

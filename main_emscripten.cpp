@@ -161,7 +161,7 @@ void LoadUrlSuccess(emscripten_fetch_t* fetch) {
 
     LoadString(otio_string);
 
-    appState.file_path = fetch->url;
+    appState.active_tab->file_path = fetch->url;
 }
 
 void LoadUrlFailure(emscripten_fetch_t* fetch) {
