@@ -90,7 +90,6 @@ struct TabData {
 struct AppState {
     std::vector<TabData*> tabs;
     TabData* active_tab;
-    bool new_tab_opened = false;
 
     // Timeline display settings
     float timeline_width = 100.0f; // automatically calculated (pixels)   

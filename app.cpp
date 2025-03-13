@@ -508,7 +508,6 @@ void LoadFile(std::string path) {
     }
 
     appState.active_tab->file_path = path;
-    appState.new_tab_opened = true;
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = (end - start);
@@ -760,22 +759,18 @@ void MainGui() {
 
         ImGui::Separator();
 
-        if (ImGui::BeginTabBar("OpenTimelines")) {
+        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
+
+        if (ImGui::BeginTabBar("OpenTimelines", tab_bar_flags)) {
             int count = 0;
             for (auto tab : appState.tabs){
-                count++;
-                ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
-                if (tab == appState.tabs.back() && appState.new_tab_opened){
-                    tab_bar_flags = ImGuiTabItemFlags_SetSelected;
-                    appState.new_tab_opened = false;
-                }
                 std::string tab_name;
                 if(tab->root.value->name().empty()){
                     tab_name = tab->file_path.substr(tab->file_path.find_last_of("/\\") + 1);;
                 } else{
                     tab_name = tab->root.value->name();
                 }
-                if (tab->opened && ImGui::BeginTabItem(tab_name.c_str(), &tab->opened, tab_bar_flags)){
+                if (tab->opened && ImGui::BeginTabItem(tab_name.c_str(), &tab->opened)){
                     appState.active_tab = tab;
 
                     // Wrap the timeline so we can control how much room is left below it
