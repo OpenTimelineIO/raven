@@ -80,6 +80,7 @@ struct AppTheme {
 struct TabData {
     otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata> root;
     bool opened = true;
+    float scale = 100.0f; // zoom scale, measured in pixels per second
 };
 
 // Struct that holds the application's state
@@ -97,8 +98,7 @@ struct AppState {
     bool new_tab_opened = false;
 
     // Timeline display settings
-    float timeline_width = 100.0f; // automatically calculated (pixels)
-    float scale = 100.0f; // zoom scale, measured in pixels per second
+    float timeline_width = 100.0f; // automatically calculated (pixels)   
     float default_track_height = 30.0f; // (pixels)
     float track_height = 30.0f; // current track height (pixels)
     otio::RationalTime playhead;

@@ -1193,7 +1193,7 @@ void FitZoomWholeTimeline() {
         return;
     }
     if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
-        appState.scale = appState.timeline_width / timeline->duration().to_seconds();
+        appState.active_tab->scale = appState.timeline_width / timeline->duration().to_seconds();
     }
 }
 // GUI utility to add dynamic height to GUI elements
