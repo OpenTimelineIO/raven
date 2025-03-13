@@ -458,7 +458,6 @@ bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
     } else if (auto serializable_collection = dynamic_cast<otio::SerializableCollection*>(GetActiveRoot())) {
         SelectObject(serializable_collection);
     } else {
-        appState.root = GetActiveRoot();
         SelectObject(root);
     }
 
@@ -949,7 +948,8 @@ void DrawMenu() {
                 LoadFile(appState.file_path);
             }
             if (ImGui::MenuItem("Close", NULL, false, GetActiveRoot())) {
-                appState.root = NULL;
+                appState.tabs.clear();
+                appState.active_tab = NULL;
                 SelectObject(NULL);
             }
 #ifndef EMSCRIPTEN

@@ -90,7 +90,7 @@ struct AppState {
     // This holds the main timeline object.
     // Pretty much everything drills into this one entry point.
     //otio::SerializableObject::Retainer<otio::Timeline> timeline;
-    otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata> root;
+    //otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata> root;
 
     std::vector<TabData*> tabs;
     TabData* active_tab;

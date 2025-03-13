@@ -717,7 +717,7 @@ void DrawMarkersInspector() {
     auto root = new otio::Stack();
     auto global_start = otio::RationalTime(0.0);
 
-    if (const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+    if (const auto& timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
         root = timeline->tracks();
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
@@ -831,7 +831,7 @@ void DrawEffectsInspector() {
     auto root = new otio::Stack();
     auto global_start = otio::RationalTime(0.0);
 
-    if (const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+    if (const auto& timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
         root = timeline->tracks();
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
@@ -936,10 +936,10 @@ void DrawTreeInspector() {
     otio::Composition* tree_root = nullptr;
     otio::RationalTime global_start = otio::RationalTime();
 
-    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+    if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
         tree_root = timeline->tracks();
         auto global_start = timeline->global_start_time().value_or(otio::RationalTime());
-    }else if (auto composition = dynamic_cast<otio::Composition*>(appState.root.value)) {
+    }else if (auto composition = dynamic_cast<otio::Composition*>(GetActiveRoot())) {
         tree_root = composition;
     }else{
         ImGui::Text("Root is not a Timeline or Composition");
