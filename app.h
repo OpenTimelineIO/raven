@@ -78,15 +78,19 @@ struct AppTheme {
     ImU32 colors[AppThemeCol_COUNT];
 };
 
-typedef std::pair<otio::SerializableObject::Retainer<otio::Marker>, otio::SerializableObject::Retainer<otio::Item>> marker_parent_pair;
+typedef std::pair<otio::SerializableObject::Retainer<otio::Marker>, 
+                  otio::SerializableObject::Retainer<otio::Item>> marker_parent_pair;
 
+// Store the state of the marker filter to save regenerating the list every frame
+// even if the filter options haven't changed
 struct MarkerFilterState {
-    bool color_change;
-    std::string filter_text;
-    bool name_check;
-    bool item_check;
-    std::vector<marker_parent_pair> pairs;
-    bool reload = false;
+    bool color_change; // Has the color combo box changed?
+    std::string filter_text; // Text in filter box
+    bool name_check; // State of filter by Name checkbox
+    bool item_check; // State of filter by Item checkbox
+    std::vector<marker_parent_pair> pairs; // List of Markers the passed filtering
+    bool reload = false; // Trigger from loading a new file
+    std::string filter_marker_color; // Stores the selected color in the combo box
 };
 
 // Struct that holds the application's state
@@ -129,9 +133,8 @@ struct AppState {
     char message[1024]; // single-line message displayed in main window
     bool message_is_error = false;
 
-    // Search
-    MarkerFilterState marker_filter_state;
-    std::string filter_marker_color;
+    // Filter
+    MarkerFilterState marker_filter_state; // Persistant state of Marker filtering
 
     // Toggles for Dear ImGui windows
     bool show_main_window = true;
