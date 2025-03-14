@@ -22,6 +22,13 @@
 #include "mz_strm.h"
 #include "mz_zip_rw.h"
 
+#include <opentimelineio/clip.h>
+#include <opentimelineio/gap.h>
+#include <opentimelineio/transition.h>
+#include <opentimelineio/effect.h>
+#include <opentimelineio/marker.h>
+#include <opentimelineio/serializableCollection.h>
+
 #include "fonts/embedded_font.inc"
 
 #include <chrono>
@@ -256,7 +263,7 @@ std::string otio_error_string(otio::ErrorStatus const& error_status) {
 }
 
 void LoadTimeline(otio::Timeline* timeline) {
-    appState.timeline = timeline;
+    appState.root = timeline;
     DetectPlayheadLimits();
     appState.playhead = appState.playhead_limit.start_time();
     FitZoomWholeTimeline();
@@ -289,22 +296,28 @@ void LoadString(std::string json) {
         elapsed_seconds);
 }
 
-otio::Timeline* LoadOTIOFile(std::string path) {
+otio::SerializableObjectWithMetadata* LoadOTIOFile(std::string path) {
     otio::ErrorStatus error_status;
-    auto timeline = dynamic_cast<otio::Timeline*>(
-        otio::Timeline::from_json_file(path, &error_status));
-    if (!timeline || otio::is_error(error_status)) {
+    auto root = dynamic_cast<otio::SerializableObjectWithMetadata*>(
+        otio::SerializableObjectWithMetadata::from_json_file(path, &error_status));
+
+    if (otio::is_error(error_status)) {
         ErrorMessage(
             "Error loading \"%s\": %s",
             path.c_str(),
             otio_error_string(error_status).c_str());
         return nullptr;
+    } else if (!root) {
+        ErrorMessage(
+            "Error loading \"%s\": Unable to extract OTIO data from input",
+            path.c_str());
+        return nullptr;
     }
-    return timeline;
+    return root;
 }
 
-otio::Timeline* LoadOTIOZFile(std::string path) {
-    otio::Timeline* timeline = nullptr;
+otio::SerializableObjectWithMetadata* LoadOTIOZFile(std::string path) {
+    otio::SerializableObjectWithMetadata* root = nullptr;
 
     void *zip_reader = mz_zip_reader_create();
 
@@ -359,8 +372,22 @@ otio::Timeline* LoadOTIOZFile(std::string path) {
                         // Add a null terminator
                         buf[file_info->uncompressed_size] = '\0';
                         std::string json(buf);
-                        timeline = dynamic_cast<otio::Timeline*>(
-                            otio::Timeline::from_json_string(json));
+                        otio::ErrorStatus error_status;
+                        root = dynamic_cast<otio::SerializableObjectWithMetadata*>(
+                            otio::SerializableObjectWithMetadata::from_json_string(json, &error_status));
+                        if (otio::is_error(error_status)) {
+                            ErrorMessage(
+                                "Invalid OTIOZ: \"%s\": %s",
+                                path.c_str(),
+                                otio_error_string(error_status).c_str());
+                            // Set root to nullptr rather than returning so we can still clean up
+                            // the zip reader
+                            root = nullptr;
+                        } else if (!root) {
+                            ErrorMessage(
+                                "Invalid OTIOZ: \"%s\": Unable to extract OTIO data from input",
+                                path.c_str());
+                        }
                     }
                     free(buf);
                     mz_zip_reader_entry_close(zip_reader);
@@ -373,7 +400,7 @@ otio::Timeline* LoadOTIOZFile(std::string path) {
 
     mz_zip_reader_delete(&zip_reader);
 
-    return timeline;
+    return root;
 }
 
 std::string FileExtension(std::string path) {
@@ -399,8 +426,36 @@ bool SupportedFileType(const std::string& filepath) {
     return extension == "otio" || extension == "otioz";
 }
 
+// Load root object based on its schema type
+//
+// Most objects won't need any special UI rendering and only need to trigger the
+// Inspector tab, however, we have a mechanism here to allow custom UI loading
+// if required (see LoadTimeline).
+//
+// It is important to note we rely on inheritance order here so if you are
+// adding a new bit of UI loading make sure the subcalss comees before the
+// superclass in the if/else chain. E.g. LoadLinearTimeWarp would have to come
+// before LoadEffect as LinearTimeWarp inherits from Effect.
+
+bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
+    if (auto timeline = dynamic_cast<otio::Timeline*>(root)) {
+        LoadTimeline(timeline);
+    } else if (auto composable = dynamic_cast<otio::Composable*>(root)) {
+        appState.root = composable;
+        SelectObject(composable);
+    } else if (auto serializable_collection = dynamic_cast<otio::SerializableCollection*>(root)) {
+        appState.root = serializable_collection;
+        SelectObject(serializable_collection);
+    } else {
+        appState.root = root;
+        SelectObject(root);
+    }
+
+    return true;
+}
+
 void LoadFile(std::string path) {
-    otio::Timeline* timeline = nullptr;
+    otio::SerializableObjectWithMetadata* root = nullptr;
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -420,9 +475,9 @@ void LoadFile(std::string path) {
 
     auto ext = LowerCase(FileExtension(path));
     if (ext == ".otio") {
-        timeline = LoadOTIOFile(path);
+        root = LoadOTIOFile(path);
     } else if (ext == ".otioz") {
-        timeline = LoadOTIOZFile(path);
+        root = LoadOTIOZFile(path);
     } else {
         ErrorMessage(
             "Unsupported file type \"%s\"",
@@ -430,10 +485,17 @@ void LoadFile(std::string path) {
         return;
     }
 
-    if (!timeline)
+    if (!root)
         return;
 
-    LoadTimeline(timeline);
+    if (!LoadRoot(root)) {
+        Message(
+            "Error loading \"%s\": Unsupported root schema: %s",
+            path.c_str(),
+            root->schema_name().c_str()
+        );
+        return;
+    }
 
     appState.file_path = path;
     appState.marker_filter_state.reload = true;
@@ -448,8 +510,8 @@ void LoadFile(std::string path) {
 }
 
 void SaveFile(std::string path) {
-    auto timeline = appState.timeline;
-    if (!timeline)
+    auto root = appState.root;
+    if (!root)
         return;
 
     // Append .otio extension if missing
@@ -469,7 +531,7 @@ void SaveFile(std::string path) {
     auto start = std::chrono::high_resolution_clock::now();
 
     otio::ErrorStatus error_status;
-    auto success = timeline->to_json_file(path, &error_status);
+    auto success = root->to_json_file(path, &error_status);
     if (!success || otio::is_error(error_status)) {
         ErrorMessage(
             "Error saving \"%s\": %s",
@@ -483,7 +545,7 @@ void SaveFile(std::string path) {
     double elapsed_seconds = elapsed.count();
     Message(
         "Saved \"%s\" in %.3f seconds",
-        timeline->name().c_str(),
+        root->name().c_str(),
         elapsed_seconds);
 }
 
@@ -539,6 +601,15 @@ bool IconButton(const char* label, const ImVec2 size = ImVec2(0, 0)) {
 }
 
 void AppUpdate() { }
+
+void DrawRoot() {
+    if (!appState.root){
+        return;
+    }
+    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+        DrawTimeline(timeline);
+    }
+}
 
 void MainGui() {
     AppUpdate();
@@ -653,6 +724,7 @@ void MainGui() {
         ImGui::DockBuilderDockWindow("Timeline", dock_main_id);
         ImGui::DockBuilderDockWindow("Inspector", dock_id_side);
         ImGui::DockBuilderDockWindow("JSON", dock_id_side);
+        ImGui::DockBuilderDockWindow("Tree", dock_id_side);
         ImGui::DockBuilderDockWindow("Markers", dock_id_side);
         ImGui::DockBuilderDockWindow("Effects", dock_id_side);
         ImGui::DockBuilderDockWindow("Settings", dock_id_side);
@@ -682,12 +754,14 @@ void MainGui() {
         contentSize.y -= ImGui::GetTextLineHeightWithSpacing() + 7;
         ImGui::BeginChild("##TimelineContainer", contentSize);
 
-        DrawTimeline(appState.timeline);
+        DrawRoot();
 
         ImGui::EndChild();
 
-        if (DrawTransportControls(appState.timeline)) {
-            appState.scroll_to_playhead = true;
+        if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+            if (DrawTransportControls(timeline)) {
+                appState.scroll_to_playhead = true;
+            }
         }
     }
     ImGui::End();
@@ -703,6 +777,13 @@ void MainGui() {
     visible = ImGui::Begin("JSON", NULL, window_flags);
     if (visible) {
         DrawJSONInspector();
+    }
+    ImGui::End();
+
+    ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
+    visible = ImGui::Begin("Tree", NULL, window_flags);
+    if (visible) {
+        DrawTreeInspector();
     }
     ImGui::End();
 
@@ -837,8 +918,8 @@ void DrawMenu() {
             if (ImGui::MenuItem("Revert")) {
                 LoadFile(appState.file_path);
             }
-            if (ImGui::MenuItem("Close", NULL, false, appState.timeline)) {
-                appState.timeline = NULL;
+            if (ImGui::MenuItem("Close", NULL, false, appState.root)) {
+                appState.root = NULL;
                 SelectObject(NULL);
             }
 #ifndef EMSCRIPTEN
@@ -1070,14 +1151,20 @@ void SnapPlayhead() {
 }
 
 void DetectPlayheadLimits() {
-    const auto timeline = appState.timeline;
-    appState.playhead_limit = otio::TimeRange(
-        timeline->global_start_time().value_or(otio::RationalTime()),
-        timeline->duration());
+    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+        appState.playhead_limit = otio::TimeRange(
+            timeline->global_start_time().value_or(otio::RationalTime()),
+            timeline->duration());
+    }
 }
 
 void FitZoomWholeTimeline() {
-    appState.scale = appState.timeline_width / appState.timeline->duration().to_seconds();
+    if (!appState.root){
+        return;
+    }
+    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+        appState.scale = appState.timeline_width / timeline->duration().to_seconds();
+    }
 }
 // GUI utility to add dynamic height to GUI elements
 
