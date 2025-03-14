@@ -761,10 +761,13 @@ void DrawMarkersInspector() {
     static bool item_check = false;
     ImGui::Checkbox("Item##filter", &item_check);
 
+    auto root = new otio::Stack();
+    auto global_start = otio::RationalTime(0.0);
+
     // Build marker list based on filtering
     if (const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
-        auto root = timeline->tracks();
-        auto global_start = timeline->global_start_time().value_or(otio::RationalTime());
+        root = timeline->tracks();
+        global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
         if (appState.marker_filter_state.color_change ||
             appState.marker_filter_state.filter_text != marker_filter.InputBuf ||
@@ -788,7 +791,7 @@ void DrawMarkersInspector() {
             }
 
             for (const auto& child :
-                appState.timeline->tracks()->find_children())
+                root->find_children())
             {
                 if (const auto& item = dynamic_cast<otio::Item*>(&*child))
                 {
@@ -806,15 +809,15 @@ void DrawMarkersInspector() {
                     }
                 }
             }
-        }
 
-        // Update state
-        appState.marker_filter_state.color_change = false;
-        appState.marker_filter_state.filter_text = marker_filter.InputBuf;
-        appState.marker_filter_state.name_check = name_check;
-        appState.marker_filter_state.item_check = item_check;
-        appState.marker_filter_state.pairs = pairs;
-        appState.marker_filter_state.reload = false;
+            // Update state
+            appState.marker_filter_state.color_change = false;
+            appState.marker_filter_state.filter_text = marker_filter.InputBuf;
+            appState.marker_filter_state.name_check = name_check;
+            appState.marker_filter_state.item_check = item_check;
+            appState.marker_filter_state.pairs = pairs;
+            appState.marker_filter_state.reload = false;
+        }
     }
 
     // Count of filtered items
@@ -937,9 +940,12 @@ void DrawEffectsInspector() {
     static bool item_check = false;
     ImGui::Checkbox("Item##filter", &item_check);
 
+    auto root = new otio::Stack();
+    auto global_start = otio::RationalTime(0.0);
+
     if (const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
-        auto root = timeline->tracks();
-        auto global_start = timeline->global_start_time().value_or(otio::RationalTime());
+        root = timeline->tracks();
+        global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
         for (const auto& effect : root->effects()) {
             if ((!name_check && !effect_check && !item_check) ||
@@ -951,7 +957,7 @@ void DrawEffectsInspector() {
         }
 
         for (const auto& child :
-             appState.timeline->tracks()->find_children())
+             root->find_children())
         {
             if (const auto& item = dynamic_cast<otio::Item*>(&*child))
             {
