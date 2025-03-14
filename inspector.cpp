@@ -714,6 +714,7 @@ void DrawMarkersInspector() {
     // Colour box
     if (ImGui::Button("X##color")){
         appState.filter_marker_color = "";
+        appState.marker_filter_state.color_change = true;
     }
 
     ImGui::SameLine();
