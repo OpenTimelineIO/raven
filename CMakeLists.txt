@@ -40,6 +40,12 @@ elseif(EMSCRIPTEN)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIMGUI_DISABLE_FILE_FUNCTIONS")
   set_target_properties(raven PROPERTIES SUFFIX .html)
   target_link_libraries(raven PUBLIC ${LIBS})
+  # Make sure the shell file is rebuilt when the HTML file changes.
+  set_property(
+    TARGET raven
+    PROPERTY LINK_DEPENDS
+    ${CMAKE_CURRENT_LIST_DIR}/shell_minimal.html
+  )
 else()
   target_sources(raven PUBLIC main_glfw.cpp)
 endif()
