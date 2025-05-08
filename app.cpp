@@ -977,13 +977,15 @@ void DrawMenu() {
                 if (path != "")
                     LoadFile(path);
             }
-            if (ImGui::MenuItem("Save As...", NULL, false, GetActiveRoot())) {
+            if (ImGui::MenuItem("Save Tab As...", NULL, false, GetActiveRoot())) {
                 auto path = SaveFileDialog();
                 if (path != "")
                     SaveFile(path);
             }
-            if (ImGui::MenuItem("Revert", NULL, false, GetActiveRoot())) {
-                LoadFile(appState.active_tab->file_path);
+            if (ImGui::MenuItem("Revert Tab", NULL, false, GetActiveRoot())) {
+                std::string filepath = appState.active_tab->file_path;
+                CloseTab(appState.active_tab);
+                LoadFile(filepath);
             }
             if (ImGui::MenuItem("Close Tab", NULL, false, GetActiveRoot())) {
                 CloseTab(appState.active_tab);
