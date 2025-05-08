@@ -8,10 +8,12 @@
 #include <stdlib.h>
 
 void DeleteSelectedObject() {
+    if (!appState.selected_object) {
+        return;
+    }
+
     if (appState.selected_object == GetActiveRoot()) {
-        appState.tabs.clear();
-        appState.active_tab = NULL;
-        SelectObject(NULL);
+        CloseTab(appState.active_tab);
         return;
     }
 
