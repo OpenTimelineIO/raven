@@ -764,12 +764,9 @@ void MainGui() {
         if (ImGui::BeginTabBar("OpenTimelines", tab_bar_flags)) {
             int count = 0;
             for (auto tab : appState.tabs){
-                std::string tab_name;
-                if(tab->root.value->name().empty()){
-                    tab_name = tab->file_path.substr(tab->file_path.find_last_of("/\\") + 1);;
-                } else{
-                    tab_name = tab->root.value->name();
-                }
+                // Tabs need unique names so use file name rather than OTIO schema name
+                std::string tab_name = tab->file_path.substr(tab->file_path.find_last_of("/\\") + 1);
+
                 if (tab->opened && ImGui::BeginTabItem(tab_name.c_str(), &tab->opened)){
                     appState.active_tab = tab;
 
