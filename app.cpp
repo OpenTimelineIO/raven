@@ -788,6 +788,37 @@ void MainGui() {
             ImGui::EndTabBar();
         }
 
+        // Loop through tabs and see if any have been closed and clean up.
+        // Assumes we can only close one tab per frame.
+
+        bool tab_closed = false;
+        for (auto tab = appState.tabs.begin(); tab != appState.tabs.end(); tab++) {
+            if (!(*tab)->opened) {
+
+                delete *tab;
+                appState.tabs.erase(tab);
+
+                SelectObject(NULL);
+                appState.active_tab = nullptr;
+
+                tab_closed = true;
+
+                break;
+            }
+            
+        }
+
+        if (tab_closed) {
+            // If there are no open tabs left load a blank timeline, otherwise laod the last tab.
+            if (appState.tabs.size() == 0) {
+                auto tl = new otio::Timeline();
+                LoadRoot(tl);
+            } else {
+                appState.active_tab = appState.tabs.back();
+                SelectObject(appState.active_tab->root.value);
+            }
+        }
+
         if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
             if (DrawTransportControls(timeline)) {
                 appState.scroll_to_playhead = true;
