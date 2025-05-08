@@ -805,7 +805,6 @@ void MainGui() {
 
                 break;
             }
-            
         }
 
         if (tab_closed) {
@@ -980,6 +979,9 @@ void DrawMenu() {
                 LoadFile(appState.active_tab->file_path);
             }
             if (ImGui::MenuItem("Close", NULL, false, GetActiveRoot())) {
+                for (auto tab : appState.tabs) {
+                    delete tab;
+                }
                 appState.tabs.clear();
                 appState.active_tab = NULL;
                 SelectObject(NULL);
