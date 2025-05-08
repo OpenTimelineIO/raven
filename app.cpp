@@ -571,15 +571,21 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
 
     // Load an empty timeline if no file is provided
     // or if loading the file fails for some reason.
-    auto tl = new otio::Timeline();
-    LoadRoot(tl);
+    //auto tl = new otio::Timeline();
+    //LoadRoot(tl);
 
     if (argc > 1) {
         LoadFile(argv[1]);
     }
 }
 
-void MainCleanup() { }
+void MainCleanup() {
+    // Clean up tabs
+    for (auto tab : appState.tabs) {
+        delete tab;
+    }
+    appState.tabs.clear();
+}
 
 // Accept and open a file path
 void FileDropCallback(int count, const char** filepaths) {
@@ -620,11 +626,34 @@ void DrawRoot(otio::SerializableObjectWithMetadata* root) {
     }
 }
 
+void CloseTab(TabData* tab) {
+    for (auto tab_it = appState.tabs.begin(); tab_it != appState.tabs.end(); tab_it++) {
+        if (*tab_it == tab) {
+            delete *tab_it;
+            appState.tabs.erase(tab_it);
+            break;
+        }
+    }
+    // If there are any open tabs left, select te last one
+    if (appState.tabs.size() > 0) {
+        appState.active_tab = appState.tabs.back();
+        SelectObject(appState.active_tab->root.value);
+    } else {
+        appState.active_tab = NULL;
+        SelectObject(NULL);
+    }
+}
+
 void MainGui() {
     AppUpdate();
 
     char window_title[1024];
-    auto filename = appState.active_tab->file_path.substr(appState.active_tab->file_path.find_last_of("/\\") + 1);
+    std::string filename;
+    if (appState.active_tab) {
+        filename = appState.active_tab->file_path.substr(appState.active_tab->file_path.find_last_of("/\\") + 1);
+    } else {
+        filename = "";
+    }
     if (filename != "") {
         snprintf(
             window_title,
@@ -791,27 +820,8 @@ void MainGui() {
         bool tab_closed = false;
         for (auto tab = appState.tabs.begin(); tab != appState.tabs.end(); tab++) {
             if (!(*tab)->opened) {
-
-                delete *tab;
-                appState.tabs.erase(tab);
-
-                SelectObject(NULL);
-                appState.active_tab = nullptr;
-
-                tab_closed = true;
-
+                CloseTab(*tab);
                 break;
-            }
-        }
-
-        if (tab_closed) {
-            // If there are no open tabs left load a blank timeline, otherwise laod the last tab.
-            if (appState.tabs.size() == 0) {
-                auto tl = new otio::Timeline();
-                LoadRoot(tl);
-            } else {
-                appState.active_tab = appState.tabs.back();
-                SelectObject(appState.active_tab->root.value);
             }
         }
 
@@ -967,21 +977,16 @@ void DrawMenu() {
                 if (path != "")
                     LoadFile(path);
             }
-            if (ImGui::MenuItem("Save As...")) {
+            if (ImGui::MenuItem("Save As...", NULL, false, GetActiveRoot())) {
                 auto path = SaveFileDialog();
                 if (path != "")
                     SaveFile(path);
             }
-            if (ImGui::MenuItem("Revert")) {
+            if (ImGui::MenuItem("Revert", NULL, false, GetActiveRoot())) {
                 LoadFile(appState.active_tab->file_path);
             }
-            if (ImGui::MenuItem("Close", NULL, false, GetActiveRoot())) {
-                for (auto tab : appState.tabs) {
-                    delete tab;
-                }
-                appState.tabs.clear();
-                appState.active_tab = NULL;
-                SelectObject(NULL);
+            if (ImGui::MenuItem("Close Tab", NULL, false, GetActiveRoot())) {
+                CloseTab(appState.active_tab);
             }
 #ifndef EMSCRIPTEN
             // You can't exit(0) from a web page
