@@ -138,6 +138,7 @@ void ErrorMessage(const char* format, ...);
 std::string Format(const char* format, ...);
 
 void LoadString(std::string json);
+bool LoadRoot(otio::SerializableObjectWithMetadata* root);
 
 otio::SerializableObjectWithMetadata* GetActiveRoot();
 void CloseTab(TabData* tab);
