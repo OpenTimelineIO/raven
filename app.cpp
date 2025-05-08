@@ -633,6 +633,11 @@ void DrawRoot(otio::SerializableObjectWithMetadata* root) {
     }
     if (auto timeline = dynamic_cast<otio::Timeline*>(root)) {
         DrawTimeline(timeline);
+    } else {
+        // If the root object has no corresponding UI it is impossible
+        // to select it and view its contents in other panels. Instead
+        // we auto select any schema that is in a tab but has no UI
+        SelectObject(root);
     }
 }
 
