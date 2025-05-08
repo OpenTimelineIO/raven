@@ -257,6 +257,8 @@ void ApplyAppStyle() {
 #include "theme.inc"
 }
 
+// Return the root object of the active tab. If there are no tabs
+// open it returns nullptr,
 otio::SerializableObjectWithMetadata* GetActiveRoot()
 {
     if (appState.tabs.size() > 0) {
@@ -444,6 +446,9 @@ bool SupportedFileType(const std::string& filepath) {
 // adding a new bit of UI loading make sure the subcalss comees before the
 // superclass in the if/else chain. E.g. LoadLinearTimeWarp would have to come
 // before LoadEffect as LinearTimeWarp inherits from Effect.
+//
+// This function also sets up the tab data for the loaded root object and sets it
+// as the active tab.
 
 bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
     TabData* tab = new TabData();
@@ -579,11 +584,6 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
 
     LoadFonts();
 
-    // Load an empty timeline if no file is provided
-    // or if loading the file fails for some reason.
-    //auto tl = new otio::Timeline();
-    //LoadRoot(tl);
-
     if (argc > 1) {
         LoadFile(argv[1]);
     }
@@ -636,6 +636,11 @@ void DrawRoot(otio::SerializableObjectWithMetadata* root) {
     }
 }
 
+// Deletes the given tab and cleans up the associated memory.
+//
+// If there are any open tabs left the last tab in the list
+// is selected as the active tab. If there are not tabs left
+// this sets appState.active_tab and the selected object to null
 void CloseTab(TabData* tab) {
     for (auto tab_it = appState.tabs.begin(); tab_it != appState.tabs.end(); tab_it++) {
         if (*tab_it == tab) {
@@ -799,12 +804,13 @@ void MainGui() {
         ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
 
         if (ImGui::BeginTabBar("OpenTimelines", tab_bar_flags)) {
-            int count = 0;
             for (auto tab : appState.tabs){
                 // Tabs need unique names so use file name rather than OTIO schema name
                 std::string tab_name = tab->file_path.substr(tab->file_path.find_last_of("/\\") + 1);
 
+                // Check tab hasn't been closed
                 if (tab->opened && ImGui::BeginTabItem(tab_name.c_str(), &tab->opened)){
+                    // Open tab is always the active tab
                     appState.active_tab = tab;
 
                     // Wrap the timeline so we can control how much room is left below it
@@ -824,7 +830,6 @@ void MainGui() {
 
         // Loop through tabs and see if any have been closed and clean up.
         // Assumes we can only close one tab per frame.
-
         bool tab_closed = false;
         for (auto tab = appState.tabs.begin(); tab != appState.tabs.end(); tab++) {
             if (!(*tab)->opened) {
