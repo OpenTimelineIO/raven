@@ -465,6 +465,16 @@ bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
 }
 
 void LoadFile(std::string path) {
+    // Ensure we don't open the same file twice
+    // Note: this is required to ensure tabs have unique names. It could be got around,
+    // but is there ever acatually a need to have a file open twice in one instance?
+    for (auto tab : appState.tabs) {
+        if (tab->file_path == path) {
+            Message("File already open \" %s\"",
+                path.c_str());
+            return;
+        }
+    }
     otio::SerializableObjectWithMetadata* root = nullptr;
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -651,8 +661,6 @@ void MainGui() {
     std::string filename;
     if (appState.active_tab) {
         filename = appState.active_tab->file_path.substr(appState.active_tab->file_path.find_last_of("/\\") + 1);
-    } else {
-        filename = "";
     }
     if (filename != "") {
         snprintf(
@@ -1001,7 +1009,7 @@ void DrawMenu() {
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Edit")) {
+        if (ImGui::BeginMenu("Edit", GetActiveRoot())) {
             if (ImGui::MenuItem(
                     "Snap to Frames",
                     NULL,
