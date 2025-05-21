@@ -285,8 +285,6 @@ void LoadString(std::string json) {
 
     LoadRoot(root);
 
-    appState.file_path = root->name().c_str();
-
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = (end - start);
     double elapsed_seconds = elapsed.count();
