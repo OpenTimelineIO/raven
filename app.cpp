@@ -274,25 +274,25 @@ void LoadString(std::string json) {
     auto start = std::chrono::high_resolution_clock::now();
 
     otio::ErrorStatus error_status;
-    auto timeline = dynamic_cast<otio::Timeline*>(
-        otio::Timeline::from_json_string(json, &error_status));
-    if (!timeline || otio::is_error(error_status)) {
+    auto root = dynamic_cast<otio::SerializableObjectWithMetadata*>(
+        otio::SerializableObjectWithMetadata::from_json_string(json, &error_status));
+    if (!root || otio::is_error(error_status)) {
         ErrorMessage(
             "Error loading JSON: %s",
             otio_error_string(error_status).c_str());
         return;
     }
 
-    LoadTimeline(timeline);
+    LoadRoot(root);
 
-    appState.file_path = timeline->name().c_str();
+    appState.file_path = root->name().c_str();
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = (end - start);
     double elapsed_seconds = elapsed.count();
     Message(
         "Loaded \"%s\" in %.3f seconds",
-        timeline->name().c_str(),
+        root->name().c_str(),
         elapsed_seconds);
 }
 
