@@ -471,16 +471,6 @@ bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
 }
 
 void LoadFile(std::string path) {
-    // Ensure we don't open the same file twice
-    // Note: this is required to ensure tabs have unique names. It could be got around,
-    // but is there ever acatually a need to have a file open twice in one instance?
-    for (auto tab : appState.tabs) {
-        if (tab->file_path == path) {
-            Message("File already open \" %s\"",
-                path.c_str());
-            return;
-        }
-    }
     otio::SerializableObjectWithMetadata* root = nullptr;
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -811,7 +801,9 @@ void MainGui() {
 
         if (ImGui::BeginTabBar("OpenTimelines", tab_bar_flags)) {
             for (auto tab : appState.tabs){
-                // Tabs need unique names so use file name rather than OTIO schema name
+                // Give each tab a unique ID to allow for tabs with the same title
+                ImGui::PushID(tab);
+                // Use file name rather than OTIO schema name for tab title
                 std::string tab_name = tab->file_path.substr(tab->file_path.find_last_of("/\\") + 1);
 
                 // Check tab hasn't been closed
@@ -830,6 +822,7 @@ void MainGui() {
 
                     ImGui::EndTabItem();
                 }
+                ImGui::PopID();
             }
             ImGui::EndTabBar();
         }
