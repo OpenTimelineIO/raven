@@ -707,36 +707,124 @@ void DrawInspector() {
 }
 
 void DrawMarkersInspector() {
-    // This temporary variable is used only for a moment to convert
-    // between the datatypes that OTIO uses vs the one that ImGui widget uses.
-    char tmp_str[1000];
+    // Clear color selction button
+    if (ImGui::Button("X##color")){
+        appState.marker_filter_state.filter_marker_color = "";
+        appState.marker_filter_state.color_change = true;
+    }
 
-    typedef std::pair<otio::SerializableObject::Retainer<otio::Marker>, otio::SerializableObject::Retainer<otio::Item>> marker_parent_pair;
-    std::vector<marker_parent_pair> pairs;
+    // Draw color selection combo box
+    ImGui::SameLine();
+
+    const char** color_choices = marker_color_names;
+    int num_color_choices = IM_ARRAYSIZE(marker_color_names);
+
+    int current_index = -1;
+    for (int i = 0; i < num_color_choices; i++) {
+        if (appState.marker_filter_state.filter_marker_color == color_choices[i]) {
+            current_index = i;
+            break;
+        }
+    }
+    if (ImGui::Combo("Color", &current_index, color_choices, num_color_choices)) {
+        if (current_index >= 0 && current_index < num_color_choices) {
+            appState.marker_filter_state.filter_marker_color = color_choices[current_index];
+            appState.marker_filter_state.color_change = true;
+        }
+    }
+
+    // Show selected marker color
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(appState.marker_filter_state.filter_marker_color));
+    ImGui::TextUnformatted("\xef\x80\xab");
+    ImGui::PopStyleColor();
+
+    // Filter box
+    static ImGuiTextFilter marker_filter;
+
+    // Clear filter button
+    if (ImGui::Button("X##filter")) {
+        marker_filter.Clear();
+    }
+
+    ImGui::SameLine();
+    marker_filter.Draw("Filter (inc,-exc)");
+
+    // "Filter By" selection
+    ImGui::TextUnformatted("Filter By:");
+    ImGui::SameLine();
+
+    static bool name_check = true;
+    ImGui::Checkbox("Name##filter", &name_check);
+    ImGui::SameLine();
+
+    static bool item_check = false;
+    ImGui::Checkbox("Item##filter", &item_check);
 
     auto root = new otio::Stack();
     auto global_start = otio::RationalTime(0.0);
 
+    // Build marker list based on filtering
     if (const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
         root = timeline->tracks();
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
-        for (const auto& marker : root->markers()) {
-            pairs.push_back(marker_parent_pair(marker, root));
-        }
+        // Only rebuild list if the filter state has changed
+        if (appState.marker_filter_state.color_change ||
+            appState.marker_filter_state.filter_text != marker_filter.InputBuf ||
+            appState.marker_filter_state.name_check != name_check ||
+            appState.marker_filter_state.item_check != item_check ||
+            appState.marker_filter_state.reload){
 
-        for (const auto& child :
-            timeline->tracks()->find_children())
-        {
-            if (const auto& item = dynamic_cast<otio::Item*>(&*child))
-            {
-                for (const auto& marker : item->markers()) {
-                    pairs.push_back(marker_parent_pair(marker, item));
+            std::vector<marker_parent_pair> pairs;
+
+            for (const auto& marker : root->markers()) {
+                if (appState.marker_filter_state.filter_marker_color != ""){
+                    if (marker->color() != appState.marker_filter_state.filter_marker_color){
+                        continue;
+                    }
+                }
+                if ((marker_filter.PassFilter(marker->name().c_str()) && name_check) ||
+                    (marker_filter.PassFilter(root->name().c_str()) && item_check) ||
+                    (!name_check && ! item_check)) {
+                    pairs.push_back(marker_parent_pair(marker, root));
                 }
             }
+
+            for (const auto& child :
+                root->find_children())
+            {
+                if (const auto& item = dynamic_cast<otio::Item*>(&*child))
+                {
+                    for (const auto& marker : item->markers()) {
+                        if (appState.marker_filter_state.filter_marker_color != ""){
+                            if (marker->color() != appState.marker_filter_state.filter_marker_color){
+                                continue;
+                            }
+                        }
+                        if ((marker_filter.PassFilter(marker->name().c_str()) && name_check) ||
+                            (marker_filter.PassFilter(item->name().c_str()) && item_check) ||
+                            (!name_check && ! item_check)) {
+                            pairs.push_back(marker_parent_pair(marker, item));
+                        }
+                    }
+                }
+            }
+
+            // Update state
+            appState.marker_filter_state.color_change = false;
+            appState.marker_filter_state.filter_text = marker_filter.InputBuf;
+            appState.marker_filter_state.name_check = name_check;
+            appState.marker_filter_state.item_check = item_check;
+            appState.marker_filter_state.pairs = pairs;
+            appState.marker_filter_state.reload = false;
         }
     }
 
+    // Count of filtered items
+    ImGui::Text("Count: %d", appState.marker_filter_state.pairs.size());
+
+    // Draw list
     auto selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
 
     if (ImGui::BeginTable("Markers",
@@ -760,13 +848,13 @@ void DrawMarkersInspector() {
 
         ImGuiListClipper marker_clipper;
 
-        marker_clipper.Begin(pairs.size());
+        marker_clipper.Begin(appState.marker_filter_state.pairs.size());
 
         while(marker_clipper.Step())
         {
             for (int row = marker_clipper.DisplayStart; row < marker_clipper.DisplayEnd; row++)
             {
-                auto pair = pairs.at(row);
+                auto pair = appState.marker_filter_state.pairs.at(row);
                 auto marker = pair.first;
                 auto parent = pair.second;
 
@@ -828,6 +916,33 @@ void DrawEffectsInspector() {
     typedef std::pair<otio::SerializableObject::Retainer<otio::Effect>, otio::SerializableObject::Retainer<otio::Item>> effect_parent_pair;
     std::vector<effect_parent_pair> pairs;
 
+    // Filter box
+    static ImGuiTextFilter effect_filter;
+
+    // lear filter button
+    if (ImGui::Button("X##filter")) {
+        effect_filter.Clear();
+    }
+
+    ImGui::SameLine();
+    effect_filter.Draw("Filter (inc,-exc)");
+
+    // "Filter By" selection
+    ImGui::TextUnformatted("Filter By:");
+    ImGui::SameLine();
+
+    static bool name_check = true;
+    ImGui::Checkbox("Name##filter", &name_check);
+    ImGui::SameLine();
+
+    static bool effect_check = true;
+    ImGui::Checkbox("Effect##filter", &effect_check);
+    ImGui::SameLine();
+
+    static bool item_check = false;
+    ImGui::Checkbox("Item##filter", &item_check);
+
+    // Build list of filtered effects
     auto root = new otio::Stack();
     auto global_start = otio::RationalTime(0.0);
 
@@ -836,20 +951,33 @@ void DrawEffectsInspector() {
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
         for (const auto& effect : root->effects()) {
-            pairs.push_back(effect_parent_pair(effect, root));
+            if ((!name_check && !effect_check && !item_check) ||
+                (effect_filter.PassFilter(effect->name().c_str()) && name_check) ||
+                (effect_filter.PassFilter(effect->effect_name().c_str()) && effect_check) ||
+                (effect_filter.PassFilter(root->name().c_str()) && item_check)) {
+                pairs.push_back(effect_parent_pair(effect, root));
+            }
         }
 
         for (const auto& child :
-            timeline->tracks()->find_children())
+             root->find_children())
         {
             if (const auto& item = dynamic_cast<otio::Item*>(&*child))
             {
                 for (const auto& effect : item->effects()) {
-                    pairs.push_back(effect_parent_pair(effect, item));
+                    if ((!name_check && !effect_check && !item_check) ||
+                        (effect_filter.PassFilter(effect->name().c_str()) && name_check) ||
+                        (effect_filter.PassFilter(effect->effect_name().c_str()) && effect_check) ||
+                        (effect_filter.PassFilter(item->name().c_str()) && item_check)){
+                        pairs.push_back(effect_parent_pair(effect, item));
+                    }
                 }
             }
         }
     }
+
+    // Count of filtered items
+    ImGui::Text("Count: %d", pairs.size());
 
     auto selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
 

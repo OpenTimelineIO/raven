@@ -496,6 +496,8 @@ void LoadFile(std::string path) {
     }
 
     appState.file_path = path;
+    // Force inspector to relaod marker list
+    appState.marker_filter_state.reload = true;
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = (end - start);
