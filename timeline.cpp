@@ -1511,7 +1511,7 @@ void DrawTimeline(otio::Timeline* timeline) {
             // we want the 2nd column to always fit the timeline content.
             // Add some padding, so you can read the playhead label when it sticks off
             // the end.
-            //ImGui::TableSetColumnWidth(1, fmaxf(0.0f, full_width) + 200.0f);
+            ImGui::TableSetColumnWidth(1, fmaxf(0.0f, full_width) + 200.0f);
         }
         // Always show the track labels & the playhead track
         ImGui::TableSetupScrollFreeze(1, 1);
