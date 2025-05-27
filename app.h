@@ -84,6 +84,7 @@ struct TabData {
     bool opened = true;
     float scale = 100.0f; // zoom scale, measured in pixels per second
     std::string file_path; // What file did we load?
+    bool set_tab_active = false; // When we close a tab, go to the tab where this is true.
 };
 
 // Struct that holds the application's state

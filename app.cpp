@@ -460,6 +460,8 @@ bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
     tab->root = root;
     appState.tabs.push_back(tab);
     appState.active_tab = tab;
+    // Always select new tabs
+    appState.active_tab->set_tab_active = true;
 
     if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
         SetupTimeline(timeline);
@@ -638,24 +640,36 @@ void DrawRoot(otio::SerializableObjectWithMetadata* root) {
 
 // Deletes the given tab and cleans up the associated memory.
 //
-// If there are any open tabs left the last tab in the list
-// is selected as the active tab. If there are not tabs left
-// this sets appState.active_tab and the selected object to null
+// If after closing the selected tab there are any tabs left over we
+// set the one to the left of the closed tab as active. If there are no
+// tabs left we set appState.active_tab and appState.selected_object to
+// null.
 void CloseTab(TabData* tab) {
     for (auto tab_it = appState.tabs.begin(); tab_it != appState.tabs.end(); tab_it++) {
         if (*tab_it == tab) {
+            // If we have multiple tabs, try to select the one
+            // to the left of our closed tab.
+            if (appState.tabs.size() > 1) {
+                TabData* tab_to_set_active;
+
+                if (tab_it != appState.tabs.begin()) {
+                    auto new_tab = std::prev(tab_it, 1);
+                    tab_to_set_active = *new_tab;
+                } else {
+                    tab_to_set_active = *std::next(tab_it);
+                }
+                appState.active_tab = tab_to_set_active;
+                SelectObject(appState.active_tab->root.value);
+                appState.active_tab->set_tab_active = true;
+            } else {
+                appState.active_tab = NULL;
+                SelectObject(NULL);
+            }
+
             delete *tab_it;
             appState.tabs.erase(tab_it);
             break;
         }
-    }
-    // If there are any open tabs left, select te last one
-    if (appState.tabs.size() > 0) {
-        appState.active_tab = appState.tabs.back();
-        SelectObject(appState.active_tab->root.value);
-    } else {
-        appState.active_tab = NULL;
-        SelectObject(NULL);
     }
 }
 
@@ -810,11 +824,17 @@ void MainGui() {
                 // Use file name rather than OTIO schema name for tab title
                 std::string tab_name = FileName(tab->file_path);
 
-                // Check tab hasn't been closed
-                if (tab->opened && ImGui::BeginTabItem(tab_name.c_str(), &tab->opened)){
+                ImGuiTabItemFlags tab_item_flags = ImGuiTabItemFlags_None;
+                // If we need to select a different tab because we have closed a tab we
+                // do so here and then fall back to the normal behaviour
+                if (tab->set_tab_active) {
+                    tab_item_flags |= ImGuiTabItemFlags_SetSelected;
+                    tab->set_tab_active = false;
+                }
+
+                if (ImGui::BeginTabItem(tab_name.c_str(), &tab->opened, tab_item_flags)){
                     // Open tab is always the active tab
                     appState.active_tab = tab;
-
                     // Wrap the timeline so we can control how much room is left below it
                     ImVec2 contentSize = ImGui::GetContentRegionAvail();
                     contentSize.y -= ImGui::GetTextLineHeightWithSpacing() + 7;
