@@ -273,7 +273,7 @@ std::string otio_error_string(otio::ErrorStatus const& error_status) {
         + error_status.details;
 }
 
-void LoadTimeline(otio::Timeline* timeline) {
+void SetupTimeline(otio::Timeline* timeline) {
     DetectPlayheadLimits();
     appState.playhead = appState.playhead_limit.start_time();
     FitZoomWholeTimeline();
@@ -438,7 +438,7 @@ bool SupportedFileType(const std::string& filepath) {
 //
 // Most objects won't need any special UI rendering and only need to trigger the
 // Inspector tab, however, we have a mechanism here to allow custom UI loading
-// if required (see LoadTimeline).
+// if required (see SetupTimeline).
 //
 // It is important to note we rely on inheritance order here so if you are
 // adding a new bit of UI loading make sure the subcalss comees before the
@@ -455,7 +455,7 @@ bool LoadRoot(otio::SerializableObjectWithMetadata* root) {
     appState.active_tab = tab;
 
     if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
-        LoadTimeline(timeline);
+        SetupTimeline(timeline);
     } else if (auto composable = dynamic_cast<otio::Composable*>(GetActiveRoot())) {
         SelectObject(composable);
     } else if (auto serializable_collection = dynamic_cast<otio::SerializableCollection*>(GetActiveRoot())) {
