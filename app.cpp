@@ -415,6 +415,13 @@ std::string FileExtension(std::string path) {
     return std::filesystem::path(path).extension().generic_string();
 }
 
+// Takes a file path and retursn the file name.
+// Returns an empty string if there is no filename in the string
+std::string FileName(std::string path) {
+    std::filesystem::path filePath(path);
+    return filePath.filename().string();
+}
+
 std::string LowerCase(std::string str) {
     std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); }); // 🙄
     return str;
@@ -658,7 +665,7 @@ void MainGui() {
     char window_title[1024];
     std::string filename;
     if (appState.active_tab) {
-        filename = appState.active_tab->file_path.substr(appState.active_tab->file_path.find_last_of("/\\") + 1);
+        filename = FileName(appState.active_tab->file_path);
     }
     if (filename != "") {
         snprintf(
@@ -801,7 +808,7 @@ void MainGui() {
                 // Give each tab a unique ID to allow for tabs with the same title
                 ImGui::PushID(tab);
                 // Use file name rather than OTIO schema name for tab title
-                std::string tab_name = tab->file_path.substr(tab->file_path.find_last_of("/\\") + 1);
+                std::string tab_name = FileName(tab->file_path);
 
                 // Check tab hasn't been closed
                 if (tab->opened && ImGui::BeginTabItem(tab_name.c_str(), &tab->opened)){
