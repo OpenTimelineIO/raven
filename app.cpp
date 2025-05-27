@@ -285,7 +285,7 @@ void LoadString(std::string json) {
 
     otio::ErrorStatus error_status;
     auto root = dynamic_cast<otio::SerializableObjectWithMetadata*>(
-        otio::Timeline::from_json_string(json, &error_status));
+        otio::SerializableObjectWithMetadata::from_json_string(json, &error_status));
     if (!root || otio::is_error(error_status)) {
         ErrorMessage(
             "Error loading JSON: %s",
@@ -294,9 +294,6 @@ void LoadString(std::string json) {
     }
 
     LoadRoot(root);
-
-    // TODO: pass file path from emscriptem
-    //appState.active_tab->file_path = root->name().c_str();
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = (end - start);
