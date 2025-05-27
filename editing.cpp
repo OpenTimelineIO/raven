@@ -139,7 +139,10 @@ bool ReplaceObject(otio::SerializableObject* old_object, otio::SerializableObjec
 }
 
 void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) {
-    auto playhead = appState.playhead;
+    if (!GetActiveRoot()) {
+        return;
+    }
+    auto playhead = appState.active_tab->playhead;
 
     if (!GetActiveRoot()){
         return;

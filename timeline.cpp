@@ -1112,20 +1112,20 @@ float DrawPlayhead(
 
 bool DrawTransportControls(otio::Timeline* timeline) {
     bool moved_playhead = false;
-
-    auto start = appState.playhead_limit.start_time();
-    auto duration = appState.playhead_limit.duration();
-    auto end = appState.playhead_limit.end_time_exclusive();
+    auto playhead_limit = appState.active_tab->playhead_limit;
+    auto start = playhead_limit.start_time();
+    auto duration = playhead_limit.duration();
+    auto end = playhead_limit.end_time_exclusive();
     auto rate = duration.rate();
-    if (appState.playhead.rate() != rate) {
-        appState.playhead = appState.playhead.rescaled_to(rate);
+    if (appState.active_tab->playhead.rate() != rate) {
+        appState.active_tab->playhead = appState.active_tab->playhead.rescaled_to(rate);
         if (appState.snap_to_frames) {
             SnapPlayhead();
         }
     }
 
     auto start_string = FormattedStringFromTime(start);
-    auto playhead_string = FormattedStringFromTime(appState.playhead);
+    auto playhead_string = FormattedStringFromTime(appState.active_tab->playhead);
     auto end_string = FormattedStringFromTime(end);
 
     ImGui::PushID("##TransportControls");
@@ -1135,12 +1135,12 @@ bool DrawTransportControls(otio::Timeline* timeline) {
     ImGui::SameLine();
 
     ImGui::SetNextItemWidth(-270);
-    float playhead_seconds = appState.playhead.to_seconds();
+    float playhead_seconds = appState.active_tab->playhead.to_seconds();
     if (ImGui::SliderFloat(
             "##Playhead",
             &playhead_seconds,
-            appState.playhead_limit.start_time().to_seconds(),
-            appState.playhead_limit.end_time_exclusive().to_seconds(),
+            playhead_limit.start_time().to_seconds(),
+            playhead_limit.end_time_exclusive().to_seconds(),
             playhead_string.c_str())) {
         SeekPlayhead(playhead_seconds);
         moved_playhead = true;
@@ -1459,11 +1459,11 @@ void DrawTimeline(otio::Timeline* timeline) {
         return;
     }
 
-    auto playhead = appState.playhead;
-
-    auto start = appState.playhead_limit.start_time();
-    auto duration = appState.playhead_limit.duration();
-    auto end = appState.playhead_limit.end_time_exclusive();
+    auto playhead = appState.active_tab->playhead;
+    auto playhead_limit = appState.active_tab->playhead_limit;
+    auto start = playhead_limit.start_time();
+    auto duration = playhead_limit.duration();
+    auto end = playhead_limit.end_time_exclusive();
 
     auto playhead_string = FormattedStringFromTime(playhead);
 

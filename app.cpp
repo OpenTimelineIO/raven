@@ -275,7 +275,7 @@ std::string otio_error_string(otio::ErrorStatus const& error_status) {
 
 void SetupTimeline(otio::Timeline* timeline) {
     DetectPlayheadLimits();
-    appState.playhead = appState.playhead_limit.start_time();
+    appState.active_tab->playhead = appState.active_tab->playhead_limit.start_time();
     FitZoomWholeTimeline();
     SelectObject(timeline);
 }
@@ -1239,24 +1239,33 @@ void SelectObject(
 }
 
 void SeekPlayhead(double seconds) {
-    double lower_limit = appState.playhead_limit.start_time().to_seconds();
-    double upper_limit = appState.playhead_limit.end_time_exclusive().to_seconds();
+    if (!GetActiveRoot()) {
+        return;
+    }
+    double lower_limit = appState.active_tab->playhead_limit.start_time().to_seconds();
+    double upper_limit = appState.active_tab->playhead_limit.end_time_exclusive().to_seconds();
     seconds = fmax(lower_limit, fmin(upper_limit, seconds));
-    appState.playhead = otio::RationalTime::from_seconds(seconds, appState.playhead.rate());
+    appState.active_tab->playhead = otio::RationalTime::from_seconds(seconds, appState.active_tab->playhead.rate());
     if (appState.snap_to_frames) {
         SnapPlayhead();
     }
 }
 
 void SnapPlayhead() {
-    appState.playhead = otio::RationalTime::from_frames(
-        appState.playhead.to_frames(),
-        appState.playhead.rate());
+    if (!GetActiveRoot()) {
+        return;
+    }
+    appState.active_tab->playhead = otio::RationalTime::from_frames(
+        appState.active_tab->playhead.to_frames(),
+        appState.active_tab->playhead.rate());
 }
 
 void DetectPlayheadLimits() {
+    if (!GetActiveRoot()) {
+        return;
+    }
     if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
-        appState.playhead_limit = otio::TimeRange(
+        appState.active_tab->playhead_limit = otio::TimeRange(
             timeline->global_start_time().value_or(otio::RationalTime()),
             timeline->duration());
     }

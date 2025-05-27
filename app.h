@@ -85,6 +85,9 @@ struct TabData {
     float scale = 100.0f; // zoom scale, measured in pixels per second
     std::string file_path; // What file did we load?
     bool set_tab_active = false; // When we close a tab, go to the tab where this is true.
+    otio::TimeRange
+        playhead_limit; // min/max limit for moving the playhead, auto-calculated
+    otio::RationalTime playhead;
 };
 
 // Struct that holds the application's state
@@ -96,12 +99,10 @@ struct AppState {
     float timeline_width = 100.0f; // automatically calculated (pixels)   
     float default_track_height = 30.0f; // (pixels)
     float track_height = 30.0f; // current track height (pixels)
-    otio::RationalTime playhead;
+
     bool scroll_to_playhead = false; // temporary flag, only true until next frame
     bool scroll_key = false; // temporary flag, only true until next frame
     bool scroll_up_down; // temporary flag, only true until next frame
-    otio::TimeRange
-        playhead_limit; // min/max limit for moving the playhead, auto-calculated
     float zebra_factor = 0.1; // opacity of the per-frame zebra stripes
 
     bool snap_to_frames = true; // user preference to snap the playhead, times,
