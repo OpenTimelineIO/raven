@@ -1127,6 +1127,15 @@ void DrawMenu() {
 void DrawToolbar(ImVec2 button_size) {
     // ImGuiStyle& style = ImGui::GetStyle();
 
+    // If there no open tabs, grey out the toolbar bttons.
+    bool grey_out_buttons = false;
+    if (!GetActiveRoot()) {
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ImColor(100, 100, 100)));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+        grey_out_buttons = true;
+    }
+
     if (IconButton("\xef\x80\x94##Delete", button_size)) {
         DeleteSelectedObject();
     }
@@ -1139,6 +1148,11 @@ void DrawToolbar(ImVec2 button_size) {
     ImGui::SameLine();
     if (IconButton("\xef\x80\xbc +Track", ImVec2(0, button_size.y))) {
         AddTrack();
+    }
+
+    // If we greyed out the toolbar buttons, pop those style changes
+    if (grey_out_buttons) {
+        ImGui::PopStyleColor(3);
     }
 
     // spacer
