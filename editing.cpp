@@ -8,9 +8,12 @@
 #include <stdlib.h>
 
 void DeleteSelectedObject() {
-    if (appState.selected_object == appState.root) {
-        appState.root = NULL;
-        SelectObject(NULL);
+    if (!appState.selected_object) {
+        return;
+    }
+
+    if (appState.selected_object == GetActiveRoot()) {
+        CloseTab(appState.active_tab);
         return;
     }
 
@@ -56,8 +59,8 @@ void DeleteSelectedObject() {
 }
 
 bool ReplaceObject(otio::SerializableObject* old_object, otio::SerializableObject* new_object) {
-    if (old_object == appState.root) {
-        appState.root = dynamic_cast<otio::SerializableObjectWithMetadata*>(new_object);
+    if (old_object == GetActiveRoot()) {
+        appState.active_tab->root = dynamic_cast<otio::SerializableObjectWithMetadata*>(new_object);
         return true;
     }
 
@@ -136,13 +139,16 @@ bool ReplaceObject(otio::SerializableObject* old_object, otio::SerializableObjec
 }
 
 void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) {
-    auto playhead = appState.playhead;
+    if (!GetActiveRoot()) {
+        return;
+    }
+    auto playhead = appState.active_tab->playhead;
 
-    if (!appState.root){
+    if (!GetActiveRoot()){
         return;
     }
 
-    const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
+    const auto& timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot());
     if (!timeline){
         return;
     }
@@ -176,11 +182,11 @@ void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) 
 }
 
 void AddTrack(std::string kind) {
-    if (!appState.root){
+    if (!GetActiveRoot()){
         return;
     }
 
-    const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
+    const auto& timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot());
     if (!timeline) {
         return;
     }
@@ -240,11 +246,11 @@ void AddTrack(std::string kind) {
 }
 
 void FlattenTrackDown() {
-    if (!appState.root) {
+    if (!GetActiveRoot()) {
         return;
     }
 
-    const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value);
+    const auto& timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot());
     if (!timeline) {
         ErrorMessage("Cannot flatten: No timeline.");
         return;
