@@ -77,19 +77,22 @@ struct AppTheme {
     ImU32 colors[AppThemeCol_COUNT];
 };
 
+// Struct that holds data specific to individual tabs.
 struct TabData {
-    // This holds the main timeline object.
-    // Pretty much everything drills into this one entry point.
+    // This holds the main Schema object. Pretty much everything drills into
+    // this one entry point.
     otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata> root;
-    bool opened = true;
-    float scale = 100.0f; // zoom scale, measured in pixels per second
-    std::string file_path; // What file did we load?
+
+    bool opened = true;          // Is the tab still open?
+    float scale = 100.0f;        // Zoom scale, measured in pixels per second.
+    std::string file_path;       // What file did we load?
     bool set_tab_active = false; // When we close a tab, go to the tab where this is true.
     otio::TimeRange
-        playhead_limit; // min/max limit for moving the playhead, auto-calculated
+        playhead_limit;          // Min/max limit for moving the playhead, auto-calculated.
     otio::RationalTime playhead;
-    bool first_frame = true; // The timeline drawing code has to be drawn across
-                             // two frames so we keep track of that here
+
+    bool first_frame = true;     // The timeline drawing code has to be drawn across
+                                 // two frames so we keep track of that here
 };
 
 // Struct that holds the application's state

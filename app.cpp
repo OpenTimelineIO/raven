@@ -415,7 +415,7 @@ std::string FileExtension(std::string path) {
     return std::filesystem::path(path).extension().generic_string();
 }
 
-// Takes a file path and retursn the file name.
+// Takes a file path and returns the file name.
 // Returns an empty string if there is no filename in the string
 std::string FileName(std::string path) {
     std::filesystem::path filePath(path);
@@ -800,7 +800,6 @@ void MainGui() {
         dockspace_id,
         ImVec2(0.0f, 0.0f),
         ImGuiDockNodeFlags_AutoHideTabBar);
-
 
     ImGui::SetNextWindowDockID(dockspace_id, ImGuiCond_FirstUseEver);
     int window_flags = ImGuiWindowFlags_NoCollapse | 0;
