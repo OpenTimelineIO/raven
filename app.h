@@ -88,6 +88,8 @@ struct TabData {
     otio::TimeRange
         playhead_limit; // min/max limit for moving the playhead, auto-calculated
     otio::RationalTime playhead;
+    bool first_frame = true; // The timeline drawing code has to be drawn across
+                             // two frames so we keep track of that here
 };
 
 // Struct that holds the application's state

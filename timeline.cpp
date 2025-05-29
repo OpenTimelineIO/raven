@@ -1506,12 +1506,14 @@ void DrawTimeline(otio::Timeline* timeline) {
         ImGui::TableSetupColumn(
             "Composition",
             ImGuiTableColumnFlags_WidthFixed);
-        if (ImGui::GetFrameCount() > 1) { // crash if we call this on the 1st frame?!
+        if (!appState.active_tab->first_frame) { // crash if we call this on a tab's 1st frame?!
             // We allow the 1st column to be user-resizable, but
             // we want the 2nd column to always fit the timeline content.
             // Add some padding, so you can read the playhead label when it sticks off
             // the end.
             ImGui::TableSetColumnWidth(1, fmaxf(0.0f, full_width) + 200.0f);
+        } else {
+            appState.active_tab->first_frame = false;
         }
         // Always show the track labels & the playhead track
         ImGui::TableSetupScrollFreeze(1, 1);
