@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"/>
     <title>Raven</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
     <style>
         body { margin: 0; background-color: black }
         .emscripten {
@@ -47,7 +48,108 @@
       // ... And free it when we're done.
       _free(stringOnWasmHeap);
     }
+
+    // https://stackoverflow.com/a/69935189
+    Module.LoadStringFromEvent = function (element_event) {
+      const file_reader = new FileReader();
+      let file_name = element_event.target.files[0].name;
+
+      file_reader.onload = (evt) => {
+        if (file_name.endsWith(".otio")) {
+          timeline_json = evt.target.result;
+        } else {
+          console.log("Loading using pyodide")
+          // Get adapter
+          timeline_json = pyodide.runPython(`
+            import tempfile
+
+            import opentimelineio
+
+            mode = 'w'
+            if not isinstance(data, str):
+                mode = 'wb'
+
+            with tempfile.NamedTemporaryFile(mode=mode, suffix="." + file_name.split(".")[-1]) as f:
+                f.write(data)
+
+                f.flush()
+                f.seek(0)
+
+                timeline = opentimelineio.adapters.read_from_file(f.name)
+                output = opentimelineio.adapters.write_to_string(timeline, adapter_name='otio_json', indent=0)
+            output
+          `, {locals: pyodide.toPy({data: evt.target.result, file_name})});
+        }
+
+        // This is annoying, but we need to allocate memory manually on the wasm heap
+        // to avoid a stack overflow if you pass in a very large string.
+        var lengthBytes = lengthBytesUTF8(timeline_json) + 1;
+        var stringOnWasmHeap = _malloc(lengthBytes);
+        stringToUTF8(timeline_json, stringOnWasmHeap, lengthBytes);
+
+        Module.ccall("js_LoadString", "number", ["number"], [stringOnWasmHeap]);
+
+        // ... And free it when we're done.
+        _free(stringOnWasmHeap);
+      }
+      if (element_event.target.files[0].name.endsWith('.aaf')) {
+        file_reader.readAsArrayBuffer(element_event.target.files[0]);
+      } else {
+        file_reader.readAsBinaryString(element_event.target.files[0]);
+      }
+    }
     Module.LoadUrl = Module.cwrap("js_LoadUrl", "number", ["string"]);
+  }
+
+  async function initializePyodide() {
+    window.initializePyodidePromise = new Promise(async function(resolve, reject) {
+      try {
+        console.log("Loading pyodide");
+        let pyodide = await loadPyodide();
+        console.log("Loaded pyodide");
+
+        console.log("Installing micropip");
+        await pyodide.loadPackage("micropip");
+        console.log("Installed micropip");
+
+        console.log("Installing OTIO python bindings and plugins");
+        const micropip = pyodide.pyimport("micropip");
+        await micropip.install(
+          [
+            'https://jcmorin.dev/otio-wasm/opentimelineio-0.18.0.dev1-cp312-cp312-pyodide_2024_0_wasm32.whl',
+            'otio-aaf-adapter',
+            'otio-burnins-adapter',
+            'otio-xges-adapter',
+            'otio-ale-adapter',
+            'otio-hls-playlist-adapter',
+            'otio-fcpx-xml-adapter',
+            'otio-maya-sequencer-adapter',
+            'otio-cmx3600-adapter',
+            'otio-fcp-adapter',
+          ]
+        );
+        console.log("Installed OTIO python bindings and plugins");
+
+        // This is a hack. See https://github.com/pyodide/pyodide/pull/4836
+        pyodide._module.reportUndefinedSymbols();
+
+        window.pyodide = pyodide;
+      } catch (e) {
+        console.error(e);
+        reject(e);
+      }
+      resolve();
+    });
+  }
+
+  async function waitForPyodide() {
+    addRunDependency("pyodide");
+
+    console.log("Waiting for pyodide");
+    await window.initializePyodidePromise;
+    console.log("Pyodide loaded");
+
+    removeRunDependency("pyodide");
   }
 
   /**
@@ -64,8 +166,8 @@
       var Module = {
         // otioLoadUrl: "",
         // otioLoadString: "",
-        preRun: [exposeRavenFunctions],
-        postRun: [ravenPostRun],
+        preRun: [exposeRavenFunctions, initializePyodide],
+        postRun: [ravenPostRun, waitForPyodide],
         print: (function() {
             return function(text) {
                 text = Array.prototype.slice.call(arguments).join(' ');
