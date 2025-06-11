@@ -561,12 +561,12 @@ void DrawInspector() {
     auto selected_object = appState.selected_object;
     auto selected_context = appState.selected_context;
 
-    auto playhead = appState.playhead;
-
-    if (!selected_object) {
+    if (!selected_object ||! GetActiveRoot()) {
         ImGui::Text("Nothing selected.");
         return;
     }
+
+    auto playhead = appState.active_tab->playhead;
 
     // This temporary variable is used only for a moment to convert
     // between the datatypes that OTIO uses vs the one that ImGui widget uses.
@@ -717,7 +717,7 @@ void DrawMarkersInspector() {
     auto root = new otio::Stack();
     auto global_start = otio::RationalTime(0.0);
 
-    if (const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+    if (const auto& timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
         root = timeline->tracks();
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
@@ -791,7 +791,7 @@ void DrawMarkersInspector() {
                 if (ImGui::Selectable(TimecodeStringFromTime(global_time).c_str(),
                                     is_selected,
                                     selectable_flags)) {
-                    appState.playhead = global_time;
+                    appState.active_tab->playhead = global_time;
                     SelectObject(marker, parent);
                     appState.scroll_to_playhead = true;
                 }
@@ -831,7 +831,7 @@ void DrawEffectsInspector() {
     auto root = new otio::Stack();
     auto global_start = otio::RationalTime(0.0);
 
-    if (const auto& timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+    if (const auto& timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
         root = timeline->tracks();
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
@@ -901,7 +901,7 @@ void DrawEffectsInspector() {
                                     is_selected,
                                     selectable_flags)) {
                     //printf("DEBUG: clicked %s\n", TimecodeStringFromTime(global_time).c_str());
-                    appState.playhead = global_time;
+                    appState.active_tab->playhead = global_time;
                     SelectObject(effect, parent);
                     appState.scroll_to_playhead = true;
                 }
@@ -936,10 +936,10 @@ void DrawTreeInspector() {
     otio::Composition* tree_root = nullptr;
     otio::RationalTime global_start = otio::RationalTime();
 
-    if (auto timeline = dynamic_cast<otio::Timeline*>(appState.root.value)) {
+    if (auto timeline = dynamic_cast<otio::Timeline*>(GetActiveRoot())) {
         tree_root = timeline->tracks();
         auto global_start = timeline->global_start_time().value_or(otio::RationalTime());
-    }else if (auto composition = dynamic_cast<otio::Composition*>(appState.root.value)) {
+    }else if (auto composition = dynamic_cast<otio::Composition*>(GetActiveRoot())) {
         tree_root = composition;
     }else{
         ImGui::Text("Root is not a Timeline or Composition");
@@ -1003,7 +1003,7 @@ void DrawTreeInspector() {
         bool just_selected = ImGui::Selectable(composable->schema_name().c_str(), is_selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap);
         if (just_clicked || just_selected) {
             SelectObject(composable);
-            appState.playhead = global_time;
+            appState.active_tab->playhead = global_time;
             appState.scroll_to_playhead = true;
         }
 

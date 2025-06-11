@@ -48,7 +48,7 @@ void TopLevelTimeRangeMap(
     std::map<otio::Composable*, otio::TimeRange>& range_map,
     otio::Item* context) {
     auto zero = otio::RationalTime();
-    auto top = dynamic_cast<otio::Timeline*>(appState.root.value)->tracks();
+    auto top = dynamic_cast<otio::Timeline*>(GetActiveRoot())->tracks();
     auto offset = context->transformed_time(zero, top);
 
     for (auto& pair : range_map) {
@@ -1112,20 +1112,20 @@ float DrawPlayhead(
 
 bool DrawTransportControls(otio::Timeline* timeline) {
     bool moved_playhead = false;
-
-    auto start = appState.playhead_limit.start_time();
-    auto duration = appState.playhead_limit.duration();
-    auto end = appState.playhead_limit.end_time_exclusive();
+    auto playhead_limit = appState.active_tab->playhead_limit;
+    auto start = playhead_limit.start_time();
+    auto duration = playhead_limit.duration();
+    auto end = playhead_limit.end_time_exclusive();
     auto rate = duration.rate();
-    if (appState.playhead.rate() != rate) {
-        appState.playhead = appState.playhead.rescaled_to(rate);
+    if (appState.active_tab->playhead.rate() != rate) {
+        appState.active_tab->playhead = appState.active_tab->playhead.rescaled_to(rate);
         if (appState.snap_to_frames) {
             SnapPlayhead();
         }
     }
 
     auto start_string = FormattedStringFromTime(start);
-    auto playhead_string = FormattedStringFromTime(appState.playhead);
+    auto playhead_string = FormattedStringFromTime(appState.active_tab->playhead);
     auto end_string = FormattedStringFromTime(end);
 
     ImGui::PushID("##TransportControls");
@@ -1135,12 +1135,12 @@ bool DrawTransportControls(otio::Timeline* timeline) {
     ImGui::SameLine();
 
     ImGui::SetNextItemWidth(-270);
-    float playhead_seconds = appState.playhead.to_seconds();
+    float playhead_seconds = appState.active_tab->playhead.to_seconds();
     if (ImGui::SliderFloat(
             "##Playhead",
             &playhead_seconds,
-            appState.playhead_limit.start_time().to_seconds(),
-            appState.playhead_limit.end_time_exclusive().to_seconds(),
+            playhead_limit.start_time().to_seconds(),
+            playhead_limit.end_time_exclusive().to_seconds(),
             playhead_string.c_str())) {
         SeekPlayhead(playhead_seconds);
         moved_playhead = true;
@@ -1153,13 +1153,13 @@ bool DrawTransportControls(otio::Timeline* timeline) {
     ImGui::SetNextItemWidth(100);
     if (ImGui::SliderFloat(
             "##Zoom",
-            &appState.scale,
+            &appState.active_tab->scale,
             0.1f,
             5000.0f,
             "Zoom",
             ImGuiSliderFlags_Logarithmic)) {
         // never go to 0 or less
-        appState.scale = fmax(0.0001f, appState.scale);
+        appState.active_tab->scale = fmax(0.0001f, appState.active_tab->scale);
         moved_playhead = true;
     }
 
@@ -1459,11 +1459,11 @@ void DrawTimeline(otio::Timeline* timeline) {
         return;
     }
 
-    auto playhead = appState.playhead;
-
-    auto start = appState.playhead_limit.start_time();
-    auto duration = appState.playhead_limit.duration();
-    auto end = appState.playhead_limit.end_time_exclusive();
+    auto playhead = appState.active_tab->playhead;
+    auto playhead_limit = appState.active_tab->playhead_limit;
+    auto start = playhead_limit.start_time();
+    auto duration = playhead_limit.duration();
+    auto end = playhead_limit.end_time_exclusive();
 
     auto playhead_string = FormattedStringFromTime(playhead);
 
@@ -1487,7 +1487,7 @@ void DrawTimeline(otio::Timeline* timeline) {
     auto available_size = ImGui::GetContentRegionAvail();
     appState.timeline_width = 0.8f * available_size.x;
 
-    float full_width = duration.to_seconds() * appState.scale;
+    float full_width = duration.to_seconds() * appState.active_tab->scale;
     float full_height = available_size.y - ImGui::GetFrameHeightWithSpacing();
 
     static ImVec2 cell_padding(2.0f, 0.0f);
@@ -1506,12 +1506,14 @@ void DrawTimeline(otio::Timeline* timeline) {
         ImGui::TableSetupColumn(
             "Composition",
             ImGuiTableColumnFlags_WidthFixed);
-        if (ImGui::GetFrameCount() > 1) { // crash if we call this on the 1st frame?!
+        if (!appState.active_tab->first_frame) { // crash if we call this on a tab's 1st frame?!
             // We allow the 1st column to be user-resizable, but
             // we want the 2nd column to always fit the timeline content.
             // Add some padding, so you can read the playhead label when it sticks off
             // the end.
             ImGui::TableSetColumnWidth(1, fmaxf(0.0f, full_width) + 200.0f);
+        } else {
+            appState.active_tab->first_frame = false;
         }
         // Always show the track labels & the playhead track
         ImGui::TableSetupScrollFreeze(1, 1);
@@ -1531,7 +1533,7 @@ void DrawTimeline(otio::Timeline* timeline) {
                 start,
                 end,
                 playhead.rate(),
-                appState.scale,
+                appState.active_tab->scale,
                 full_width,
                 appState.track_height)) {
             // scroll_to_playhead = true;
@@ -1540,7 +1542,7 @@ void DrawTimeline(otio::Timeline* timeline) {
         std::map<otio::Composable*, otio::TimeRange> empty_map;
         DrawMarkers(
             timeline->tracks(),
-            appState.scale,
+            appState.active_tab->scale,
             origin,
             appState.track_height,
             empty_map);
@@ -1550,7 +1552,7 @@ void DrawTimeline(otio::Timeline* timeline) {
             start,
             end,
             playhead,
-            appState.scale,
+            appState.active_tab->scale,
             full_width,
             appState.track_height,
             appState.track_height,
@@ -1573,7 +1575,7 @@ void DrawTimeline(otio::Timeline* timeline) {
                 DrawTrack(
                     video_track,
                     index,
-                    appState.scale,
+                    appState.active_tab->scale,
                     origin,
                     full_width,
                     appState.track_height);
@@ -1601,7 +1603,7 @@ void DrawTimeline(otio::Timeline* timeline) {
                 DrawTrack(
                     audio_track,
                     index,
-                    appState.scale,
+                    appState.active_tab->scale,
                     origin,
                     full_width,
                     appState.track_height);
@@ -1622,7 +1624,7 @@ void DrawTimeline(otio::Timeline* timeline) {
                 DrawTrack(
                     other_track,
                     index,
-                    appState.scale,
+                    appState.active_tab->scale,
                     origin,
                     full_width,
                     appState.track_height);
@@ -1647,7 +1649,7 @@ void DrawTimeline(otio::Timeline* timeline) {
             start,
             end,
             playhead,
-            appState.scale,
+            appState.active_tab->scale,
             full_width,
             appState.track_height,
             full_height,
