@@ -10,10 +10,13 @@
 #include <opentimelineio/anyDictionary.h>
 #include <opentimelineio/clip.h>
 #include <opentimelineio/composition.h>
-#include <opentimelineio/effect.h>
+#include <opentimelineio/externalReference.h>
 #include <opentimelineio/gap.h>
+#include <opentimelineio/imageSequenceReference.h>
 #include <opentimelineio/linearTimeWarp.h>
 #include <opentimelineio/marker.h>
+#include <opentimelineio/mediaReference.h>
+#include <opentimelineio/missingReference.h>
 #include <opentimelineio/track.h>
 #include <opentimelineio/transition.h>
 
@@ -85,6 +88,10 @@ void UpdateJSONInspector() {
     json_edited = false;
     json_error_message = "";
     json_error_line = -1;
+
+    // When the user selects a new clip, we need to update the selected reference index
+    // this allows the inspector to show the correct reference when the user selects a clip
+    appState.selected_reference_index = -1;
 }
 
 void SetJSONErrorMessage(std::string message) {
@@ -124,6 +131,65 @@ void SetJSONErrorMessage(std::string message) {
     json_error_message = wrapped_message;
 
     ErrorMessage("%s", json_error_message.c_str());
+}
+
+void DrawAvailableImageBounds(
+    char const* label,
+    otio::MediaReference* media_reference) {
+    /*
+     * Draw the widgets for viewing and modifying the available image bounds.
+     *
+     * @parm label: The label to display above the widgets.
+     * @parm media_reference: The media reference to get the available image bounds from
+     *  and set the new bounds to.
+     */
+
+    auto available_image_bounds = media_reference->available_image_bounds();
+
+    ImGui::Text("%s", label);
+    ImGui::Indent();
+
+    Imath_3_2::Box2d bounds = available_image_bounds.value();
+
+    ImGui::Text("Min:");
+    ImGui::SameLine();
+    ImGui::PushItemWidth(100);
+    float min_x = static_cast<float>(available_image_bounds->min.x);
+    if (ImGui::InputFloat("##min_x", &min_x)) {
+        bounds.min.x = static_cast<double>(min_x);
+    };
+    ImGui::SameLine();
+
+    float min_y = static_cast<float>(available_image_bounds->min.y);
+    if (ImGui::InputFloat("##min_y", &min_y)) {
+        bounds.min.y = static_cast<double>(min_y);
+    };
+
+    ImGui::PopItemWidth();
+
+    ImGui::Text("Max:");
+    ImGui::SameLine();
+    ImGui::PushItemWidth(100);
+
+    float max_x = static_cast<float>(available_image_bounds->max.x);
+    if (ImGui::InputFloat("##max_x", &max_x)) {
+        bounds.max.x = static_cast<double>(max_x);
+    };
+    ImGui::SameLine();
+
+    float max_y = static_cast<float>(available_image_bounds->max.y);
+    if (ImGui::InputFloat("##max_y", &max_y)) {
+        bounds.max.y = static_cast<double>(max_y);
+    };
+    ImGui::PopItemWidth();
+    ImGui::Unindent();
+
+    if (bounds != available_image_bounds.value()) {
+        // Ensure that the min is less than the max on the x and y
+        if (bounds.min.x < bounds.max.x && bounds.min.y < bounds.max.y) {
+            media_reference->set_available_image_bounds(bounds);
+        }
+    }
 }
 
 void DrawJSONApplyEditButtons() {
@@ -703,6 +769,121 @@ void DrawInspector() {
         ImGui::TextUnformatted("Metadata:");
 
         DrawMetadataTable(metadata);
+    }
+
+    // Draw Reference Media Information
+    if (const auto& clip = dynamic_cast<otio::Clip*>(selected_object)) {
+        ImGui::Dummy(ImVec2(0.0f, 20.0f));
+        ImGui::Text("Selected media reference:");
+
+        const auto& media_references = clip->media_references();
+
+        // Array of names and corresponding MediaReference pointers
+        std::vector<const char*> reference_names;
+        otio::MediaReference** reference_objects = new otio::MediaReference*[media_references.size()];
+
+        size_t i = 0;
+        for (const auto& media_reference : media_references) {
+            reference_names.push_back(media_reference.first.c_str());
+            reference_objects[i] = media_reference.second;
+            i++;
+        }
+        int num_references = static_cast<int>(media_references.size());
+
+        std::string current_reference_name = clip->active_media_reference_key();
+
+        // Select the active media reference if it is not already set in the appState.
+        if (appState.selected_reference_index == -1) {
+            for (int i = 0; i < num_references; i++) {
+                if (current_reference_name == reference_names[i]) {
+                    appState.selected_reference_index = i;
+                    break;
+                }
+            }
+        }
+
+        // Set the active media ref key based on user selection
+        if (ImGui::Combo("", &appState.selected_reference_index, reference_names.data(), num_references)) {
+            if (appState.selected_reference_index >= 0 && appState.selected_reference_index < num_references) {
+                clip->set_active_media_reference_key(reference_names[appState.selected_reference_index]);
+            }
+        }
+
+        // Retrieve the selected MediaReference object
+        otio::MediaReference* selected_reference = nullptr;
+        if (appState.selected_reference_index >= 0 && appState.selected_reference_index < num_references) {
+            selected_reference = reference_objects[appState.selected_reference_index];
+        } else {
+            std::cerr << "Error: Selected reference index is out of range." << std::endl;
+        }
+
+        if (selected_reference) {
+            ImGui::Indent();
+            ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
+            if (auto external_ref = dynamic_cast<otio::ExternalReference*>(selected_reference)) {
+                ImGui::Text("Type: External Media");
+                snprintf(tmp_str, sizeof(tmp_str), "%s", external_ref->target_url().c_str());
+                if (ImGui::InputText("Target", tmp_str, sizeof(tmp_str))) {
+                    external_ref->set_target_url(tmp_str);
+                }
+
+                auto available_range = external_ref->available_range();
+                if (available_range && DrawTimeRange("Available range", &(*available_range), false)) {
+                    external_ref->set_available_range(available_range);
+                }
+
+                auto available_image_bounds = external_ref->available_image_bounds();
+                if (available_image_bounds) {
+                    DrawAvailableImageBounds("Available image bounds", external_ref);
+                }
+
+                ImGui::Text("Metadata:");
+                DrawMetadataTable(external_ref->metadata());
+
+            } else if (auto missing_ref = dynamic_cast<otio::MissingReference*>(selected_reference)) {
+                ImGui::Text("Type: Missing Media");
+
+                auto available_range = missing_ref->available_range();
+                if (available_range && DrawTimeRange("Available range", &(*available_range), false)) {
+                    missing_ref->set_available_range(available_range);
+                }
+
+                auto available_image_bounds = missing_ref->available_image_bounds();
+                if (available_image_bounds) {
+                    DrawAvailableImageBounds("Available image bounds", missing_ref);
+                }
+
+                ImGui::Text("Metadata:");
+                DrawMetadataTable(missing_ref->metadata());
+            } else if (auto imageSeqRef = dynamic_cast<otio::ImageSequenceReference*>(selected_reference)) {
+                ImGui::Text("Type: Image Sequence");
+
+                auto target_url = imageSeqRef->target_url_base();
+                if (ImGui::InputText("Target url base", tmp_str, sizeof(tmp_str))) {
+                    imageSeqRef->set_target_url_base(tmp_str);
+                }
+
+                auto available_range = imageSeqRef->available_range();
+                if (available_range && DrawTimeRange("Available range", &(*available_range), false)) {
+                    imageSeqRef->set_available_range(available_range);
+                }
+
+                auto available_image_bounds = imageSeqRef->available_image_bounds();
+                if (available_image_bounds) {
+                    DrawAvailableImageBounds("Available image bounds", imageSeqRef);
+                }
+
+                ImGui::Text("Metadata:");
+                DrawMetadataTable(imageSeqRef->metadata());
+
+            } else {
+                ImGui::Text("Type: The selected media type is not yet supported in the inspector.");
+            }
+            ImGui::Unindent();
+        } else {
+            ImGui::Text("No media reference found.");
+        }
     }
 }
 

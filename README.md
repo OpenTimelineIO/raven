@@ -31,7 +31,7 @@ This will also clone and initialize all of the submodules that this project depe
 
 ## Building (macOS, Windows, Linux)
 
-Spin up your favourite terminal and follow these steps:
+Spin up your favorite terminal and follow these steps:
 
 ```shell
   git clone --recursive https://github.com/OpenTimelineIO/raven.git

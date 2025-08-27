@@ -127,6 +127,9 @@ struct AppState {
     char message[1024]; // single-line message displayed in main window
     bool message_is_error = false;
 
+    // Store the currently selected MediaReference index for the inspector.
+    int selected_reference_index = -1;
+
     // Toggles for Dear ImGui windows
     bool show_main_window = true;
     bool show_style_editor = false;
