@@ -681,6 +681,10 @@ void DrawInspector() {
             if (item_color != "") {
                 SetItemColor(item, item_color);
             }
+            auto enabled = item->enabled();
+            if(ImGui::Checkbox("Enabled", &enabled)){
+                item->set_enabled(enabled);
+            }
         }
 
         auto trimmed_range = item->trimmed_range();
