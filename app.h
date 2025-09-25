@@ -86,7 +86,7 @@ typedef std::pair<otio::SerializableObject::Retainer<otio::Marker>,
 // even if the filter options haven't changed
 struct MarkerFilterState {
     bool color_change; // Has the color combo box changed?
-    std::string filter_text; // Text in filter box
+    std::string filter_text = ""; // Text in filter box
     bool name_check; // State of filter by Name checkbox
     bool item_check; // State of filter by Item checkbox
     std::vector<marker_parent_pair> pairs; // List of Markers the passed filtering
@@ -110,6 +110,9 @@ struct TabData {
 
     bool first_frame = true;     // The timeline drawing code has to be drawn across
                                  // two frames so we keep track of that here
+
+    // Filter
+    MarkerFilterState marker_filter_state; // Persistant state of Marker filtering
 };
 
 // Struct that holds the application's state
@@ -143,9 +146,6 @@ struct AppState {
     std::string selected_text; // displayed in the JSON inspector
     char message[1024]; // single-line message displayed in main window
     bool message_is_error = false;
-
-    // Filter
-    MarkerFilterState marker_filter_state; // Persistant state of Marker filtering
 
     // Store the currently selected MediaReference index for the inspector.
     int selected_reference_index = -1;

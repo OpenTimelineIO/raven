@@ -888,10 +888,16 @@ void DrawInspector() {
 }
 
 void DrawMarkersInspector() {
+
+    if (!GetActiveRoot()) {
+        return;
+    }
+    MarkerFilterState* active_tab_filter_state = &appState.active_tab->marker_filter_state;
+
     // Clear color selction button
     if (ImGui::Button("X##color")){
-        appState.marker_filter_state.filter_marker_color = "";
-        appState.marker_filter_state.color_change = true;
+        active_tab_filter_state->filter_marker_color = "";
+        active_tab_filter_state->color_change = true;
     }
 
     // Draw color selection combo box
@@ -902,26 +908,27 @@ void DrawMarkersInspector() {
 
     int current_index = -1;
     for (int i = 0; i < num_color_choices; i++) {
-        if (appState.marker_filter_state.filter_marker_color == color_choices[i]) {
+        if (active_tab_filter_state->filter_marker_color == color_choices[i]) {
             current_index = i;
             break;
         }
     }
     if (ImGui::Combo("Color", &current_index, color_choices, num_color_choices)) {
         if (current_index >= 0 && current_index < num_color_choices) {
-            appState.marker_filter_state.filter_marker_color = color_choices[current_index];
-            appState.marker_filter_state.color_change = true;
+            active_tab_filter_state->filter_marker_color = color_choices[current_index];
+            active_tab_filter_state->color_change = true;
         }
     }
 
     // Show selected marker color
     ImGui::SameLine();
-    ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(appState.marker_filter_state.filter_marker_color));
+    ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(active_tab_filter_state->filter_marker_color));
     ImGui::TextUnformatted("\xef\x80\xab");
     ImGui::PopStyleColor();
 
     // Filter box
     static ImGuiTextFilter marker_filter;
+    strncpy(marker_filter.InputBuf, active_tab_filter_state->filter_text.c_str(), 256);
 
     // Clear filter button
     if (ImGui::Button("X##filter")) {
@@ -950,17 +957,17 @@ void DrawMarkersInspector() {
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
         // Only rebuild list if the filter state has changed
-        if (appState.marker_filter_state.color_change ||
-            appState.marker_filter_state.filter_text != marker_filter.InputBuf ||
-            appState.marker_filter_state.name_check != name_check ||
-            appState.marker_filter_state.item_check != item_check ||
-            appState.marker_filter_state.reload){
+        if (active_tab_filter_state->color_change ||
+            active_tab_filter_state->filter_text != marker_filter.InputBuf ||
+            active_tab_filter_state->name_check != name_check ||
+            active_tab_filter_state->item_check != item_check ||
+            active_tab_filter_state->reload){
 
             std::vector<marker_parent_pair> pairs;
 
             for (const auto& marker : root->markers()) {
-                if (appState.marker_filter_state.filter_marker_color != ""){
-                    if (marker->color() != appState.marker_filter_state.filter_marker_color){
+                if (active_tab_filter_state->filter_marker_color != "") {
+                    if (marker->color() != active_tab_filter_state->filter_marker_color) {
                         continue;
                     }
                 }
@@ -977,8 +984,8 @@ void DrawMarkersInspector() {
                 if (const auto& item = dynamic_cast<otio::Item*>(&*child))
                 {
                     for (const auto& marker : item->markers()) {
-                        if (appState.marker_filter_state.filter_marker_color != ""){
-                            if (marker->color() != appState.marker_filter_state.filter_marker_color){
+                        if (active_tab_filter_state->filter_marker_color != "") {
+                            if (marker->color() != active_tab_filter_state->filter_marker_color) {
                                 continue;
                             }
                         }
@@ -992,17 +999,17 @@ void DrawMarkersInspector() {
             }
 
             // Update state
-            appState.marker_filter_state.color_change = false;
-            appState.marker_filter_state.filter_text = marker_filter.InputBuf;
-            appState.marker_filter_state.name_check = name_check;
-            appState.marker_filter_state.item_check = item_check;
-            appState.marker_filter_state.pairs = pairs;
-            appState.marker_filter_state.reload = false;
+            active_tab_filter_state->color_change = false;
+            active_tab_filter_state->filter_text = marker_filter.InputBuf;
+            active_tab_filter_state->name_check = name_check;
+            active_tab_filter_state->item_check = item_check;
+            active_tab_filter_state->pairs = pairs;
+            active_tab_filter_state->reload = false;
         }
     }
 
     // Count of filtered items
-    ImGui::Text("Count: %d", appState.marker_filter_state.pairs.size());
+    ImGui::Text("Count: %d", active_tab_filter_state->pairs.size());
 
     // Draw list
     auto selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
@@ -1028,13 +1035,13 @@ void DrawMarkersInspector() {
 
         ImGuiListClipper marker_clipper;
 
-        marker_clipper.Begin(appState.marker_filter_state.pairs.size());
+        marker_clipper.Begin(active_tab_filter_state->pairs.size());
 
         while(marker_clipper.Step())
         {
             for (int row = marker_clipper.DisplayStart; row < marker_clipper.DisplayEnd; row++)
             {
-                auto pair = appState.marker_filter_state.pairs.at(row);
+                auto pair = active_tab_filter_state->pairs.at(row);
                 auto marker = pair.first;
                 auto parent = pair.second;
 

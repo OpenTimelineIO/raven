@@ -520,7 +520,7 @@ void LoadFile(std::string path) {
     }
 
     // Force inspector to relaod marker list
-    appState.marker_filter_state.reload = true;
+    appState.active_tab->marker_filter_state.reload = true;
 
     appState.active_tab->file_path = path;
 
