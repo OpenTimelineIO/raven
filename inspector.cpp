@@ -919,6 +919,9 @@ void DrawMarkersInspector() {
             active_tab_filter_state->color_change = true;
         }
     }
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_DelayNormal)) {
+        ImGui::SetTooltip("Select Marker Color\nDefault is all colours selected");
+    }
 
     // Show selected marker color
     ImGui::SameLine();
@@ -936,7 +939,7 @@ void DrawMarkersInspector() {
     }
 
     ImGui::SameLine();
-    marker_filter.Draw("Filter (inc,-exc)");
+    marker_filter.Draw("Filter");
 
     // "Filter By" selection
     ImGui::TextUnformatted("Filter By:");
@@ -948,6 +951,21 @@ void DrawMarkersInspector() {
 
     static bool item_check = false;
     ImGui::Checkbox("Item##filter", &item_check);
+
+    // ImGuiTextFilter is not a widget in its own right so tooltips don't work
+    // so we have to put the usage instructions in a collapsable header.
+
+    if (ImGui::CollapsingHeader("Filter Usage", ImGuiTreeNodeFlags_None)) {
+        ImGui::Separator();
+        ImGui::TextUnformatted("Filter Usage:");
+        ImGui::TextUnformatted("Type to filter by Marker or Item name");
+        ImGui::TextUnformatted("To exclude values, use the \"-\" symbol");
+        ImGui::TextUnformatted("e.g. -special_marker");
+        ImGui::TextUnformatted("To filter multiple values use a comma (,)");
+        ImGui::TextUnformatted("e.g. marker1,marker2");
+        ImGui::Separator();
+    }
+
 
     auto root = new otio::Stack();
     auto global_start = otio::RationalTime(0.0);
