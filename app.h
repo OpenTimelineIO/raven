@@ -78,6 +78,7 @@ struct AppTheme {
     ImU32 colors[AppThemeCol_COUNT];
 };
 
+
 typedef std::pair<otio::SerializableObject::Retainer<otio::Marker>, 
                   otio::SerializableObject::Retainer<otio::Item>> marker_parent_pair;
 
@@ -93,27 +94,37 @@ struct MarkerFilterState {
     std::string filter_marker_color; // Stores the selected color in the combo box
 };
 
-// Struct that holds the application's state
-struct AppState {
-    // What file did we load?
-    std::string file_path;
-
-    // This holds the main timeline object.
-    // Pretty much everything drills into this one entry point.
-    //otio::SerializableObject::Retainer<otio::Timeline> timeline;
+// Struct that holds data specific to individual tabs.
+struct TabData {
+    // This holds the main Schema object. Pretty much everything drills into
+    // this one entry point.
     otio::SerializableObject::Retainer<otio::SerializableObjectWithMetadata> root;
 
+    bool opened = true;          // Is the tab still open?
+    float scale = 100.0f;        // Zoom scale, measured in pixels per second.
+    std::string file_path;       // What file did we load?
+    bool set_tab_active = false; // When we close a tab, go to the tab where this is true.
+    otio::TimeRange
+        playhead_limit;          // Min/max limit for moving the playhead, auto-calculated.
+    otio::RationalTime playhead;
+
+    bool first_frame = true;     // The timeline drawing code has to be drawn across
+                                 // two frames so we keep track of that here
+};
+
+// Struct that holds the application's state
+struct AppState {
+    std::vector<TabData*> tabs;
+    TabData* active_tab;
+
     // Timeline display settings
-    float timeline_width = 100.0f; // automatically calculated (pixels)
-    float scale = 100.0f; // zoom scale, measured in pixels per second
+    float timeline_width = 100.0f; // automatically calculated (pixels)   
     float default_track_height = 30.0f; // (pixels)
     float track_height = 30.0f; // current track height (pixels)
-    otio::RationalTime playhead;
+
     bool scroll_to_playhead = false; // temporary flag, only true until next frame
     bool scroll_key = false; // temporary flag, only true until next frame
     bool scroll_up_down; // temporary flag, only true until next frame
-    otio::TimeRange
-        playhead_limit; // min/max limit for moving the playhead, auto-calculated
     float zebra_factor = 0.1; // opacity of the per-frame zebra stripes
 
     bool snap_to_frames = true; // user preference to snap the playhead, times,
@@ -136,6 +147,9 @@ struct AppState {
     // Filter
     MarkerFilterState marker_filter_state; // Persistant state of Marker filtering
 
+    // Store the currently selected MediaReference index for the inspector.
+    int selected_reference_index = -1;
+
     // Toggles for Dear ImGui windows
     bool show_main_window = true;
     bool show_style_editor = false;
@@ -154,6 +168,10 @@ void ErrorMessage(const char* format, ...);
 std::string Format(const char* format, ...);
 
 void LoadString(std::string json);
+bool LoadRoot(otio::SerializableObjectWithMetadata* root);
+
+otio::SerializableObjectWithMetadata* GetActiveRoot();
+void CloseTab(TabData* tab);
 
 std::string otio_error_string(otio::ErrorStatus const& error_status);
 
