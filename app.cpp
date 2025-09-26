@@ -519,8 +519,9 @@ void LoadFile(std::string path) {
         return;
     }
 
-    // Force inspector to relaod marker list
+    // Force inspector to relaod marker and effect lists
     appState.active_tab->marker_filter_state.reload = true;
+    appState.active_tab->effect_filter_state.reload = true;
 
     appState.active_tab->file_path = path;
 

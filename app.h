@@ -83,15 +83,29 @@ typedef std::pair<otio::SerializableObject::Retainer<otio::Marker>,
                   otio::SerializableObject::Retainer<otio::Item>> marker_parent_pair;
 
 // Store the state of the marker filter to save regenerating the list every frame
-// even if the filter options haven't changed
+// if the filter options haven't changed
 struct MarkerFilterState {
-    bool color_change; // Has the color combo box changed?
-    std::string filter_text = ""; // Text in filter box
-    bool name_check; // State of filter by Name checkbox
-    bool item_check; // State of filter by Item checkbox
+    bool color_change;                     // Has the color combo box changed?
+    std::string filter_text = "";          // Text in filter box
+    bool name_check = true;                // State of filter by Name checkbox
+    bool item_check = false;               // State of filter by Item checkbox
     std::vector<marker_parent_pair> pairs; // List of Markers the passed filtering
-    bool reload = false; // Trigger from loading a new file
-    std::string filter_marker_color; // Stores the selected color in the combo box
+    bool reload = false;                   // Trigger from loading a new file
+    std::string filter_marker_color;       // Stores the selected color in the combo box
+};
+
+typedef std::pair<otio::SerializableObject::Retainer<otio::Effect>,
+                  otio::SerializableObject::Retainer<otio::Item>> effect_parent_pair;
+
+// Store the state of the effect filter to save regenerating the list every frame
+// if the filter options haven't changed
+struct EffectFilterState {
+    std::string filter_text = "";          // Text in filter box
+    bool reload = false;                   // Trigger from loading a new file
+    bool name_check = true;                // State of filter by Name checkbox
+    bool item_check = false;               // State of filter by Item checkbox
+    bool effect_check = true;              // State of filter by Effect checkbox
+    std::vector<effect_parent_pair> pairs; //List of Effects that passed filtering
 };
 
 // Struct that holds data specific to individual tabs.
@@ -111,8 +125,9 @@ struct TabData {
     bool first_frame = true;     // The timeline drawing code has to be drawn across
                                  // two frames so we keep track of that here
 
-    // Filter
+    // Filters
     MarkerFilterState marker_filter_state; // Persistant state of Marker filtering
+    EffectFilterState effect_filter_state; // Persistant state of Effect filtering
 };
 
 // Struct that holds the application's state
