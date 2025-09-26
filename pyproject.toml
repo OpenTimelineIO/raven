@@ -4,9 +4,24 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "opentimelineio-raven"
-version = "0.1.0"
-description = "OTIO Viewer - C++ executable bundled as a Python package"
-authors = [{ name = "Your Name", email = "your@email.com" }]
+dynamic = ["version"]
+description = "OpenTimelineIO viewer app based on imGui."
+authors = [
+    { name = "Contributors to the OpenTimelineIO project", email = "otio-discussion@lists.aswf.io"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Multimedia :: Video :: Display",
+    "Topic :: Multimedia :: Video :: Non-Linear Editor",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Natural Language :: English"
+]
+keywords = ["film", "tv", "editing", "editorial", "edit", "non-linear", "time", "otio", "opentimelineio", "raven"]
 license = { file = "LICENSE.txt" }
 readme = "README.md"
 requires-python = ">=3.9,<3.13"
@@ -14,9 +29,19 @@ requires-python = ">=3.9,<3.13"
 [project.scripts]
 raven = "otio_raven._wrapper:main"
 
+[project.urls]
+"Homepage" = "https://github.com/OpenTimelineIO/raven"
+"Bug Tracker" = "https://github.com/OpenTimelineIO/raven/issues"
+
 [tool.scikit-build]
 cmake.version = ">=3.10"
 cmake.build-type = "Release"
 wheel.packages = ["python/otio_raven"]
 wheel.install-dir = "otio_raven"
 wheel.py-api = "py3"
+
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "VERSION.txt"
+regex = "^(?P<version>.+)"
+result = "{version}"

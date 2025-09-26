@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 cmake_policy(SET CMP0076 NEW)
 
-project(raven VERSION 1.0)
+# Project version is stored in VERSION.txt
+file(READ "${CMAKE_CURRENT_LIST_DIR}/VERSION.txt" RAVEN_VERSION)
+string(STRIP "${RAVEN_VERSION}" RAVEN_VERSION)
+
+project(raven VERSION ${RAVEN_VERSION})
 
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
 
