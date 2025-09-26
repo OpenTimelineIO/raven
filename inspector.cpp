@@ -890,6 +890,7 @@ void DrawInspector() {
 void DrawMarkersInspector() {
 
     if (!GetActiveRoot()) {
+        ImGui::Text("No file loaded.");
         return;
     }
     MarkerFilterState* active_tab_filter_state = &appState.active_tab->marker_filter_state;
