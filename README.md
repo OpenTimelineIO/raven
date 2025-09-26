@@ -68,6 +68,23 @@ You can load a file into WASM Raven a few ways:
 
 Note: The WASM build of raven is missing some features - see the Help Wanted section below.
 
+## Building (as a Python package)
+
+Raven can be built and embedded inside a Python package for easy distribution alongside other OTIO Python packages.
+For simplicity, we recommend using [UV](https://github.com/astral-sh/uv) for builds and running Raven from the Python package.
+
+```shell
+# clone the code
+git clone --recursive https://github.com/OpenTimelineIO/raven.git
+cd raven
+
+# run Raven using UV
+uv run --no-editable raven example.otio
+
+# build wheel using UV (wheel file will be in ./dist)
+uv build # add '--python <python_version>' to build for a specific Python version
+```
+
 ## Troubleshooting
 
 If you have trouble building, these hints might help...
