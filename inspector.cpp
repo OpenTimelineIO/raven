@@ -942,6 +942,21 @@ void DrawMarkersInspector() {
     ImGui::SameLine();
     marker_filter.Draw("Filter");
 
+    // A TextFilter is not a normal widget so we cannot append a tooltip directly too it.
+    // Instead we add a (?) symbol and add the tooltip to that.
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_DelayNormal)){
+        if (ImGui::BeginTooltip()) {
+            ImGui::TextUnformatted("Type to filter by Marker or Item name");
+            ImGui::TextUnformatted("To exclude values, use the \"-\" symbol");
+            ImGui::TextUnformatted("e.g. -special_marker");
+            ImGui::TextUnformatted("To filter multiple values use a comma (,)");
+            ImGui::TextUnformatted("e.g. marker1,marker2");
+            ImGui::EndTooltip();
+        }
+    }
+
     // "Filter By" selection
     ImGui::TextUnformatted("Filter By:");
     ImGui::SameLine();
@@ -952,20 +967,6 @@ void DrawMarkersInspector() {
 
     bool item_check = active_tab_filter_state->item_check;
     ImGui::Checkbox("Item##filter", &item_check);
-
-    // ImGuiTextFilter is not a widget in its own right so tooltips don't work
-    // so we have to put the usage instructions in a collapsable header.
-
-    if (ImGui::CollapsingHeader("Filter Usage", ImGuiTreeNodeFlags_None)) {
-        ImGui::Separator();
-        ImGui::TextUnformatted("Type to filter by Marker or Item name");
-        ImGui::TextUnformatted("To exclude values, use the \"-\" symbol");
-        ImGui::TextUnformatted("e.g. -special_marker");
-        ImGui::TextUnformatted("To filter multiple values use a comma (,)");
-        ImGui::TextUnformatted("e.g. marker1,marker2");
-        ImGui::Separator();
-    }
-
 
     auto root = new otio::Stack();
     auto global_start = otio::RationalTime(0.0);
@@ -1137,6 +1138,21 @@ void DrawEffectsInspector() {
     ImGui::SameLine();
     effect_filter.Draw("Filter");
 
+    // A TextFilter is not a normal widget so we cannot append a tooltip directly too it.
+    // Instead we add a (?) symbol and add the tooltip to that.
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_DelayNormal)) {
+        if (ImGui::BeginTooltip()) {
+            ImGui::TextUnformatted("Type to filter by Name, Effect type or Item name");
+            ImGui::TextUnformatted("To exclude values, use the \"-\" symbol");
+            ImGui::TextUnformatted("e.g. -special_effect");
+            ImGui::TextUnformatted("To filter multiple values use a comma (,)");
+            ImGui::TextUnformatted("e.g. effect1,effect2");
+            ImGui::EndTooltip();
+        }
+    }
+
     // "Filter By" selection
     ImGui::TextUnformatted("Filter By:");
     ImGui::SameLine();
@@ -1151,19 +1167,6 @@ void DrawEffectsInspector() {
 
     bool item_check = active_tab_filter_state->item_check;
     ImGui::Checkbox("Item##filter", &item_check);
-
-    // ImGuiTextFilter is not a widget in its own right so tooltips don't work
-    // so we have to put the usage instructions in a collapsable header.
-
-    if (ImGui::CollapsingHeader("Filter Usage", ImGuiTreeNodeFlags_None)) {
-        ImGui::Separator();
-        ImGui::TextUnformatted("Type to filter by Name, Effect type or Item name");
-        ImGui::TextUnformatted("To exclude values, use the \"-\" symbol");
-        ImGui::TextUnformatted("e.g. -special_effect");
-        ImGui::TextUnformatted("To filter multiple values use a comma (,)");
-        ImGui::TextUnformatted("e.g. effect1,effect2");
-        ImGui::Separator();
-    }
 
     // Build list of filtered effects
     auto root = new otio::Stack();
