@@ -73,6 +73,8 @@ Note: The WASM build of raven is missing some features - see the Help Wanted sec
 Raven can be built and embedded inside a Python package for easy distribution alongside other OTIO Python packages.
 For simplicity, we recommend using [UV](https://github.com/astral-sh/uv) for builds and running Raven from the Python package.
 
+_Note: Since we don't publish Raven to PyPI yet, you will need to build it yourself._
+
 ```shell
 # clone the code
 git clone --recursive https://github.com/OpenTimelineIO/raven.git
