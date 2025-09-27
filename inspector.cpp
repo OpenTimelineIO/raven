@@ -888,11 +888,11 @@ void DrawInspector() {
 }
 
 void DrawMarkersInspector() {
-
     if (!GetActiveRoot()) {
         ImGui::Text("No file loaded.");
         return;
     }
+
     MarkerFilterState* active_tab_filter_state = &appState.active_tab->marker_filter_state;
 
     // Clear color selction button
@@ -1130,7 +1130,7 @@ void DrawEffectsInspector() {
     static ImGuiTextFilter effect_filter;
     strncpy(effect_filter.InputBuf, active_tab_filter_state->filter_text.c_str(), 256); // InputBuf is hardcoded as 256 chars
 
-    // lear filter button
+    // Clear filter button
     if (ImGui::Button("X##filter")) {
         effect_filter.Clear();
     }

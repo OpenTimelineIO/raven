@@ -125,7 +125,7 @@ struct TabData {
     bool first_frame = true;     // The timeline drawing code has to be drawn across
                                  // two frames so we keep track of that here
 
-    // Filters
+    // Filter state
     MarkerFilterState marker_filter_state; // Persistant state of Marker filtering
     EffectFilterState effect_filter_state; // Persistant state of Effect filtering
 };
