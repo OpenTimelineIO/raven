@@ -5,12 +5,12 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "opentimelineio-raven"
 dynamic = ["version"]
-description = "OpenTimelineIO viewer app based on imGui."
+description = "OpenTimelineIO viewer app made with Dear ImGui."
 authors = [
     { name = "Contributors to the OpenTimelineIO project", email = "otio-discussion@lists.aswf.io"}
 ]
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Programming Language :: C++",
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Multimedia :: Video",
