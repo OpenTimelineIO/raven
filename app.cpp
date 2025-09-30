@@ -946,6 +946,10 @@ void MainGui() {
     if (appState.show_implot_demo_window) {
         ImPlot::ShowDemoWindow();
     }
+
+    if (appState.active_tab && appState.active_tab->state_change) {
+        appState.active_tab->state_change = false;
+    }
 }
 
 void SaveTheme() {

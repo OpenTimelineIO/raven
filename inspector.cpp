@@ -1005,12 +1005,14 @@ void DrawMarkersInspector() {
         root = timeline->tracks();
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
-        // Only rebuild list if the filter state has changed
+        // Only rebuild list if the filter state or the overall tab state
+        // has changed
         if (active_tab_filter_state->color_change ||
             active_tab_filter_state->filter_text != marker_filter.InputBuf ||
             active_tab_filter_state->name_check != name_check ||
             active_tab_filter_state->item_check != item_check ||
-            active_tab_filter_state->reload){
+            active_tab_filter_state->reload ||
+            appState.active_tab->state_change){
 
             std::vector<marker_parent_pair> pairs;
 
@@ -1238,11 +1240,14 @@ void DrawEffectsInspector() {
         root = timeline->tracks();
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
+        // Only rebuild list if the filter state or the overall tab state
+        // has changed
         if (active_tab_filter_state->filter_text != effect_filter.InputBuf ||
             active_tab_filter_state->effect_check != effect_check ||
             active_tab_filter_state->item_check != item_check ||
             active_tab_filter_state->name_check != name_check ||
-            active_tab_filter_state->reload) {
+            active_tab_filter_state->reload ||
+            appState.active_tab->state_change) {
 
             std::vector<effect_parent_pair> pairs;
 

@@ -128,6 +128,13 @@ struct TabData {
     // Filter state
     MarkerFilterState marker_filter_state; // Persistant state of Marker filtering
     EffectFilterState effect_filter_state; // Persistant state of Effect filtering
+
+    // This should be set to true whenever something happens that changes to state
+    // of the tab . Then on the next draw loop we can check this and update things
+    // as required. See the Effects Inspector for an example. If set to true it is
+    // reset at the end of MainGui() in app.c.
+    // TODO: Could use to add a "file changed" indicator to the tab headers
+    bool state_change = false;
 };
 
 // Struct that holds the application's state
