@@ -90,7 +90,7 @@ struct MarkerFilterState {
     bool name_check = true;                // State of filter by Name checkbox
     bool item_check = false;               // State of filter by Item checkbox
     std::vector<marker_parent_pair> pairs; // List of Markers the passed filtering
-    bool reload = false;                   // Trigger from loading a new file
+    bool reload = false;                   // Trigger from loading a new file or state change
     std::string filter_marker_color;       // Stores the selected color in the combo box
 };
 
@@ -131,7 +131,7 @@ struct TabData {
 
     // This should be set to true whenever something happens that changes to state
     // of the tab . Then on the next draw loop we can check this and update things
-    // as required. See the Effects Inspector for an example. If set to true it is
+    // as required. See the Effects Inspector for an example. If set to true
     // things are handled in AppUpdate() in app.c
     // TODO: Could use to add a "file changed" indicator to the tab headers
     bool state_change = false;
