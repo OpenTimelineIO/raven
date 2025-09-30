@@ -803,7 +803,7 @@ void DrawInspector() {
         }
 
         // Set the active media ref key based on user selection
-        if (ImGui::Combo("", &appState.selected_reference_index, reference_names.data(), num_references)) {
+        if (ImGui::Combo("##", &appState.selected_reference_index, reference_names.data(), num_references)) {
             if (appState.selected_reference_index >= 0 && appState.selected_reference_index < num_references) {
                 clip->set_active_media_reference_key(reference_names[appState.selected_reference_index]);
             }
@@ -887,13 +887,116 @@ void DrawInspector() {
     }
 }
 
-void DrawMarkersInspector() {
-    // This temporary variable is used only for a moment to convert
-    // between the datatypes that OTIO uses vs the one that ImGui widget uses.
-    char tmp_str[1000];
+bool MarkerFilterTest(ImGuiTextFilter* filter, std::string marker_name, bool name_check, std::string marker_item, bool item_check) {
+    // If we are not filtering by anything return all values
+    if (!name_check  && !item_check) {
+        return true;
+    }
 
-    typedef std::pair<otio::SerializableObject::Retainer<otio::Marker>, otio::SerializableObject::Retainer<otio::Item>> marker_parent_pair;
-    std::vector<marker_parent_pair> pairs;
+    // When filtering values out (-), if a header is checked and it's corresponding
+    // filter fails, immediately skip. When filtering in, if a header is checked and
+    // its corresponding filter passes, immediately pass.
+    if (filter->InputBuf[0] == '-') {
+        if (name_check && !filter->PassFilter(marker_name.c_str())) {
+            return false;
+        }
+        if (item_check && !filter->PassFilter(marker_item.c_str())) {
+            return false;
+        }
+
+        return true;
+    } else {
+        if (name_check && filter->PassFilter(marker_name.c_str())) {
+            return true;
+        }
+        if (item_check && filter->PassFilter(marker_item.c_str())) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
+void DrawMarkersInspector() {
+    if (!GetActiveRoot()) {
+        ImGui::Text("No file loaded.");
+        return;
+    }
+
+    MarkerFilterState* active_tab_filter_state = &appState.active_tab->marker_filter_state;
+
+    // Clear color selction button
+    if (ImGui::Button("X##color")){
+        active_tab_filter_state->filter_marker_color = "";
+        active_tab_filter_state->color_change = true;
+    }
+
+    // Draw color selection combo box
+    ImGui::SameLine();
+
+    const char** color_choices = marker_color_names;
+    int num_color_choices = IM_ARRAYSIZE(marker_color_names);
+
+    int current_index = -1;
+    for (int i = 0; i < num_color_choices; i++) {
+        if (active_tab_filter_state->filter_marker_color == color_choices[i]) {
+            current_index = i;
+            break;
+        }
+    }
+    if (ImGui::Combo("Color", &current_index, color_choices, num_color_choices)) {
+        if (current_index >= 0 && current_index < num_color_choices) {
+            active_tab_filter_state->filter_marker_color = color_choices[current_index];
+            active_tab_filter_state->color_change = true;
+        }
+    }
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_DelayNormal)) {
+        ImGui::SetTooltip("Select Marker Color\nDefault is all colours selected");
+    }
+
+    // Show selected marker color
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(active_tab_filter_state->filter_marker_color));
+    ImGui::TextUnformatted("\xef\x80\xab");
+    ImGui::PopStyleColor();
+
+    // Filter box
+    static ImGuiTextFilter marker_filter;
+    strncpy(marker_filter.InputBuf, active_tab_filter_state->filter_text.c_str(), 256); // InputBuf is hardcoded as 256 chars
+
+    // Clear filter button
+    if (ImGui::Button("X##filter")) {
+        marker_filter.Clear();
+    }
+
+    ImGui::SameLine();
+    marker_filter.Draw("Filter");
+
+    // A TextFilter is not a normal widget so we cannot append a tooltip directly too it.
+    // Instead we add a (?) symbol and add the tooltip to that.
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_DelayNormal)){
+        if (ImGui::BeginTooltip()) {
+            ImGui::TextUnformatted("Type to filter by Marker or Item name");
+            ImGui::TextUnformatted("To exclude values, use the \"-\" symbol");
+            ImGui::TextUnformatted("e.g. -special_marker");
+            ImGui::TextUnformatted("To filter multiple values use a comma (,)");
+            ImGui::TextUnformatted("e.g. marker1,marker2");
+            ImGui::EndTooltip();
+        }
+    }
+
+    // "Filter By" selection
+    ImGui::TextUnformatted("Filter By:");
+    ImGui::SameLine();
+
+    bool name_check = active_tab_filter_state->name_check;
+    ImGui::Checkbox("Name##filter", &name_check);
+    ImGui::SameLine();
+
+    bool item_check = active_tab_filter_state->item_check;
+    ImGui::Checkbox("Item##filter", &item_check);
 
     auto root = new otio::Stack();
     auto global_start = otio::RationalTime(0.0);
@@ -902,22 +1005,59 @@ void DrawMarkersInspector() {
         root = timeline->tracks();
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
-        for (const auto& marker : root->markers()) {
-            pairs.push_back(marker_parent_pair(marker, root));
-        }
+        // Only rebuild list if the filter state or the overall tab state
+        // has changed
+        if (active_tab_filter_state->color_change ||
+            active_tab_filter_state->filter_text != marker_filter.InputBuf ||
+            active_tab_filter_state->name_check != name_check ||
+            active_tab_filter_state->item_check != item_check ||
+            active_tab_filter_state->reload){
 
-        for (const auto& child :
-            timeline->tracks()->find_children())
-        {
-            if (const auto& item = dynamic_cast<otio::Item*>(&*child))
-            {
-                for (const auto& marker : item->markers()) {
-                    pairs.push_back(marker_parent_pair(marker, item));
+            std::vector<marker_parent_pair> pairs;
+
+            for (const auto& marker : root->markers()) {
+                if (active_tab_filter_state->filter_marker_color != "") {
+                    if (marker->color() != active_tab_filter_state->filter_marker_color) {
+                        continue;
+                    }
+                }
+                if (MarkerFilterTest(&marker_filter, marker->name(), name_check, root->name(), item_check)) {
+                    pairs.push_back(marker_parent_pair(marker, root));
                 }
             }
+
+            for (const auto& child :
+                root->find_children())
+            {
+                if (const auto& item = dynamic_cast<otio::Item*>(&*child))
+                {
+                    for (const auto& marker : item->markers()) {
+                        if (active_tab_filter_state->filter_marker_color != "") {
+                            if (marker->color() != active_tab_filter_state->filter_marker_color) {
+                                continue;
+                            }
+                        }
+                        if (MarkerFilterTest(&marker_filter, marker->name(), name_check, item->name(), item_check)) {
+                            pairs.push_back(marker_parent_pair(marker, item));
+                        }
+                    }
+                }
+            }
+
+            // Update state
+            active_tab_filter_state->color_change = false;
+            active_tab_filter_state->filter_text = marker_filter.InputBuf;
+            active_tab_filter_state->name_check = name_check;
+            active_tab_filter_state->item_check = item_check;
+            active_tab_filter_state->pairs = pairs;
+            active_tab_filter_state->reload = false;
         }
     }
 
+    // Count of filtered items
+    ImGui::Text("Count: %d", active_tab_filter_state->pairs.size());
+
+    // Draw list
     auto selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
 
     if (ImGui::BeginTable("Markers",
@@ -941,13 +1081,13 @@ void DrawMarkersInspector() {
 
         ImGuiListClipper marker_clipper;
 
-        marker_clipper.Begin(pairs.size());
+        marker_clipper.Begin(active_tab_filter_state->pairs.size());
 
         while(marker_clipper.Step())
         {
             for (int row = marker_clipper.DisplayStart; row < marker_clipper.DisplayEnd; row++)
             {
-                auto pair = pairs.at(row);
+                auto pair = active_tab_filter_state->pairs.at(row);
                 auto marker = pair.first;
                 auto parent = pair.second;
 
@@ -1005,10 +1145,93 @@ void DrawMarkersInspector() {
     ImGui::EndTable();
 }
 
-void DrawEffectsInspector() {
-    typedef std::pair<otio::SerializableObject::Retainer<otio::Effect>, otio::SerializableObject::Retainer<otio::Item>> effect_parent_pair;
-    std::vector<effect_parent_pair> pairs;
+bool EffectsFilterTest(ImGuiTextFilter* filter, std::string effect_name, bool name_check, std::string effect_effect, bool effect_check, std::string effect_item, bool item_check) {
+    // If we are not filtering by anything return all values
+    if (!name_check && !effect_check && !item_check) {
+        return true;
+    }
 
+    // When filtering values out (-), if a header is checked and it's corresponding
+    // filter fails, immediately skip. When filtering in, if a header is checked and
+    // its corresponding filter passes, immediately pass.
+    if (filter->InputBuf[0] == '-') {
+        if (name_check && !filter->PassFilter(effect_name.c_str())) {
+            return false;
+        }
+        if (effect_check && !filter->PassFilter(effect_effect.c_str())) {
+            return false;
+        }
+        if (item_check && !filter->PassFilter(effect_item.c_str())) {
+            return false;
+        }
+
+        return true;
+    } else {
+        if (name_check && filter->PassFilter(effect_name.c_str())) {
+            return true;
+        }
+        if (effect_check && filter->PassFilter(effect_effect.c_str())) {
+            return true;
+        }
+        if (item_check && filter->PassFilter(effect_item.c_str())) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
+void DrawEffectsInspector() {
+    if (!GetActiveRoot()) {
+        ImGui::Text("No file loaded.");
+        return;
+    }
+
+    EffectFilterState* active_tab_filter_state = &appState.active_tab->effect_filter_state;
+
+    // Filter box
+    static ImGuiTextFilter effect_filter;
+    strncpy(effect_filter.InputBuf, active_tab_filter_state->filter_text.c_str(), 256); // InputBuf is hardcoded as 256 chars
+
+    // Clear filter button
+    if (ImGui::Button("X##filter")) {
+        effect_filter.Clear();
+    }
+
+    ImGui::SameLine();
+    effect_filter.Draw("Filter");
+
+    // A TextFilter is not a normal widget so we cannot append a tooltip directly too it.
+    // Instead we add a (?) symbol and add the tooltip to that.
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_DelayNormal)) {
+        if (ImGui::BeginTooltip()) {
+            ImGui::TextUnformatted("Type to filter by Name, Effect type or Item name");
+            ImGui::TextUnformatted("To exclude values, use the \"-\" symbol");
+            ImGui::TextUnformatted("e.g. -special_effect");
+            ImGui::TextUnformatted("To filter multiple values use a comma (,)");
+            ImGui::TextUnformatted("e.g. effect1,effect2");
+            ImGui::EndTooltip();
+        }
+    }
+
+    // "Filter By" selection
+    ImGui::TextUnformatted("Filter By:");
+    ImGui::SameLine();
+
+    bool name_check = active_tab_filter_state->name_check;
+    ImGui::Checkbox("Name##filter", &name_check);
+    ImGui::SameLine();
+
+    bool effect_check = active_tab_filter_state->effect_check;
+    ImGui::Checkbox("Effect##filter", &effect_check);
+    ImGui::SameLine();
+
+    bool item_check = active_tab_filter_state->item_check;
+    ImGui::Checkbox("Item##filter", &item_check);
+
+    // Build list of filtered effects
     auto root = new otio::Stack();
     auto global_start = otio::RationalTime(0.0);
 
@@ -1016,21 +1239,49 @@ void DrawEffectsInspector() {
         root = timeline->tracks();
         global_start = timeline->global_start_time().value_or(otio::RationalTime());
 
-        for (const auto& effect : root->effects()) {
-            pairs.push_back(effect_parent_pair(effect, root));
-        }
+        // Only rebuild list if the filter state or the overall tab state
+        // has changed
+        if (active_tab_filter_state->filter_text != effect_filter.InputBuf ||
+            active_tab_filter_state->effect_check != effect_check ||
+            active_tab_filter_state->item_check != item_check ||
+            active_tab_filter_state->name_check != name_check ||
+            active_tab_filter_state->reload) {
 
-        for (const auto& child :
-            timeline->tracks()->find_children())
-        {
-            if (const auto& item = dynamic_cast<otio::Item*>(&*child))
-            {
-                for (const auto& effect : item->effects()) {
-                    pairs.push_back(effect_parent_pair(effect, item));
+            std::vector<effect_parent_pair> pairs;
+
+            for (const auto& effect : root->effects()) {
+                if (EffectsFilterTest(&effect_filter,
+                                      effect->name(), name_check,
+                                      effect->effect_name(), effect_check,
+                                      root->name(), item_check)) {
+                        pairs.push_back(effect_parent_pair(effect, root));
                 }
             }
+
+            for (const auto& child :
+                root->find_children()) {
+                if (const auto& item = dynamic_cast<otio::Item*>(&*child)) {
+                    for (const auto& effect : item->effects()) {
+                        if (EffectsFilterTest(&effect_filter,
+                                              effect->name(), name_check,
+                                              effect->effect_name(), effect_check,
+                                              item->name(), item_check)) {
+                                pairs.push_back(effect_parent_pair(effect, item));
+                        }
+                    }
+                }
+            }
+            active_tab_filter_state->filter_text = effect_filter.InputBuf;
+            active_tab_filter_state->effect_check = effect_check;
+            active_tab_filter_state->item_check = item_check;
+            active_tab_filter_state->name_check = name_check;
+            active_tab_filter_state->pairs = pairs;
+            active_tab_filter_state->reload = false;
         }
     }
+
+    // Count of filtered items
+    ImGui::Text("Count: %d", active_tab_filter_state->pairs.size());
 
     auto selectable_flags = ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap;
 
@@ -1054,13 +1305,13 @@ void DrawEffectsInspector() {
 
         ImGuiListClipper effects_clipper;
 
-        effects_clipper.Begin(pairs.size());
+        effects_clipper.Begin(active_tab_filter_state->pairs.size());
 
         while (effects_clipper.Step())
         {
             for (int row = effects_clipper.DisplayStart; row < effects_clipper.DisplayEnd; row++)
             {
-                auto pair = pairs.at(row);
+                auto pair = active_tab_filter_state->pairs.at(row);
                 auto effect = pair.first;
                 auto parent = pair.second;
 

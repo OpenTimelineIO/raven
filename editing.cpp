@@ -12,6 +12,8 @@ void DeleteSelectedObject() {
         return;
     }
 
+    appState.active_tab->state_change = true;
+
     if (appState.selected_object == GetActiveRoot()) {
         CloseTab(appState.active_tab);
         return;

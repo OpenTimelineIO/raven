@@ -519,6 +519,10 @@ void LoadFile(std::string path) {
         return;
     }
 
+    // Force inspector to reload marker and effect lists
+    appState.active_tab->marker_filter_state.reload = true;
+    appState.active_tab->effect_filter_state.reload = true;
+
     appState.active_tab->file_path = path;
 
     auto end = std::chrono::high_resolution_clock::now();
@@ -622,7 +626,16 @@ bool IconButton(const char* label, const ImVec2 size = ImVec2(0, 0)) {
     return result;
 }
 
-void AppUpdate() { }
+void AppUpdate() {
+    // If something has happend that changed the active tabs state
+    // then handle any redraw/recalculation flags here
+    if (appState.active_tab && appState.active_tab->state_change) {
+        appState.active_tab->marker_filter_state.reload = true;
+        appState.active_tab->effect_filter_state.reload = true;
+
+        appState.active_tab->state_change = false;
+    }
+}
 
 void DrawRoot(otio::SerializableObjectWithMetadata* root) {
     if (!root){
