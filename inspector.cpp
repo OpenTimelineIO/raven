@@ -887,6 +887,36 @@ void DrawInspector() {
     }
 }
 
+bool MarkerFilterTest(ImGuiTextFilter* filter, std::string marker_name, bool name_check, std::string marker_item, bool item_check) {
+    // If we are not filtering by anything return all values
+    if (!name_check  && !item_check) {
+        return true;
+    }
+
+    // When filtering values out (-), if a header is checked and it's corresponding
+    // filter fails, immediately skip. When filtering in, if a header is checked and
+    // its corresponding filter passes, immediately pass.
+    if (filter->InputBuf[0] == '-') {
+        if (name_check && !filter->PassFilter(marker_name.c_str())) {
+            return false;
+        }
+        if (item_check && !filter->PassFilter(marker_item.c_str())) {
+            return false;
+        }
+
+        return true;
+    } else {
+        if (name_check && filter->PassFilter(marker_name.c_str())) {
+            return true;
+        }
+        if (item_check && filter->PassFilter(marker_item.c_str())) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
 void DrawMarkersInspector() {
     if (!GetActiveRoot()) {
         ImGui::Text("No file loaded.");
@@ -990,9 +1020,7 @@ void DrawMarkersInspector() {
                         continue;
                     }
                 }
-                if ((marker_filter.PassFilter(marker->name().c_str()) && name_check) ||
-                    (marker_filter.PassFilter(root->name().c_str()) && item_check) ||
-                    (!name_check && ! item_check)) {
+                if (MarkerFilterTest(&marker_filter, marker->name(), name_check, root->name(), item_check)) {
                     pairs.push_back(marker_parent_pair(marker, root));
                 }
             }
@@ -1008,9 +1036,7 @@ void DrawMarkersInspector() {
                                 continue;
                             }
                         }
-                        if ((marker_filter.PassFilter(marker->name().c_str()) && name_check) ||
-                            (marker_filter.PassFilter(item->name().c_str()) && item_check) ||
-                            (!name_check && ! item_check)) {
+                        if (MarkerFilterTest(&marker_filter, marker->name(), name_check, item->name(), item_check)) {
                             pairs.push_back(marker_parent_pair(marker, item));
                         }
                     }
@@ -1118,6 +1144,42 @@ void DrawMarkersInspector() {
     ImGui::EndTable();
 }
 
+bool EffectsFilterTest(ImGuiTextFilter* filter, std::string effect_name, bool name_check, std::string effect_effect, bool effect_check, std::string effect_item, bool item_check) {
+    // If we are not filtering by anything return all values
+    if (!name_check && !effect_check && !item_check) {
+        return true;
+    }
+
+    // When filtering values out (-), if a header is checked and it's corresponding
+    // filter fails, immediately skip. When filtering in, if a header is checked and
+    // its corresponding filter passes, immediately pass.
+    if (filter->InputBuf[0] == '-') {
+        if (name_check && !filter->PassFilter(effect_name.c_str())) {
+            return false;
+        }
+        if (effect_check && !filter->PassFilter(effect_effect.c_str())) {
+            return false;
+        }
+        if (item_check && !filter->PassFilter(effect_item.c_str())) {
+            return false;
+        }
+
+        return true;
+    } else {
+        if (name_check && filter->PassFilter(effect_name.c_str())) {
+            return true;
+        }
+        if (effect_check && filter->PassFilter(effect_effect.c_str())) {
+            return true;
+        }
+        if (item_check && filter->PassFilter(effect_item.c_str())) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
 void DrawEffectsInspector() {
     if (!GetActiveRoot()) {
         ImGui::Text("No file loaded.");
@@ -1185,10 +1247,10 @@ void DrawEffectsInspector() {
             std::vector<effect_parent_pair> pairs;
 
             for (const auto& effect : root->effects()) {
-                if ((!name_check && !effect_check && !item_check) ||
-                    (effect_filter.PassFilter(effect->name().c_str()) && name_check) ||
-                    (effect_filter.PassFilter(effect->effect_name().c_str()) && effect_check) ||
-                    (effect_filter.PassFilter(root->name().c_str()) && item_check)) {
+                if (EffectsFilterTest(&effect_filter,
+                                      effect->name(), name_check,
+                                      effect->effect_name(), effect_check,
+                                      root->name(), item_check)) {
                         pairs.push_back(effect_parent_pair(effect, root));
                 }
             }
@@ -1197,10 +1259,10 @@ void DrawEffectsInspector() {
                 root->find_children()) {
                 if (const auto& item = dynamic_cast<otio::Item*>(&*child)) {
                     for (const auto& effect : item->effects()) {
-                        if ((!name_check && !effect_check && !item_check) ||
-                            (effect_filter.PassFilter(effect->name().c_str()) && name_check) ||
-                            (effect_filter.PassFilter(effect->effect_name().c_str()) && effect_check) ||
-                            (effect_filter.PassFilter(item->name().c_str()) && item_check)) {
+                        if (EffectsFilterTest(&effect_filter,
+                                              effect->name(), name_check,
+                                              effect->effect_name(), effect_check,
+                                              item->name(), item_check)) {
                                 pairs.push_back(effect_parent_pair(effect, item));
                         }
                     }
