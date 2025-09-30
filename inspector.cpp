@@ -1011,8 +1011,7 @@ void DrawMarkersInspector() {
             active_tab_filter_state->filter_text != marker_filter.InputBuf ||
             active_tab_filter_state->name_check != name_check ||
             active_tab_filter_state->item_check != item_check ||
-            active_tab_filter_state->reload ||
-            appState.active_tab->state_change){
+            active_tab_filter_state->reload){
 
             std::vector<marker_parent_pair> pairs;
 
@@ -1246,8 +1245,7 @@ void DrawEffectsInspector() {
             active_tab_filter_state->effect_check != effect_check ||
             active_tab_filter_state->item_check != item_check ||
             active_tab_filter_state->name_check != name_check ||
-            active_tab_filter_state->reload ||
-            appState.active_tab->state_change) {
+            active_tab_filter_state->reload) {
 
             std::vector<effect_parent_pair> pairs;
 

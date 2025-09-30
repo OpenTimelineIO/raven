@@ -626,7 +626,16 @@ bool IconButton(const char* label, const ImVec2 size = ImVec2(0, 0)) {
     return result;
 }
 
-void AppUpdate() { }
+void AppUpdate() {
+    // If something ahs happend that changed=s the active tabs state
+    // then handle any redraw/recalculation flags here
+    if (appState.active_tab && appState.active_tab->state_change) {
+        appState.active_tab->marker_filter_state.reload = true;
+        appState.active_tab->effect_filter_state.reload = true;
+
+        appState.active_tab->state_change = false;
+    }
+}
 
 void DrawRoot(otio::SerializableObjectWithMetadata* root) {
     if (!root){
@@ -945,10 +954,6 @@ void MainGui() {
 
     if (appState.show_implot_demo_window) {
         ImPlot::ShowDemoWindow();
-    }
-
-    if (appState.active_tab && appState.active_tab->state_change) {
-        appState.active_tab->state_change = false;
     }
 }
 
