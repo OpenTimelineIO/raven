@@ -12,6 +12,7 @@
 #include "imgui_internal.h"
 
 #include "widgets.h"
+#include "tools.h"
 
 #ifndef EMSCRIPTEN
 #include "nfd.h"
@@ -1062,6 +1063,17 @@ void DrawMenu() {
                     false,
                     appState.selected_object != NULL)) {
                 DeleteSelectedObject();
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Tools", GetActiveRoot())) {
+            if (ImGui::MenuItem("Redact OTIO File")) {
+                if (Redact()) {
+                    std::cout << "Successfully redacted " << appState.active_tab->file_path << std::endl;
+                } else {
+                    std::cout << "Failed to redact " << appState.active_tab->file_path << std::endl;
+                }
             }
             ImGui::EndMenu();
         }
