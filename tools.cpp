@@ -80,49 +80,25 @@ bool run_otiotool_command(std::string options, bool debug = false)
 }
 
 bool Redact() {
-    if (run_otiotool_command("--redact")) {
-        return true;
-    } else {
-        return false;
-    }
+    return run_otiotool_command("--redact");
 }
 
 bool VideoOnly() {
-    if (run_otiotool_command("--video-only")) {
-        return true;
-    } else {
-        return false;
-    }
+    return run_otiotool_command("--video-only");
 }
 
 bool AudioOnly() {
-    if (run_otiotool_command("--audio-only")) {
-        return true;
-    } else {
-        return false;
-    }
+    return run_otiotool_command("--audio-only");
 }
 
 bool FlattenAllTracks() {
-    if (run_otiotool_command("--flatten all")) {
-        return true;
-    } else {
-        return false;
-    }
+    return run_otiotool_command("--flatten all");
 }
 
 bool FlattenVideoTracks() {
-    if (run_otiotool_command("--flatten video")) {
-        return true;
-    } else {
-        return false;
-    }
+    return run_otiotool_command("--flatten video");
 }
 
 bool FlattenAudioTracks() {
-    if (run_otiotool_command("--flatten audio")) {
-        return true;
-    } else {
-        return false;
-    }
+    return run_otiotool_command("--flatten audio");
 }
