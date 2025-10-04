@@ -3,12 +3,6 @@
 
 #include "app.h"
 
-#include <opentimelineio/clip.h>
-#include <opentimelineio/effect.h>
-#include <opentimelineio/externalReference.h>
-#include <opentimelineio/imageSequenceReference.h>
-#include <opentimelineio/marker.h>
-
 #include <map>
 #include <filesystem>
 #include <cstdio>
@@ -53,18 +47,22 @@ bool otiotool_found()
     return !result;
 }
 
-bool run_otiotool_command(std::string options)
+bool run_otiotool_command(std::string options, bool debug = false)
 {
     // Write the current root to a temp json file
     std::filesystem::path file = std::filesystem::temp_directory_path();
     file.replace_filename(std::tmpnam(nullptr));
     file.replace_extension("otio");
-    std::cout << file << std::endl;
+    if (debug) {
+        std::cout << file << std::endl;
+    }
     GetActiveRoot()->to_json_file(file.generic_string());
 
     // Build command
     std::string command = "otiotool --input " + file.generic_string() + " " + options + " --output -";
-    std::cout << command << std::endl;
+    if (debug) {
+        std::cout << command << std::endl;
+    }
 
     // Run subproces
     int return_val = 0;

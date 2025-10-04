@@ -587,7 +587,7 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
         appState.otiotool_found = true;
         Message("otiotool found, relevant tools have been enabled");
     } else {
-        Message("oitotool not found, rlevant tools have been disabled");
+        Message("oitotool not found, relevant tools have been disabled");
     }
 
     if (argc > 1) {
@@ -706,7 +706,6 @@ void MainGui() {
     }
     char window_id[1024];
     snprintf(window_id, sizeof(window_id), "%s###MainWindow", window_title);
-
 
     // Avoid double window padding since we have a dockspace window
     // which fills our whole main window.
