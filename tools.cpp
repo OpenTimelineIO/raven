@@ -39,11 +39,7 @@ bool otiotool_found()
 {
     int result;
 
-    #ifdef _WIN32
-    run_subprocess("where /Q otiotool", result);
-    #else
-    run_subprocess("whereis otiotool", result);
-    #endif
+    run_subprocess("otiotool -h", result);
 
     return !result;
 }
