@@ -12,3 +12,12 @@ bool VideoOnly();
 
 //  Output only audio tracks
 bool AudioOnly();
+
+// Flatten all tracks
+bool FlattenAllTracks();
+
+// Flatten vieo tracks
+bool FlattenVideoTracks();
+
+// Flatten audio tracks
+bool FlattenAudioTracks();

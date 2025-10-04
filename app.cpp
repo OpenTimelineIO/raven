@@ -1101,6 +1101,30 @@ void DrawMenu() {
                 }
                 ImGui::EndMenu();
             }
+            if (ImGui::BeginMenu("Flatten Tracks")) {
+                if (ImGui::MenuItem("All")) {
+                    if (FlattenAllTracks()) {
+                        Message("Sucessfully flattened tracks from %s\n", current_file.c_str());
+                    } else {
+                        ErrorMessage("Failed to flatten tracks from %s\n", current_file.c_str());
+                    }
+                }
+                if (ImGui::MenuItem("Video")) {
+                    if (FlattenVideoTracks()) {
+                        Message("Sucessfully flattened video tracks from %s\n", current_file.c_str());
+                    } else {
+                        ErrorMessage("Failed to flatten video tracks from %s\n", current_file.c_str());
+                    }
+                }
+                if (ImGui::MenuItem("Audio")) {
+                    if (FlattenAudioTracks()) {
+                        Message("Sucessfully flattened audio tracks from %s\n", current_file.c_str());
+                    } else {
+                        ErrorMessage("Failed to flatten audio tracks from %s\n", current_file.c_str());
+                    }
+                }
+                ImGui::EndMenu();
+            }
             ImGui::EndMenu();
         }
 

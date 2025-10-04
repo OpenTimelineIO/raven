@@ -105,3 +105,27 @@ bool AudioOnly() {
         return false;
     }
 }
+
+bool FlattenAllTracks() {
+    if (run_otiotool_command("--flatten all")) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool FlattenVideoTracks() {
+    if (run_otiotool_command("--flatten video")) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool FlattenAudioTracks() {
+    if (run_otiotool_command("--flatten audio")) {
+        return true;
+    } else {
+        return false;
+    }
+}
