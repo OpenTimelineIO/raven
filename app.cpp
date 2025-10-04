@@ -582,6 +582,14 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
 
     LoadFonts();
 
+    // Check for otiotool
+    if (otiotool_found()) {
+        appState.otiotool_found = true;
+        Message("otiotool found, relevant tools have been enabled");
+    } else {
+        Message("oitotool not found, rlevant tools have been disabled");
+    }
+
     if (argc > 1) {
         LoadFile(argv[1]);
     }
@@ -698,6 +706,7 @@ void MainGui() {
     }
     char window_id[1024];
     snprintf(window_id, sizeof(window_id), "%s###MainWindow", window_title);
+
 
     // Avoid double window padding since we have a dockspace window
     // which fills our whole main window.
@@ -1067,13 +1076,31 @@ void DrawMenu() {
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Tools", GetActiveRoot())) {
+        if (ImGui::BeginMenu("Tools", GetActiveRoot() && appState.otiotool_found)) {
+            std::string current_file = appState.active_tab->file_path;
             if (ImGui::MenuItem("Redact OTIO File")) {
                 if (Redact()) {
-                    std::cout << "Successfully redacted " << appState.active_tab->file_path << std::endl;
+                    Message("Successfully redacted %s\n", current_file.c_str());
                 } else {
-                    std::cout << "Failed to redact " << appState.active_tab->file_path << std::endl;
+                    ErrorMessage("Failed to redact %s\n", current_file.c_str());
                 }
+            }
+            if (ImGui::BeginMenu("Extract Track Type")) {
+                if (ImGui::MenuItem("Video Tracks Only")) {
+                    if (VideoOnly()) {
+                        Message("Sucessfully extracted video tracks from %s\n", current_file.c_str());
+                    } else {
+                        ErrorMessage("Failed to extract video tracks from %s\n", current_file.c_str());
+                    }
+                }
+                if (ImGui::MenuItem("Audio Tracks Only")) {
+                    if (AudioOnly()) {
+                        Message("Sucessfully extracted audio tracks from %s\n", current_file.c_str());
+                    } else {
+                        ErrorMessage("Failed to extract audio tracks from %s\n", current_file.c_str());
+                    }
+                }
+                ImGui::EndMenu();
             }
             ImGui::EndMenu();
         }

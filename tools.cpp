@@ -10,78 +10,100 @@
 #include <opentimelineio/marker.h>
 
 #include <map>
+#include <filesystem>
+#include <cstdio>
 
-// Check to see if the lookup already contians the name. If it does, return its count and if not add
-// it to the lookup, assign it a count and return that.
-std::string name_from_lookup(std::map<std::string, int>& lookup, std::string name, int& count) {
-    if (lookup.count(name)) {
-        return std::to_string(lookup.at(name));
-    } else {
-        count++;
-        lookup.emplace(name, count);
-        return std::to_string(count);
+std::string run_subprocess(const std::string cmd, int& return_val)
+{
+    #ifdef _WIN32
+    auto pipe = _popen(cmd.c_str(), "r");
+    #else
+    auto pipe = popen(cmd.c_str(), "r");
+    #endif
+
+    if (pipe == nullptr) {
+        std::cout << "Failed to open pipe" << std::endl;
+        return std::string();
     }
+
+    char buffer[128];
+
+    std::string result;
+
+    while (fgets(buffer, sizeof buffer, pipe) != NULL){
+        result += buffer;
+    }
+
+    return_val = _pclose(pipe);
+
+
+    return result;
+}
+
+bool otiotool_found()
+{
+    int result;
+
+    #ifdef _WIN32
+    run_subprocess("where /Q otiotool", result);
+    #else
+    run_subprocess("whereis otiotool", result);
+    #endif
+
+    return !result;
+}
+
+bool run_otiotool_command(std::string options)
+{
+    // Write the current root to a temp json file
+    std::filesystem::path file = std::filesystem::temp_directory_path();
+    file.replace_filename(std::tmpnam(nullptr));
+    file.replace_extension("otio");
+    std::cout << file << std::endl;
+    GetActiveRoot()->to_json_file(file.generic_string());
+
+    // Build command
+    std::string command = "otiotool --input " + file.generic_string() + " " + options + " --output -";
+    std::cout << command << std::endl;
+
+    // Run subproces
+    int return_val = 0;
+    std::string result = run_subprocess(command, return_val);
+
+    // Load new otio file
+    if (!result.empty() && return_val == 0) {
+        LoadString(result);
+    } else {
+        ErrorMessage("Error trying to redact file, see console");
+        return false;
+    }
+
+    // Clean up temp file
+    std::remove(file.generic_string().c_str());
+
+    return true;
 }
 
 bool Redact() {
-    otio::SerializableObjectWithMetadata* root = GetActiveRoot();
-    std::map<std::string, int> item_lookup;
-
-    int count = -1;
-
-    // Handle root item
-    root->set_name(root->schema_name() + name_from_lookup(item_lookup, root->name(), count));
-    root->metadata().clear();
-
-    // If the root is a Timeline, loop through it's children and redact them
-    if (const auto& timeline = dynamic_cast<otio::Timeline*>(root)) {
-        for (auto track : timeline->tracks()->children()) {
-            track->set_name(track->schema_name() + name_from_lookup(item_lookup, track->name(), count));
-            track->metadata().clear();
-        }
-        for (auto child : timeline->find_children()) {
-            // Clear child anme and metadata
-            child->set_name(child->schema_name() + name_from_lookup(item_lookup, child->name(), count));
-            child->metadata().clear();
-
-            // Clear childs data
-            if (const auto& item = dynamic_cast<otio::Item*>(&*child)) {
-                // Markers
-                for (const auto& marker : item->markers()) {
-                    marker->set_name(marker->schema_name() + name_from_lookup(item_lookup, marker->name(), count));
-                    marker->metadata().clear();
-                }
-
-                // Effects
-                for (const auto& effect : item->effects()) {
-                    // At least in examples I have seen effect->name tends to be empty, would it be better use effect->effect_name?
-                    // Also is losing the effects metadata bad as it could lose effects settings like blur amount?
-                    effect->set_name(effect->schema_name() + name_from_lookup(item_lookup, effect->name(), count));
-                    effect->metadata().clear();
-                    // Should we also clear effect->effect_name()?
-                }
-
-                // Media reference
-                // Note: Can Clips have multiple media references and hwo does that work?
-                if (const auto& clip = dynamic_cast<otio::Clip*>(&*child)) {
-                    if (auto media_ref = clip->media_reference()) {
-                        media_ref->set_name(media_ref->schema_name() + name_from_lookup(item_lookup, media_ref->name(), count));
-                        media_ref->metadata().clear();
-
-                        if (const auto& ref = dynamic_cast<otio::ExternalReference*>(media_ref)) {
-                            ref->set_target_url("URL " + name_from_lookup(item_lookup, ref->target_url(), count));
-                        }
-
-                        if (const auto& ref = dynamic_cast<otio::ImageSequenceReference*>(media_ref)) {
-                            ref->set_target_url_base("URL " + name_from_lookup(item_lookup, ref->target_url_base(), count));
-                            // DO we need to redact name_prefix/name_suffix?
-                        }
-                    }
-                }
-            }
-        }
+    if (run_otiotool_command("--redact")) {
+        return true;
+    } else {
+        return false;
     }
-    
+}
 
-    return true;
+bool VideoOnly() {
+    if (run_otiotool_command("--video-only")) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool AudioOnly() {
+    if (run_otiotool_command("--audio-only")) {
+        return true;
+    } else {
+        return false;
+    }
 }
