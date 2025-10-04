@@ -21,15 +21,16 @@ std::string run_subprocess(const std::string cmd, int& return_val)
     }
 
     char buffer[128];
-
     std::string result;
-
     while (fgets(buffer, sizeof buffer, pipe) != NULL){
         result += buffer;
     }
 
+    #ifdef _WIN32
     return_val = _pclose(pipe);
-
+    #else
+    return_val = pclose(pipe);
+    #endif
 
     return result;
 }
