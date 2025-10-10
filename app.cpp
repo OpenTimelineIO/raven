@@ -582,7 +582,41 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
     LoadFonts();
 
     if (argc > 1) {
-        LoadFile(argv[1]);
+        std::string first_file = argv[1];
+
+        // If the first argument contains a wild card try and open all files in that folder,
+        // if not open all the files given as arguments
+        if (std::filesystem::path(first_file).filename().string().find("*") != std::string::npos) {
+            auto extension = LowerCase(FileExtension(first_file));
+
+            // Check valid extension
+            if (!SupportedFileType(first_file)) {
+                ErrorMessage(
+                    "Unsuported file type \"%s\"",
+                    first_file.c_str());
+                return;
+            }
+
+            // Get base path
+            int index_of_wildcard = first_file.find_last_of("*");
+            std::string base_path = first_file.substr(0, index_of_wildcard);
+            if (base_path.empty()) {
+                base_path = ".";
+            }
+
+            std::cout << "Loading all " << extension << " files in " << base_path << std::endl;
+
+            // Iterate through directory and load all files with the given extension
+            for (auto const& dir_entry : std::filesystem::directory_iterator(base_path))
+                if (dir_entry.path().extension().string() == extension) {
+                    LoadFile(dir_entry.path().string());
+                }
+        } else {
+            // Load each specified file
+            for (int i = 1; i < argc; i++) {
+                LoadFile(argv[i]);
+            }
+        }
     }
 }
 
