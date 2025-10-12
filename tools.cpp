@@ -17,10 +17,11 @@ std::string run_subprocess(const std::string cmd, int& return_val)
 
     if (pipe == nullptr) {
         std::cout << "Failed to open pipe" << std::endl;
+        return_val = 1;
         return std::string();
     }
 
-    char buffer[128];
+    char buffer[8192];
     std::string result;
     while (fgets(buffer, sizeof buffer, pipe) != NULL){
         result += buffer;
@@ -55,8 +56,8 @@ bool run_otiotool_command(std::string options, bool debug = false)
     }
     GetActiveRoot()->to_json_file(file.generic_string());
 
-    // Build command
-    std::string command = "otiotool --input " + file.generic_string() + " " + options + " --output -";
+    // Build command, the file path is wrapped in quotation marks in case of spaces
+    std::string command = "otiotool --input \"" + file.generic_string() + "\" " + options + " --output -";
     if (debug) {
         std::cout << command << std::endl;
     }
@@ -69,7 +70,7 @@ bool run_otiotool_command(std::string options, bool debug = false)
     if (!result.empty() && return_val == 0) {
         LoadString(result);
     } else {
-        ErrorMessage("Error trying to redact file, see console");
+        ErrorMessage("Error trying to run otiotool command, see console for details");
         return false;
     }
 
