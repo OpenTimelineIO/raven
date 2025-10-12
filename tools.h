@@ -3,6 +3,8 @@
 
 bool otiotool_found();
 
+void DrawToolPopups();
+
 // Remove all metadata, names, or other identifying information from this
 // timeline. Only the structure, schema and timing will remain.
 bool Redact();
@@ -21,3 +23,6 @@ bool FlattenVideoTracks();
 
 // Flatten audio tracks
 bool FlattenAudioTracks();
+
+// Display statistics about the current OTIO file
+bool Statistics();

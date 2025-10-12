@@ -951,6 +951,24 @@ void MainGui() {
     if (appState.show_implot_demo_window) {
         ImPlot::ShowDemoWindow();
     }
+
+    // Handle tool popups
+    // These modal popups are all triggered by the Tools menu and
+    // therefore can't have their draw code in the menu code. To
+    // get around that the menu flags if a modal is to be drawn and
+    // then we call the relevant ImGui::OpenPopup here. We then call
+    // our all encompassing DrawToolPopups function.
+    if (appState.draw_stat_popup) {
+        ImGui::OpenPopup("Statistics");
+        appState.draw_stat_popup = false;
+    }
+    if (appState.draw_extract_clips) {
+        ImGui::OpenPopup("Extract Clips");
+        appState.draw_extract_clips = false;
+    }
+    if (GetActiveRoot()) {
+        DrawToolPopups();
+    }
 }
 
 void SaveTheme() {
@@ -1124,6 +1142,19 @@ void DrawMenu() {
                     }
                 }
                 ImGui::EndMenu();
+            }
+            if (ImGui::MenuItem("Extract Clips")) {
+                // This option requires user input before the otiotool command
+                // can be called so we simply flag the popup for drawing here.
+                appState.draw_extract_clips = true;
+            }
+            if (ImGui::MenuItem("Statistics")) {
+                if (Statistics()) {
+                    Message("Sucessfully returned statistics from %s\n", current_file.c_str());
+                    appState.draw_stat_popup = true;
+                } else {
+                    ErrorMessage("Failed to return statistics from %s\n", current_file.c_str());
+                }
             }
             ImGui::EndMenu();
         }
