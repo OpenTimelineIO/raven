@@ -18,6 +18,7 @@ target_sources(raven
     editing.h
     inspector.h
     timeline.h
+    tools.h
     colors.h
     widgets.h
 
@@ -25,6 +26,7 @@ target_sources(raven
     editing.cpp
     inspector.cpp
     timeline.cpp
+    tools.cpp
     colors.cpp
     widgets.cpp
 

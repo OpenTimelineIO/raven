@@ -12,6 +12,7 @@
 #include "imgui_internal.h"
 
 #include "widgets.h"
+#include "tools.h"
 
 #ifndef EMSCRIPTEN
 #include "nfd.h"
@@ -581,6 +582,14 @@ void MainInit(int argc, char** argv, int initial_width, int initial_height) {
 
     LoadFonts();
 
+    // Check for otiotool
+    if (otiotool_found()) {
+        appState.otiotool_found = true;
+        Message("otiotool found, relevant tools have been enabled");
+    } else {
+        Message("oitotool not found, relevant tools have been disabled");
+    }
+
     if (argc > 1) {
         LoadFile(argv[1]);
     }
@@ -942,6 +951,24 @@ void MainGui() {
     if (appState.show_implot_demo_window) {
         ImPlot::ShowDemoWindow();
     }
+
+    // Handle tool popups
+    // These modal popups are all triggered by the Tools menu and
+    // therefore can't have their draw code in the menu code. To
+    // get around that the menu flags if a modal is to be drawn and
+    // then we call the relevant ImGui::OpenPopup here. We then call
+    // our all encompassing DrawToolPopups function.
+    if (appState.draw_stat_popup) {
+        ImGui::OpenPopup("Statistics");
+        appState.draw_stat_popup = false;
+    }
+    if (appState.draw_extract_clips) {
+        ImGui::OpenPopup("Extract Clips");
+        appState.draw_extract_clips = false;
+    }
+    if (GetActiveRoot()) {
+        DrawToolPopups();
+    }
 }
 
 void SaveTheme() {
@@ -1062,6 +1089,72 @@ void DrawMenu() {
                     false,
                     appState.selected_object != NULL)) {
                 DeleteSelectedObject();
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Tools", GetActiveRoot() && appState.otiotool_found)) {
+            std::string current_file = appState.active_tab->file_path;
+            if (ImGui::MenuItem("Redact OTIO File")) {
+                if (Redact()) {
+                    Message("Successfully redacted %s\n", current_file.c_str());
+                } else {
+                    ErrorMessage("Failed to redact %s\n", current_file.c_str());
+                }
+            }
+            if (ImGui::BeginMenu("Extract Track Type")) {
+                if (ImGui::MenuItem("Video Tracks Only")) {
+                    if (VideoOnly()) {
+                        Message("Sucessfully extracted video tracks from %s\n", current_file.c_str());
+                    } else {
+                        ErrorMessage("Failed to extract video tracks from %s\n", current_file.c_str());
+                    }
+                }
+                if (ImGui::MenuItem("Audio Tracks Only")) {
+                    if (AudioOnly()) {
+                        Message("Sucessfully extracted audio tracks from %s\n", current_file.c_str());
+                    } else {
+                        ErrorMessage("Failed to extract audio tracks from %s\n", current_file.c_str());
+                    }
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Flatten Tracks")) {
+                if (ImGui::MenuItem("All")) {
+                    if (FlattenAllTracks()) {
+                        Message("Sucessfully flattened tracks from %s\n", current_file.c_str());
+                    } else {
+                        ErrorMessage("Failed to flatten tracks from %s\n", current_file.c_str());
+                    }
+                }
+                if (ImGui::MenuItem("Video")) {
+                    if (FlattenVideoTracks()) {
+                        Message("Sucessfully flattened video tracks from %s\n", current_file.c_str());
+                    } else {
+                        ErrorMessage("Failed to flatten video tracks from %s\n", current_file.c_str());
+                    }
+                }
+                if (ImGui::MenuItem("Audio")) {
+                    if (FlattenAudioTracks()) {
+                        Message("Sucessfully flattened audio tracks from %s\n", current_file.c_str());
+                    } else {
+                        ErrorMessage("Failed to flatten audio tracks from %s\n", current_file.c_str());
+                    }
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::MenuItem("Extract Clips")) {
+                // This option requires user input before the otiotool command
+                // can be called so we simply flag the popup for drawing here.
+                appState.draw_extract_clips = true;
+            }
+            if (ImGui::MenuItem("Statistics")) {
+                if (Statistics()) {
+                    Message("Sucessfully returned statistics from %s\n", current_file.c_str());
+                    appState.draw_stat_popup = true;
+                } else {
+                    ErrorMessage("Failed to return statistics from %s\n", current_file.c_str());
+                }
             }
             ImGui::EndMenu();
         }
