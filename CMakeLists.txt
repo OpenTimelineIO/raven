@@ -60,7 +60,8 @@ add_subdirectory("libs/opentimelineio")
 include_directories(
   ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src
   ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src/deps
-  ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src/deps/optional-lite/include
+  ${PROJECT_SOURCE_DIR}/libs/opentimelineio/src/deps/Imath/src
+  ${PROJECT_BINARY_DIR}/libs/opentimelineio/src
 )
 
 if(NOT EMSCRIPTEN AND NOT WIN32)
