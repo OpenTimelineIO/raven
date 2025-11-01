@@ -10,7 +10,7 @@ jobs:
   Linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 1
         submodules: recursive
@@ -48,7 +48,7 @@ jobs:
   MacOS:
     runs-on: macOS-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 1
         submodules: recursive
@@ -81,7 +81,7 @@ jobs:
   Emscripten:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 1
         submodules: recursive
@@ -119,7 +119,7 @@ jobs:
   Windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 1
         submodules: recursive
@@ -157,7 +157,7 @@ jobs:
         python-version: ["3.9"]
         os: [ ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-13, macos-latest ]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 1
         submodules: recursive
@@ -184,7 +184,7 @@ jobs:
   package_sdist:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 1
           submodules: recursive
