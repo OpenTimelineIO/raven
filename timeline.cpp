@@ -109,6 +109,9 @@ void DrawItem(
         hover_fill_color = TintedColorForUI(fill_color);
     }
 
+    if (!item->enabled()){
+        fill_color = UIColorFromName("");
+    }
     if (auto gap = dynamic_cast<otio::Gap*>(item)) {
         // different colors & style
         fill_color = appTheme.colors[AppThemeCol_Background];
