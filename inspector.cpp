@@ -803,7 +803,7 @@ void DrawInspector() {
         }
 
         // Set the active media ref key based on user selection
-        if (ImGui::Combo("", &appState.selected_reference_index, reference_names.data(), num_references)) {
+        if (ImGui::Combo("##", &appState.selected_reference_index, reference_names.data(), num_references)) {
             if (appState.selected_reference_index >= 0 && appState.selected_reference_index < num_references) {
                 clip->set_active_media_reference_key(reference_names[appState.selected_reference_index]);
             }

@@ -136,6 +136,14 @@ struct AppState {
     bool show_demo_window = false;
     bool show_metrics = false;
     bool show_implot_demo_window = false;
+
+    // Was otiotool found?
+    bool otiotool_found = false;
+
+    // otiotool data for popup windows
+    std::string otiotool_return_value; // Value returned by call to otiotool
+    bool draw_stat_popup = false;      // Draw statistics popup
+    bool draw_extract_clips = false;   // Draw clip extraction popup
 };
 
 extern AppState appState;
