@@ -185,7 +185,8 @@ void AddMarkerAtPlayhead(otio::Item* item, std::string name, std::string color) 
     }
 
     const auto marked_range = otio::TimeRange(time); // default 0 duration
-    otio::SerializableObject::Retainer<otio::Marker> marker = new otio::Marker(name, marked_range, color);
+    // \todo
+    otio::SerializableObject::Retainer<otio::Marker> marker = new otio::Marker(name, marked_range);
 
     item->markers().push_back(marker);
 
