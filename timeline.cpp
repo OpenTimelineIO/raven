@@ -102,12 +102,20 @@ void DrawItem(
     auto hover_fill_color = appTheme.colors[AppThemeCol_ItemHovered];
     bool fancy_corners = true;
 
+if (auto color = item->color()) {
+    fill_color = UIColorFromOTIOColor(*color);
+    selected_fill_color = TintedColorForUI(fill_color);
+    hover_fill_color = TintedColorForUI(fill_color);
+} else {
     auto item_color = GetItemColor(item);
     if (item_color != "") {
         fill_color = UIColorFromName(item_color);
         selected_fill_color = TintedColorForUI(fill_color);
         hover_fill_color = TintedColorForUI(fill_color);
     }
+}
+
+
 
     if (auto gap = dynamic_cast<otio::Gap*>(item)) {
         // different colors & style
