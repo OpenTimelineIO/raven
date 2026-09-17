@@ -63,6 +63,8 @@ void PowerConserve( float Seconds ) {
 // Main code
 int main(int argc, char** argv)
 {
+    HandleCliArgs(argc, argv);
+
     int initial_width = 1280;
     int initial_height = 800;
     // Create application window

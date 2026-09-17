@@ -11,6 +11,7 @@ set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
 
 add_executable(raven)
 set_property(TARGET raven PROPERTY CXX_STANDARD 17)
+target_compile_definitions(raven PRIVATE RAVEN_VERSION="${RAVEN_VERSION}")
 
 target_sources(raven
   PUBLIC
