@@ -1,0 +1,43 @@
+name: publish
+
+# Publish the wheels + sdist that build.yaml already attached to the release.
+#   release: published (a stable tag) -> real PyPI, automatically.
+#   workflow_dispatch  (manually via Actions UI) -> test.pypi, only for testing.
+on:
+  release:
+    # real releases only, not prereleases (which are for testing)
+    types: [ published ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish to TestPyPI
+        required: true
+
+jobs:
+  publish_pypi:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false
+    # Distinct environments per target: each (Test)PyPI trusted publisher names
+    # its matching environment, so only this job can mint a publish token.
+    environment: ${{ github.event_name == 'workflow_dispatch' && 'testpypi' || 'pypi' }}
+    permissions:
+      contents: read       # gh release download
+      id-token: write      # mandatory for PyPI Trusted Publishing
+    steps:
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          mkdir dist
+          gh release download "$TAG" \
+            --repo "${{ github.repository }}" \
+            --pattern '*.whl' --pattern '*.tar.gz' \
+            --dir dist
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # Manual dispatch goes to test.pypi, a proper release goes to pypi.org
+          repository-url: ${{ github.event_name == 'workflow_dispatch' && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}
+          # Do not fail if the version is already uploaded.
+          skip-existing: true

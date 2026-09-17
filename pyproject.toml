@@ -24,7 +24,7 @@ classifiers = [
 keywords = ["film", "tv", "editing", "editorial", "edit", "non-linear", "time", "otio", "opentimelineio", "raven"]
 license = { file = "LICENSE.txt" }
 readme = "README.md"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9.0,<3.13"
 
 [project.scripts]
 raven = "otio_raven._wrapper:main"
@@ -34,14 +34,42 @@ raven = "otio_raven._wrapper:main"
 "Bug Tracker" = "https://github.com/OpenTimelineIO/raven/issues"
 
 [tool.scikit-build]
-cmake.version = ">=3.10"
+# arm64/universal2 builds want >=3.19.2
+cmake.version = ">=3.19.2"
 cmake.build-type = "Release"
 wheel.packages = ["python/otio_raven"]
 wheel.install-dir = "otio_raven"
+# tag 3.9 build as py3-none-<platform> since raven ships no Python dependent code
 wheel.py-api = "py3"
 
-[tool.scikit-build.metadata.version]
+[[tool.dynamic-metadata]]
+field = "version"
 provider = "scikit_build_core.metadata.regex"
 input = "VERSION.txt"
-regex = "^(?P<version>.+)"
-result = "{version}"
+regex = "^(?P<value>.+)"
+result = "{value}"
+
+[tool.cibuildwheel]
+# build with Py3.9 once per platform
+build = "cp39-*"
+skip = "*-musllinux*"
+test-command = "raven --version"
+
+[tool.cibuildwheel.linux]
+# glfw -> needs X11 dev headers
+# nativefiledialog -> needs GTK3
+# minizip-ng -> needs zlib
+before-all = "dnf install -y libX11-devel libXrandr-devel libXinerama-devel libXcursor-devel libXi-devel mesa-libGL-devel gtk3-devel"
+# Skip Wayland backend to avoid pulling the wayland/libdecor dep chain.
+environment = { CMAKE_ARGS = "-DGLFW_BUILD_WAYLAND=OFF" }
+
+[tool.cibuildwheel.macos]
+# CMakeLists forces a universal (x86_64, arm64) build
+archs = ["universal2"]
+environment = { MACOSX_DEPLOYMENT_TARGET = "10.15" }
+
+[tool.cibuildwheel.windows]
+# x64 only, 32-bit support
+archs = ["AMD64"]
+before-all = "vcpkg install zlib:x64-windows"
+environment = { CMAKE_PREFIX_PATH = "C:/vcpkg/installed/x64-windows" }

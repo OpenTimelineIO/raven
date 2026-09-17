@@ -8,6 +8,8 @@ string(STRIP "${RAVEN_VERSION}" RAVEN_VERSION)
 project(raven VERSION ${RAVEN_VERSION})
 
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+# std::filesystem requires the macOS 10.15 runtime.
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15")
 
 add_executable(raven)
 set_property(TARGET raven PROPERTY CXX_STANDARD 17)
@@ -139,3 +141,13 @@ endif()
 install(TARGETS raven
     BUNDLE DESTINATION bin
     RUNTIME DESTINATION bin)
+
+# Bundle vcpkg's zlib DLL (z.dll) next to raven.exe so the packaged wheel/archive
+# runs standalone. $<TARGET_RUNTIME_DLLS> misses it because zlib is pulled in
+# transitively through the static minizip library, and delvewheel only scans .pyd.
+# cibuildwheel passes the vcpkg prefix via the CMAKE_PREFIX_PATH env var.
+if(WIN32 AND DEFINED ENV{CMAKE_PREFIX_PATH})
+  install(DIRECTORY "$ENV{CMAKE_PREFIX_PATH}/bin/"
+          DESTINATION bin
+          FILES_MATCHING PATTERN "*.dll")
+endif()
