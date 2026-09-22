@@ -138,6 +138,13 @@ elseif(NOT EMSCRIPTEN)
   )
 endif()
 
+# Bundle the runtime DLLs so the packaged wheel
+# runs on machines without the Visual C++ redistributable.
+if(WIN32)
+  set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION bin)
+  include(InstallRequiredSystemLibraries)
+endif()
+
 install(TARGETS raven
     BUNDLE DESTINATION bin
     RUNTIME DESTINATION bin)
