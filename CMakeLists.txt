@@ -96,9 +96,10 @@ add_subdirectory("libs/minizip-ng")
 if(NOT EMSCRIPTEN)
   add_custom_command(
       OUTPUT "${PROJECT_SOURCE_DIR}/fonts/embedded_font.inc"
-      COMMAND binary_to_compressed_c -base85 "${PROJECT_SOURCE_DIR}/fonts/mononoki-Regular Nerd Font Complete.ttf" MononokiFont > ${PROJECT_SOURCE_DIR}/fonts/embedded_font.inc
+      COMMAND binary_to_compressed_c -base85 "fonts/mononoki-Regular Nerd Font Complete.ttf" MononokiFont > ${PROJECT_SOURCE_DIR}/fonts/embedded_font.inc
       COMMENT "Embedding font..."
       MAIN_DEPENDENCY "fonts/mononoki-Regular Nerd Font Complete.ttf"
+      WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
       VERBATIM)
 endif()
 
