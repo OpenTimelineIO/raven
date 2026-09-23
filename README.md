@@ -73,18 +73,21 @@ Note: The WASM build of raven is missing some features - see the Help Wanted sec
 Raven can be built and embedded inside a Python package for easy distribution alongside other OTIO Python packages.
 For simplicity, we recommend using [UV](https://github.com/astral-sh/uv) for builds and running Raven from the Python package.
 
-_Note: Since we don't publish Raven to PyPI yet, you will need to build it yourself._
-
 ```shell
 # clone the code
 git clone --recursive https://github.com/OpenTimelineIO/raven.git
 cd raven
 
-# run Raven using UV
-uv run --no-editable raven example.otio
+# run Raven from source using UV
+uv run raven example.otio
+```
 
-# build wheel using UV (wheel file will be in ./dist)
-uv build # add '--python <python_version>' to build for a specific Python version
+If you want to build a Python wheel to put in a wheelhouse / package index:
+
+```shell
+# build Python wheel in dist/*.whl
+uv build
+
 ```
 
 ## Troubleshooting
@@ -145,14 +148,10 @@ Raven was made possible by these excellent libraries:
 ## To Do
 
 - Feature parity with `otioview`:
-  - Show media reference details in the Inspector
   - Double-click to expand/collapse nested compositions
   - Arrow keys to navigate by selection
     - This sort of works already via ImGui's navigation system, but it is too easy to get stuck on a marker, or to walk out of the timeline.
     - Can this be rectified by turning off keyboard navigation on the widgets outside the timeline?
-  - Multiple timelines in separate tabs or windows?
-    - Look at ImGui document-based demo code for reference.
-    - Might be fine to just open multiple instances of the app.
   - Add support for adapters
     - Use embedded Python, or run `otioconvert` via pipe?
     - Constraint: We want to ensure this tool stays light weight, and works in the browser.

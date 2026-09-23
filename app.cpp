@@ -1,6 +1,7 @@
 // Raven NLE
 
 #include <cstddef>
+#include <cstring>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -572,6 +573,27 @@ void SaveFile(std::string path) {
         "Saved \"%s\" in %.3f seconds",
         root->name().c_str(),
         elapsed_seconds);
+}
+
+#ifndef RAVEN_VERSION
+#define RAVEN_VERSION "unknown"
+#endif
+
+// Handle --version / --help before any window is created, so the binary can be
+// tested in headless CI (no GUI). Bonus: users can inspect the Raven version from the terminal.
+void HandleCliArgs(int argc, char** argv) {
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--version") == 0) {
+            printf("raven %s\n", RAVEN_VERSION);
+            exit(0);
+        }
+        if (strcmp(argv[i], "--help") == 0) {
+            printf("Usage: raven [options] [file.otio]\n"
+                   "  --version   Print version and exit\n"
+                   "  --help      Print this help and exit\n");
+            exit(0);
+        }
+    }
 }
 
 void MainInit(int argc, char** argv, int initial_width, int initial_height) {
