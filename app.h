@@ -10,7 +10,7 @@
 #include <opentimelineio/marker.h>
 #include <opentimelineio/timeline.h>
 #include <opentimelineio/serializableObjectWithMetadata.h>
-namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
+namespace otio = opentimelineio::OPENTIMELINEIO_VERSION_NS;
 
 enum AppThemeCol_ {
     AppThemeCol_Background,

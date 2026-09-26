@@ -1,7 +1,7 @@
 // Timeline widget
 
 #include <opentimelineio/timeline.h>
-namespace otio = opentimelineio::OPENTIMELINEIO_VERSION;
+namespace otio = opentimelineio::OPENTIMELINEIO_VERSION_NS;
 
 void DrawTimeline(otio::Timeline* timeline);
 bool DrawTransportControls(otio::Timeline* timeline);

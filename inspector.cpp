@@ -730,7 +730,8 @@ void DrawInspector() {
     }
 
     // Marker
-    if (const auto& marker = dynamic_cast<otio::Marker*>(selected_object)) {
+    // \todo
+    /*if (const auto& marker = dynamic_cast<otio::Marker*>(selected_object)) {
         auto rate = marker->marked_range().start_time().rate();
 
         auto color_name = DrawColorChooser(marker->color());
@@ -747,7 +748,7 @@ void DrawInspector() {
         if (DrawTimeRange("Marked Range", &marked_range, false)) {
             marker->set_marked_range(marked_range);
         }
-    }
+    }*/
 
     // Track
     if (const auto& track = dynamic_cast<otio::Track*>(selected_object)) {
@@ -1116,7 +1117,7 @@ void DrawMarkersInspector() {
                 // Color + Name
                 ImGui::TableNextColumn();
 
-                ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(marker->color()));
+                ImGui::PushStyleColor(ImGuiCol_Text, UIColorFromName(marker->color()->name()));
                 ImGui::TextUnformatted("\xef\x80\xab");
                 ImGui::PopStyleColor();
                 ImGui::SameLine();

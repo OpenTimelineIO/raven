@@ -58,6 +58,12 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/libs/nativefiledialog/src/include
 )
 
+# OTIO links minizip-ng for .otioz support. Use raven's copy (built below)
+# instead of OTIO's vendored one, which does not build under Emscripten,
+# and skip OTIO's submodule update at configure time.
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+set(OTIO_FIND_MINIZIP_NG ON)
+set(OTIO_AUTOMATIC_SUBMODULES OFF)
 set(OTIO_SHARED_LIBS OFF)
 add_subdirectory("libs/opentimelineio")
 include_directories(
@@ -109,7 +115,6 @@ target_compile_definitions(raven
 target_link_libraries(raven PUBLIC
     OTIO::opentimelineio
     IMGUI
-    MINIZIP::minizip
 )
 
 if (APPLE)

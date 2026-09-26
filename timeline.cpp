@@ -548,7 +548,7 @@ void DrawMarkers(
                 + origin.x - arrow_width / 2,
             ImGui::GetCursorPosY());
 
-        auto fill_color = UIColorFromName(marker->color());
+        auto fill_color = UIColorFromName(marker->color()->name());
         auto selected_fill_color = appTheme.colors[AppThemeCol_MarkerSelected];
         auto hover_fill_color = appTheme.colors[AppThemeCol_MarkerHovered];
 
@@ -606,7 +606,7 @@ void DrawMarkers(
                 "%s: %s\nColor: %s\nRange: %s - %s\nDuration: %s",
                 marker->schema_name().c_str(),
                 marker->name().c_str(),
-                marker->color().c_str(),
+                marker->color()->name().c_str(),
                 FormattedStringFromTime(range.start_time()).c_str(),
                 FormattedStringFromTime(range.end_time_exclusive()).c_str(),
                 FormattedStringFromTime(duration).c_str());
