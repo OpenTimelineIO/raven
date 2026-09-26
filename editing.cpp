@@ -1,11 +1,14 @@
 #include "editing.h"
 #include "app.h"
+#include "colors.h"
 
 #include <opentimelineio/effect.h>
 #include <opentimelineio/item.h>
 #include <opentimelineio/marker.h>
 #include <opentimelineio/stackAlgorithm.h>
 #include <stdlib.h>
+
+using otio = opentimelineio::OPENTIMELINEIO_VERSION;
 
 void DeleteSelectedObject() {
     if (!appState.selected_object) {
@@ -337,6 +340,20 @@ std::string GetItemColor(otio::Item* item)
 {
     std::string item_color = "";
 
+    // ✅ Use official OTIO Color schema
+    auto c = item->color();
+    if (c)
+    {
+        // NameFromOTIOColor() returns "" for a color that isn't one of
+        // the known named colors (e.g. an arbitrary RGB value). That is
+        // intentional: we must never guess a name for a custom color,
+        // since doing so would silently overwrite it the next time
+        // SetItemColor() runs. "" tells callers "this item has a color,
+        // but it doesn't match a preset - leave it alone."
+        return NameFromOTIOColor(*c);
+    }
+
+    // ✅ Fallback to Raven legacy metadata
     if (item->metadata().has_key("raven") &&
         item->metadata()["raven"].type() == typeid(otio::AnyDictionary))
     {
@@ -354,6 +371,10 @@ std::string GetItemColor(otio::Item* item)
 
 void SetItemColor(otio::Item* item, std::string color_name)
 {
+    auto c = OTIOColorFromName(color_name);
+    item->set_color(c);
+
+    // Optionally keep Raven's legacy field in sync for backward compatibility
     otio::AnyDictionary raven_md;
     if (item->metadata().has_key("raven") &&
         item->metadata()["raven"].type() == typeid(otio::AnyDictionary))

@@ -259,7 +259,14 @@ void DrawNonEditableTextField(const char* label, const char* format, ...) {
     ImGui::PopStyleColor();
 }
 
-std::string DrawColorChooser(std::string current_color_name)
+// custom_color_swatch: when the current color doesn't match a named
+// preset (current_color_name == ""), pass the raw color here so we can
+// still show the user *something* is set, instead of a blank combo that
+// looks like "no color". Pass nullptr for callers (like Marker) that
+// only ever deal in named colors.
+std::string DrawColorChooser(
+    std::string current_color_name,
+    const otio::Color* custom_color_swatch = nullptr)
 {
     const char** color_choices = marker_color_names;
     int num_color_choices = IM_ARRAYSIZE(marker_color_names);
@@ -271,6 +278,27 @@ std::string DrawColorChooser(std::string current_color_name)
             break;
         }
     }
+
+    bool is_custom = (current_index == -1) && custom_color_swatch != nullptr;
+    if (is_custom) {
+        // Draw a small swatch of the actual color next to the combo so
+        // it's visible that a non-preset color is present. Selecting a
+        // named color below will replace it; leaving the combo alone
+        // preserves the original custom value untouched.
+        ImU32 swatch = UIColorFromOTIOColor(*custom_color_swatch);
+        ImGui::ColorButton(
+            "##custom_color_swatch",
+            ImGui::ColorConvertU32ToFloat4(swatch),
+            ImGuiColorEditFlags_NoTooltip,
+            ImVec2(16, 16));
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip(
+                "Custom color (not one of the preset names).\n"
+                "Selecting a color below will replace it.");
+        }
+        ImGui::SameLine();
+    }
+
     if (ImGui::Combo("Color", &current_index, color_choices, num_color_choices)) {
         if (current_index >= 0 && current_index < num_color_choices) {
             return color_choices[current_index];
@@ -670,7 +698,14 @@ void DrawInspector() {
 
         if (!is_gap) {
             auto item_color = GetItemColor(item);
-            item_color = DrawColorChooser(item_color);
+            auto raw_color = item->color();
+            // Only pass the swatch when there IS a color but it didn't
+            // match a named preset - i.e. it's genuinely custom, not
+            // simply absent.
+            bool is_custom_color = item_color == "" && raw_color.has_value();
+            item_color = DrawColorChooser(
+                item_color,
+                is_custom_color ? &raw_color.value() : nullptr);
             if (item_color != "") {
                 SetItemColor(item, item_color);
             }
