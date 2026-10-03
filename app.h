@@ -6,6 +6,7 @@
 
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "timeline_layout.h"
 
 #include <opentimelineio/marker.h>
 #include <opentimelineio/timeline.h>
@@ -124,6 +125,8 @@ struct TabData {
 
     bool first_frame = true;     // The timeline drawing code has to be drawn across
                                  // two frames so we keep track of that here
+
+    TimelineExpansion timeline_expansion; // Per-tab, temporary disclosure state.
 
     // Filter state
     MarkerFilterState marker_filter_state; // Persistant state of Marker filtering

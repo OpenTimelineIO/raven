@@ -21,6 +21,7 @@ target_sources(raven
     editing.h
     inspector.h
     timeline.h
+    timeline_layout.h
     colors.h
     widgets.h
 
@@ -28,6 +29,7 @@ target_sources(raven
     editing.cpp
     inspector.cpp
     timeline.cpp
+    timeline_layout.cpp
     colors.cpp
     widgets.cpp
 
@@ -158,4 +160,27 @@ if(WIN32 AND DEFINED ENV{CMAKE_PREFIX_PATH})
   install(DIRECTORY "$ENV{CMAKE_PREFIX_PATH}/bin/"
           DESTINATION bin
           FILES_MATCHING PATTERN "*.dll")
+endif()
+
+# Focused, media-free tests for nested timeline layout.
+option(RAVEN_BUILD_TESTS "Build Raven timeline layout tests" OFF)
+if(RAVEN_BUILD_TESTS)
+  enable_testing()
+  add_executable(raven_timeline_layout_tests tests/timeline_layout_test.cpp timeline_layout.cpp)
+  target_compile_features(raven_timeline_layout_tests PRIVATE cxx_std_17)
+  target_include_directories(raven_timeline_layout_tests PRIVATE ${PROJECT_SOURCE_DIR})
+  target_link_libraries(raven_timeline_layout_tests PRIVATE OTIO::opentimelineio)
+  add_test(NAME raven_timeline_layout COMMAND raven_timeline_layout_tests)
+endif()
+
+if(RAVEN_BUILD_TESTS AND NOT EMSCRIPTEN)
+  add_executable(raven_timeline_ui_tests
+    tests/timeline_ui_test.cpp app.cpp editing.cpp inspector.cpp
+    timeline.cpp timeline_layout.cpp colors.cpp widgets.cpp)
+  target_compile_features(raven_timeline_ui_tests PRIVATE cxx_std_17)
+  target_include_directories(raven_timeline_ui_tests PRIVATE ${PROJECT_SOURCE_DIR})
+  target_compile_definitions(raven_timeline_ui_tests PRIVATE
+    $<TARGET_PROPERTY:raven,COMPILE_DEFINITIONS>)
+  target_link_libraries(raven_timeline_ui_tests PRIVATE $<TARGET_PROPERTY:raven,LINK_LIBRARIES>)
+  add_test(NAME raven_timeline_ui COMMAND raven_timeline_ui_tests)
 endif()

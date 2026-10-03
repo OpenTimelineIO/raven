@@ -654,6 +654,7 @@ void AppUpdate() {
     if (appState.active_tab && appState.active_tab->state_change) {
         appState.active_tab->marker_filter_state.reload = true;
         appState.active_tab->effect_filter_state.reload = true;
+        appState.active_tab->timeline_expansion.clear();
 
         appState.active_tab->state_change = false;
     }
