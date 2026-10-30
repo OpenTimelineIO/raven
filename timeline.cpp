@@ -109,6 +109,19 @@ void DrawItem(
         hover_fill_color = TintedColorForUI(fill_color);
     }
 
+    if (!item->enabled()) {
+        fill_color = IM_COL32(80,80,80,255);
+        selected_fill_color = TintedColorForUI(fill_color);
+        hover_fill_color = TintedColorForUI(fill_color);
+    }
+
+    auto track_enabled = item->parent()->enabled();
+    if (!track_enabled) {
+        fill_color = IM_COL32(200,200,200,50);
+        selected_fill_color = TintedColorForUI(fill_color);
+        hover_fill_color = TintedColorForUI(fill_color);
+    }
+
     if (auto gap = dynamic_cast<otio::Gap*>(item)) {
         // different colors & style
         fill_color = appTheme.colors[AppThemeCol_Background];
@@ -299,6 +312,13 @@ void DrawTransition(
     auto line_color = appTheme.colors[AppThemeCol_TransitionLine];
     auto selected_fill_color = appTheme.colors[AppThemeCol_TransitionSelected];
     auto hover_fill_color = appTheme.colors[AppThemeCol_TransitionHovered];
+
+    auto track_enabled = transition->parent()->enabled();
+    if (!track_enabled) {
+        fill_color = IM_COL32(100,100,100,50);
+        selected_fill_color = TintedColorForUI(fill_color);
+        hover_fill_color = TintedColorForUI(fill_color);
+    }
 
     if (ColorIsBright(fill_color)) {
         auto inverted_fill_color = ColorInvert(fill_color);
